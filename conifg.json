@@ -1,0 +1,28 @@
+{
+  "device": {
+    "id": "rpi-edge-001",
+    "location": "lab-bioreactor-1"
+  },
+  "sampling": {
+    "sensor_interval": 5,
+    "spectra_interval": 60,
+    "retry_upload_interval": 300
+  },
+  "aws": {
+    "region": "eu-west-1", 
+    "iot_topic": "microalgae/data",
+    "s3_bucket": "microalgae-spectra",
+    "timestream_db": "microalgae_monitoring"
+  },
+  "paths": {
+    "db": "./data/edge_data.db",
+    "spectra_dir": "./data/spectra",
+    "logs_dir": "./data/logs"
+  },
+  "mqtt": {
+    "broker": "localhost",
+    "port": 1883,
+    "topic_spectra": "nir/spectra",
+    "topic_sensors": "edge/sensors"
+  }
+}

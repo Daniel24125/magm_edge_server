@@ -1,0 +1,27 @@
+[project]
+name = "magm-edge-server"
+version = "0.1.0"
+description = "Edge server for microalgae IoT monitoring using Raspberry Pi"
+authors = [
+  { name="Daniel Madalena", email="daniel.madalena@ceb.uminho.pt" }
+]
+requires-python = ">=3.9"
+dependencies = [
+  "paho-mqtt",
+  "boto3",
+  "sqlite-utils",
+  "apscheduler",
+  "pyyaml",
+  "requests",
+  "python-dotenv"
+]
+
+[tool.black]
+line-length = 88
+
+[tool.flake8]
+max-line-length = 88
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

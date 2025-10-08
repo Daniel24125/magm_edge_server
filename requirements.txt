@@ -1,0 +1,7 @@
+paho-mqtt
+boto3
+sqlite-utils
+apscheduler
+pyyaml
+requests
+python-dotenv
