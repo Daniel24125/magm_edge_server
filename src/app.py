@@ -13,8 +13,8 @@ def main():
     print("--- Starting Microalgae Edge Server ---")
     # Load configuration
 
-    server_settings = config.get("server_settings", {})
-    read_interval = server_settings.get("read_interval_seconds", 1)
+    server_settings = config.get("sampling", {})
+    read_interval = server_settings.get("sensor_interval", 1)
 
     # Initialize the sensor manager
     # This manager will create and manage all sensor instances based on the config
@@ -40,17 +40,15 @@ def main():
             all_readings = sensor_manager.read_all_sensors()
 
             print("\n--- Sensor Readings ---")
-            for sensor_name, reading in all_readings.items():
-                if reading:
-                    # Format the value to 2 decimal places for cleaner output
-                    formatted_value = f"{reading.value:.2f}"
-                    print(f"  {sensor_name}: {formatted_value} {reading.unit}")
-                else:
-                    print(f"  {sensor_name}: Failed to read sensor.")
+            print(all_readings)
+            # for sensor_name, reading in all_readings.items():
+            #     if reading:
+            #         # Format the value to 2 decimal places for cleaner output
+            #         formatted_value = f"{reading.value:.2f}"
+            #         print(f"  {sensor_name}: {formatted_value} {reading.unit}")
+            #     else:
+            #         print(f"  {sensor_name}: Failed to read sensor.")
             
-            # In a real application, this is where you would:
-            # 2. Store the data using the StorageManager
-            # 3. Attempt to upload the data using the Uploader
 
             time.sleep(read_interval)
 
