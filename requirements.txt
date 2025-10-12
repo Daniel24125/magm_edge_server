@@ -5,3 +5,7 @@ apscheduler
 pyyaml
 requests
 python-dotenv
+sqlalchemy
+pydantic
+loguru
+typing-extensions

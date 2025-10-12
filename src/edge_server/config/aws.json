@@ -1,0 +1,8 @@
+{
+  "aws": {
+    "region": "eu-west-1",
+    "iot_topic": "microalgae/data",
+    "s3_bucket": "microalgae-spectra",
+    "timestream_db": "microalgae_monitoring"
+  }
+}
