@@ -38,12 +38,12 @@ class MQTTClient:
         self.client.loop_start()
 
     def publish_sensor_data(self, readings: dict):
+        logger.info("Trying to publish sensor data...")
         payload = {
             "timestamp": time.time(),
             "data": {name: r.value if r else None for name, r in readings.items()}
         }
         message = json.dumps(payload)
-        print(message)
         result = self.client.publish(self.topic, message, qos=1)
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning(f"Failed to publish message: {mqtt.error_string(result.rc)}")

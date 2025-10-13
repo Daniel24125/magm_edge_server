@@ -78,18 +78,19 @@ class MqttSubscriber:
         """Starts the MQTT client loop."""
         try:
             self.client.connect(self.host, self.port, keepalive=60)
-            # Blocking call that processes network traffic, calls callbacks, and handles reconnections
             self.client.loop_forever()
         except KeyboardInterrupt:
             print("\nShutting down subscriber.")
+
         except Exception as e:
             print(f"An error occurred: {e}")
         finally:
+            print("Disconnecting server...")
+
             self.client.disconnect()
 
 
 if __name__ == "__main__":
-
     subscriber = MqttSubscriber(
         host=MQTT_HOST,
         port=MQTT_PORT,
