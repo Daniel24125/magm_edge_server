@@ -38,7 +38,6 @@ class MQTTClient:
         self.client.loop_start()
 
     def publish_sensor_data(self, readings: dict):
-        logger.info("Trying to publish sensor data...")
         payload = {
             "timestamp": time.time(),
             "data": {name: r.value if r else None for name, r in readings.items()}
