@@ -19,16 +19,15 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 try:
-    from config.config_manager import config
+    from shared.utils.config_loader import load_config
 except ImportError as e:
     print(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
     sys.exit(1)
 
 # Default to local broker if not explicitly configured
-broker_config = config.get("mqtt", {})
-MQTT_HOST = broker_config.get("broker") # Standard loopback address for local broker
-MQTT_PORT = broker_config.get("port", 1883)  # Default MQTT port
-# Listen to the same base topic as the publisher, using a wildcard (#) to capture all sensors
+broker_config = load_config(os.path.join(PROJECT_ROOT, "shared/config/mqtt.json")).get("mqtt", {})
+MQTT_HOST = broker_config.get("broker") 
+MQTT_PORT = broker_config.get("port", 1883)
 TOPIC_TO_SUBSCRIBE = f"{broker_config.get('topic_sensors', "/#")}"
 
 
@@ -47,7 +46,7 @@ class MqttSubscriber:
         
         print(f"MQTT Subscriber initialized for: {host}:{port}")
 
-    def _on_connect(self, client, userdata, flags, rc, properties): # <-- ADDED 'properties' argument
+    def _on_connect(self, client, userdata, flags, rc, properties): 
         """Callback function for when the client receives a CONNACK response from the server."""
         if rc == 0:
             print(f"Successfully connected to MQTT broker. Subscribing to '{self.topic}'...")
