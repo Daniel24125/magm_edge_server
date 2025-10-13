@@ -59,14 +59,15 @@ class MqttSubscriber:
         """Callback function for when a PUBLISH message is received from the server."""
         try:
             payload = json.loads(msg.payload.decode())
-            
+            data = payload.get("data", {})
             # Format and print the received data
-            print("-" * 50)
-            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING")
-            print(f"  Topic: {msg.topic}")
-            print(f"  Sensor: {payload.get('sensor_name', 'N/A')}")
-            print(f"  Value: {payload.get('value')} {payload.get('unit', '')}")
-            print("-" * 50)
+            for name, reading in data.items():
+                print("-" * 50)
+                print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING")
+                print(f"  Topic: {msg.topic}")
+                print(f"  Sensor: {name}")
+                print(f"  Value: {reading}")
+                print("-" * 50)
             
         except json.JSONDecodeError:
             print(f"Error decoding JSON payload: {msg.payload.decode()}")

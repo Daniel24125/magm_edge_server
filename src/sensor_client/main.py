@@ -1,6 +1,6 @@
 import sys, os, time, platform
 from sensors.manager import SensorManager
-
+from mqtt_client import MQTTClient
 
 
 SIMULATION_MODE = platform.system() == "Windows"
@@ -22,6 +22,7 @@ class SensorClient():
 
     def init_sensor_client(self): 
         self.manager = SensorManager(self.config)
+        self.mqtt = MQTTClient(self.config)
         
     def init_config(self): 
         self.config = load_config(os.path.join(PROJECT_ROOT, "src/sensor_client/config/sensors.json"))
@@ -47,10 +48,11 @@ class SensorClient():
                 all_readings = self.manager.read_all_sensors()
                 if self.time_elapsed % self.read_interval == 0:
                     self.display_readings(all_readings)
+                    self.mqtt.publish_sensor_data(all_readings)
                 time.sleep(1)
                 self.time_elapsed += 1
         except KeyboardInterrupt:
-            logger.error("\nStopping sensor acquisition...")
+            logger.warning("Stopping sensor acquisition...")
         except Exception as e:
             logger.error(f"Unexpected error in acquisition loop: {e}")
 
