@@ -59,16 +59,18 @@ class SensorManager:
     def start_acquisition_loop(self):
         aquisition_settings = self.config.get("sampling", {})
         read_interval = aquisition_settings.get("sensor_interval", 1)
-
+        time_elapsed = 0
         print(f"\nStarting main loop. Reading sensors every {read_interval} seconds.")
         print("Press Ctrl+C to exit.")
         while True:
             all_readings = self.read_all_sensors()
-            print("\n--- Sensor Readings ---")
-            for sensor_name, reading in all_readings.items():
-                if reading:
-                    formatted_value = f"{reading.value:.2f}"
-                    print(f"  {sensor_name}: {formatted_value} {reading.unit}")
-                else:
-                    print(f"  {sensor_name}: Failed to read sensor.")
-            time.sleep(read_interval)
+            if time_elapsed % read_interval == 0:
+                print("\n--- Sensor Readings ---")
+                for sensor_name, reading in all_readings.items():
+                    if reading:
+                        formatted_value = f"{reading.value:.2f}"
+                        print(f"  {sensor_name}: {formatted_value} {reading.unit}")
+                    else:
+                        print(f"  {sensor_name}: Failed to read sensor.")
+            time.sleep(1)
+            time_elapsed += 1
