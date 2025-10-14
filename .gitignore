@@ -30,3 +30,4 @@ env/
 *.crt
 *.key
 venv/
+**/.env.local
