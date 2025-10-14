@@ -3,7 +3,6 @@ from sensors.manager import SensorManager
 from mqtt_client import MQTTClient
 
 
-SIMULATION_MODE = platform.system() == "Windows"
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -12,6 +11,8 @@ if PROJECT_ROOT not in sys.path:
 
 from shared.utils.config_loader import load_config
 from shared.utils.logger import logger
+
+
 
 class SensorClient(): 
     time_elapsed = 0
@@ -57,9 +58,7 @@ class SensorClient():
             logger.error(f"Unexpected error in acquisition loop: {e}")
 
 
-def main():
-    sensor_client = SensorClient()
-    sensor_client.start_acquisition_loop()
 
 if __name__ == "__main__": 
-    main()
+    sensor_client = SensorClient()
+    sensor_client.start_acquisition_loop()

@@ -1,14 +1,6 @@
 import abc
-import sys, os
+import sys, os, platform
 from typing import Optional
-
-try: 
-    import RPi.GPIO as GPIO
-    SIMULATION_MODE = False
-except ImportError:
-    print("GPIO module not found. Simulation mode activated!")
-    SIMULATION_MODE = True
-    from utils.RPi_sim import MockGPIO as GPIO
 
 # Add project root to sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -17,7 +9,17 @@ if project_root not in sys.path:
 
 from shared.models.sensor_reading import SensorReading
 from shared.utils.logger import logger
+from shared.utils.state_manager import StateManager
+state_manager = StateManager()
+state_manager.update_simulation_mode(platform.system() == "Windows")
  
+try: 
+    import RPi.GPIO as GPIO
+except ImportError:
+    print("GPIO module not found. Simulation mode activated!")
+    from utils.RPi_sim import MockGPIO as GPIO
+
+
 # --- Abstract Base Class for Sensors ---
 
 class AbstractSensor(abc.ABC):

@@ -1,10 +1,10 @@
 import time
-from .base import AbstractSensor, SIMULATION_MODE, GPIO, SensorReading
+from .base import AbstractSensor, SensorReading, state_manager, GPIO
+
+SIMULATION_MODE = state_manager.simulation_mode
 
 if SIMULATION_MODE:
     from .simulators import SimulatedTemperatureSensor 
-
-
 
 class TemperatureSensor(AbstractSensor):
     def __init__(self, name: str, unit: str, config: dict):

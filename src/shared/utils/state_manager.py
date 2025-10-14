@@ -51,6 +51,10 @@ class StateManager:
         self.offline_mode = not status
         logger.state(f"Connected: {status}")
 
+    def update_simulation_mode(self, mode: bool):
+        self.simulation_mode = mode
+        logger.state(f"Simulation Mode: {mode}")
+
     def record_error(self):
         self.error_count += 1
         logger.error(f"Error count = {self.error_count}")
