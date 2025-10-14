@@ -1,5 +1,5 @@
-from mqtt_server import MqttSubscriber, MQTT_HOST, MQTT_PORT, TOPIC_TO_SUBSCRIBE
 
+from mqtt_server import MqttSubscriber, MQTT_HOST, MQTT_PORT, TOPIC_TO_SUBSCRIBE
 
 
 if __name__ == "__main__":
@@ -9,3 +9,4 @@ if __name__ == "__main__":
         topic=TOPIC_TO_SUBSCRIBE
     )
     subscriber.run()
+ 
