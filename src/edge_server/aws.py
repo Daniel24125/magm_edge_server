@@ -15,7 +15,6 @@ AWS_ROOT_CERT = os.getenv('AWS_ROOT_CERT')
 AWS_PORT = os.getenv('AWS_PORT')
 AWS_CLIENT_ID = os.getenv('AWS_CLIENT_ID')
 
-
 FILE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CERT_DIR = os.path.join(FILE_ROOT, "certs")
 
@@ -23,15 +22,16 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from shared.utils.logger import logger
-
+from shared.utils.state_manager import StateManager
+state_manager = StateManager()
 
 class AWSIoTClient:
-    def __init__(self, topic: dict):
+    def __init__(self,  topic: dict):
         self.endpoint = AWS_ENDPOINT
-        self.port = AWS_PORT
-        self.root_ca = AWS_ROOT_CERT
-        self.certfile = AWS_CERTIFICATE
-        self.keyfile = AWS_KEY
+        self.port = int(AWS_PORT)
+        self.root_ca = os.path.join(CERT_DIR,AWS_ROOT_CERT)
+        self.certfile = os.path.join(CERT_DIR,AWS_CERTIFICATE)
+        self.keyfile = os.path.join(CERT_DIR,AWS_KEY)
         self.client_id = AWS_CLIENT_ID
         self.topic = topic
         self.client = mqtt.Client(client_id=self.client_id)
@@ -58,11 +58,14 @@ class AWSIoTClient:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             logger.info("Connected to AWS IoT Core")
+            state_manager.update_aws_status(True)
         else:
             logger.error(f"Connection failed with code {rc}")
+            state_manager.update_aws_status(False)
 
     def on_disconnect(self, client, userdata, rc):
         logger.warning("Disconnected from AWS IoT Core")
+        state_manager.update_aws_status(False)
 
     def on_message(self, client, userdata, msg):
         logger.info(f"Received message on {msg.topic}: {msg.payload.decode()}")
@@ -85,35 +88,3 @@ class AWSIoTClient:
         message = json.dumps(payload)
         logger.debug(f"Publishing to {self.topic}: {message}")
         self.client.publish(self.topic, message, qos=1)
-
-
-if __name__ == "__main__":
-    
-    # Example configuration
-    iot_client = AWSIoTClient(
-        endpoint="a3f8example-ats.iot.us-east-1.amazonaws.com",
-        port=8883,
-        root_ca="certs/AmazonRootCA1.pem",
-        certfile="certs/certificate.pem.crt",
-        keyfile="certs/private.pem.key",
-        client_id="edge-server-01",
-        topic="microalgae/edge01/sensors"
-    )
-
-    iot_client.connect()
-
-    try:
-        while True:
-            data = {
-                "timestamp": int(time.time() * 1000),
-                "device_id": "edge-server-01",
-                "temperature": 26.3,
-                "ph": 7.2
-            }
-            iot_client.publish_sensor_data(data)
-            print("Published:", data)
-            time.sleep(5)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        iot_client.disconnect()
