@@ -25,3 +25,8 @@ wheels/
 *.egg
 MANIFEST
 env/
+**/certs/
+*.pem
+*.crt
+*.key
+venv/
