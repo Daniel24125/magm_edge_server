@@ -10,14 +10,18 @@ from shared.utils.logger import logger
 
 class MQTTClient:
     def __init__(self, config):
+        self.init_variables(config)
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=self.client_id, clean_session=False)
+        self.client.connect(self.broker, self.port, self.keepalive)
+        self.init_mqtt_client()
+
+    def init_variables(self, config): 
         self.broker = config.get("mqtt", {}).get("broker", "localhost")
         self.port = config.get("mqtt", {}).get("port", 1883)
         self.topic = config.get("mqtt", {}).get("topic_sensors", "edge/sensors")
         self.client_id = config.get("mqtt", {}).get("client_id", "sensor_client_01")
         self.keepalive = config.get("mqtt", {}).get("keepalive", 60)
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=self.client_id, clean_session=False)
-        self.client.connect(self.broker, self.port, self.keepalive)
-        self.init_mqtt_client()
+
 
     def init_mqtt_client(self):
         self.client.on_connect = self.on_connect
@@ -40,6 +44,7 @@ class MQTTClient:
     def publish_sensor_data(self, readings: dict):
         payload = {
             "timestamp": time.time(),
+            "source": "rpi",
             "data": {name: r.value if r else None for name, r in readings.items()}
         }
         message = json.dumps(payload)

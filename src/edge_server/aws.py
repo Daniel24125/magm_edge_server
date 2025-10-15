@@ -3,6 +3,7 @@ import json
 import threading
 import os 
 import sys
+import time
 from typing import Dict, Any
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
@@ -30,16 +31,20 @@ class AWSIoTClient(threading.Thread):
     def __init__(self, data_queue, topic: dict):
         super().__init__(daemon=True)
         self.data_queue = data_queue
+        self.topic = topic
+        self.init_variables()
+        self._configure_tls()
+        self._register_callbacks()
+        self.connect()
+
+    def init_variables(self):
         self.endpoint = AWS_ENDPOINT
         self.port = int(AWS_PORT)
         self.root_ca = os.path.join(CERT_DIR,AWS_ROOT_CERT)
         self.certfile = os.path.join(CERT_DIR,AWS_CERTIFICATE)
         self.keyfile = os.path.join(CERT_DIR,AWS_KEY)
         self.client_id = AWS_CLIENT_ID
-        self.topic = topic
         self.client = mqtt.Client(client_id=self.client_id)
-        self._configure_tls()
-        self._register_callbacks()
 
     def _configure_tls(self):
         """Configure TLS mutual authentication for AWS IoT"""
@@ -77,8 +82,7 @@ class AWSIoTClient(threading.Thread):
     def connect(self):
         logger.info(f"Connecting to AWS IoT at {self.endpoint}:{self.port}")
         self.client.connect(self.endpoint, self.port, keepalive=60)
-        # self.client.loop_start()
-        self.listen()
+        self.client.loop_start()
 
     def disconnect(self):
         logger.info("Disconnecting from AWS IoT Core")
@@ -91,16 +95,16 @@ class AWSIoTClient(threading.Thread):
         """
         message = json.dumps(payload)
         logger.debug(f"Publishing to {self.topic}: {message}")
-        self.client.publish(self.topic, message, qos=1)
+        self.client.publish(self.topic.get(payload.get("source")), message, qos=1)
 
-    def listen(self): 
+    def run(self): 
         logger.info("Listenning for sensor data...")
         while not stop_event.is_set():
             try:
                 # Wait for data from MQTT
                 data = self.data_queue.get(timeout=1)
-                logger.debug(type(data))
+                logger.info(f"Data received: {data}")
                 self.publish_sensor_data(data)
+                time.sleep(0.1)
             except Exception:
                 continue
-        print("TESTE")

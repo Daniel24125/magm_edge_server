@@ -37,14 +37,16 @@ class MqttSubscriber(threading.Thread):
     """
     def __init__(self, data_queue):
         super().__init__(daemon=True)
+        self.data_queue = data_queue
+        self.init_variables()
+
+    def init_variables(self):
         self.host = MQTT_HOST
         self.port = MQTT_PORT
         self.topic = TOPIC_TO_SUBSCRIBE
-        self.data_queue = data_queue
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
-        
         logger.info(f"MQTT Subscriber initialized for: {self.host}:{self.port}")
 
     def _on_connect(self, client, userdata, flags, rc, properties): 
@@ -73,7 +75,7 @@ class MqttSubscriber(threading.Thread):
         data = payload.get("data", {})
         for name, reading in data.items():
             print("-" * 50)
-            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING")
+            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING FROM {payload.get("source")}")
             print(f"  Topic: {msg.topic}")
             print(f"  Sensor: {name}")
             print(f"  Value: {reading}")
