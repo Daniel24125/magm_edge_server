@@ -1,11 +1,12 @@
 import ssl
 import json
-import time
+import threading
 import os 
 import sys
 from typing import Dict, Any
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
+from utils.thread_handler import stop_event
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env.local"))
 AWS_ENDPOINT = os.getenv('AWS_ENDPOINT')
@@ -25,8 +26,10 @@ from shared.utils.logger import logger
 from shared.utils.state_manager import StateManager
 state_manager = StateManager()
 
-class AWSIoTClient:
-    def __init__(self,  topic: dict):
+class AWSIoTClient(threading.Thread):
+    def __init__(self, data_queue, topic: dict):
+        super().__init__(daemon=True)
+        self.data_queue = data_queue
         self.endpoint = AWS_ENDPOINT
         self.port = int(AWS_PORT)
         self.root_ca = os.path.join(CERT_DIR,AWS_ROOT_CERT)
@@ -74,7 +77,8 @@ class AWSIoTClient:
     def connect(self):
         logger.info(f"Connecting to AWS IoT at {self.endpoint}:{self.port}")
         self.client.connect(self.endpoint, self.port, keepalive=60)
-        self.client.loop_start()
+        # self.client.loop_start()
+        self.listen()
 
     def disconnect(self):
         logger.info("Disconnecting from AWS IoT Core")
@@ -88,3 +92,15 @@ class AWSIoTClient:
         message = json.dumps(payload)
         logger.debug(f"Publishing to {self.topic}: {message}")
         self.client.publish(self.topic, message, qos=1)
+
+    def listen(self): 
+        logger.info("Listenning for sensor data...")
+        while not stop_event.is_set():
+            try:
+                # Wait for data from MQTT
+                data = self.data_queue.get(timeout=1)
+                logger.debug(type(data))
+                self.publish_sensor_data(data)
+            except Exception:
+                continue
+        print("TESTE")

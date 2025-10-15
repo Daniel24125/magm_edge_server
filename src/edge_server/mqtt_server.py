@@ -1,4 +1,6 @@
+import threading
 import json, sys, os, time
+from utils.thread_handler import stop_event
 
 # --- Configuration ---
 # Since this script is in src/, we need the sys.path fix to find config/
@@ -6,6 +8,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+from shared.utils.logger import logger
 try:
     from shared.utils.config_loader import load_config
 except ImportError as e:
@@ -28,60 +31,72 @@ except ImportError:
     sys.exit(1)
 
 
-class MqttSubscriber:
+class MqttSubscriber(threading.Thread):
     """
     Manages the connection to the MQTT broker and subscribes to all sensor topics.
     """
-    def __init__(self, host: str, port: int, topic: str):
-        self.host = host
-        self.port = port
-        self.topic = topic
-        
+    def __init__(self, data_queue):
+        super().__init__(daemon=True)
+        self.host = MQTT_HOST
+        self.port = MQTT_PORT
+        self.topic = TOPIC_TO_SUBSCRIBE
+        self.data_queue = data_queue
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
         
-        print(f"MQTT Subscriber initialized for: {host}:{port}")
+        logger.info(f"MQTT Subscriber initialized for: {self.host}:{self.port}")
 
     def _on_connect(self, client, userdata, flags, rc, properties): 
         """Callback function for when the client receives a CONNACK response from the server."""
         if rc == 0:
-            print(f"Successfully connected to MQTT broker. Subscribing to '{self.topic}'...")
+            logger.info(f"Successfully connected to MQTT broker. Subscribing to '{self.topic}'...")
             # Subscribe to the topic with QoS 1
             client.subscribe(self.topic, qos=1)
         else:
-            print(f"Connection failed with code {rc}. Please ensure your local broker is running.")
+            logger.error(f"Connection failed with code {rc}. Please ensure your local broker is running.")
             
     def _on_message(self, client, userdata, msg):
         """Callback function for when a PUBLISH message is received from the server."""
         try:
             payload = json.loads(msg.payload.decode())
-            data = payload.get("data", {})
-            # Format and print the received data
-            for name, reading in data.items():
-                print("-" * 50)
-                print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING")
-                print(f"  Topic: {msg.topic}")
-                print(f"  Sensor: {name}")
-                print(f"  Value: {reading}")
-                print("-" * 50)
+            self.data_queue.put(payload)
+            self.display_payload(payload, msg)
             
         except json.JSONDecodeError:
-            print(f"Error decoding JSON payload: {msg.payload.decode()}")
+            logger.error(f"Error decoding JSON payload: {msg.payload.decode()}")
         except Exception as e:
-            print(f"An error occurred while processing message: {e}")
+            logger.error(f"An error occurred while processing message: {e}")
+
+    def display_payload(self, payload, msg):
+        # Format and print the received data
+        data = payload.get("data", {})
+        for name, reading in data.items():
+            print("-" * 50)
+            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING")
+            print(f"  Topic: {msg.topic}")
+            print(f"  Sensor: {name}")
+            print(f"  Value: {reading}")
+            print("-" * 50)
 
     def run(self):
         """Starts the MQTT client loop."""
         try:
             self.client.connect(self.host, self.port, keepalive=60)
-            self.client.loop_forever()
+            self.client.loop_start()
+            while not stop_event.is_set():
+                time.sleep(1)
+            self.stop_process()
         except KeyboardInterrupt:
-            print("\nShutting down subscriber.")
-
+            logger.warning("\nShutting down subscriber.")
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
         finally:
-            print("Disconnecting server...")
+            logger.info("Disconnecting server...")
+            self.stop_process()
 
-            self.client.disconnect()
+    def stop_process(self): 
+        logger.info("MQTT thread stopping...")
+        self.client.loop_stop()
+        self.client.disconnect()
+        logger.info("MQTT disconnected cleanly.")
