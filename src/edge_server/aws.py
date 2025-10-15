@@ -16,6 +16,7 @@ AWS_KEY = os.getenv('AWS_KEY')
 AWS_ROOT_CERT = os.getenv('AWS_ROOT_CERT')
 AWS_PORT = os.getenv('AWS_PORT')
 AWS_CLIENT_ID = os.getenv('AWS_CLIENT_ID')
+AWS_PUBLISH_TOPIC = os.getenv('AWS_PUBLISH_TOPIC')
 
 FILE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CERT_DIR = os.path.join(FILE_ROOT, "certs")
@@ -28,10 +29,10 @@ from shared.utils.state_manager import StateManager
 state_manager = StateManager()
 
 class AWSIoTClient(threading.Thread):
-    def __init__(self, data_queue, topic: dict):
+    def __init__(self, data_queue):
         super().__init__(daemon=True)
         self.data_queue = data_queue
-        self.topic = topic
+        self.topic = json.loads(AWS_PUBLISH_TOPIC)
         self.init_variables()
         self._configure_tls()
         self._register_callbacks()

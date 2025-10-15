@@ -9,13 +9,8 @@ import sys, time
 
 def main():
     subscriber_thread = MqttSubscriber(t.data_queue)    
-    # subscriber_thread = threading.Thread(target=subscriber.run, daemon=True)
+    aws_publisher_thread = AWSIoTClient(data_queue=t.data_queue)
 
-    aws_publisher_thread = AWSIoTClient(
-        topic={"rpi":"microalgae/edge01/sensors"},
-        data_queue=t.data_queue
-    )
-    # aws_thread = threading.Thread(target=aws_publisher.connect, daemon=True)
     subscriber_thread.start()
     aws_publisher_thread.start()
 
