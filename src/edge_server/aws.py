@@ -17,7 +17,6 @@ AWS_ROOT_CERT = os.getenv('AWS_ROOT_CERT')
 AWS_PORT = os.getenv('AWS_PORT')
 AWS_CLIENT_ID = os.getenv('AWS_CLIENT_ID')
 AWS_PUBLISH_TOPIC = os.getenv('AWS_PUBLISH_TOPIC')
-
 FILE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CERT_DIR = os.path.join(FILE_ROOT, "certs")
 
