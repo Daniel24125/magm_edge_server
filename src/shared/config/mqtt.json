@@ -3,6 +3,8 @@
     "broker": "localhost",
     "port": 1883,
     "topic_spectra": "nir/spectra",
-    "topic_sensors": "edge/sensors"
+    "topic_sensors": "edge/sensors",
+    "client_id": "rpi_edge_server",
+    "keepalive": 60
   }
 }

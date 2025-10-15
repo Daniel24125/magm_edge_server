@@ -16,6 +16,7 @@ class MQTTClient:
         self.init_mqtt_client()
 
     def init_variables(self, config): 
+        print(config)
         self.broker = config.get("mqtt", {}).get("broker", "localhost")
         self.port = config.get("mqtt", {}).get("port", 1883)
         self.topic = config.get("mqtt", {}).get("topic_sensors", "edge/sensors")
@@ -45,6 +46,7 @@ class MQTTClient:
         payload = {
             "timestamp": time.time(),
             "source": "rpi",
+            "device_id": self.client_id,
             "data": {name: r.value if r else None for name, r in readings.items()}
         }
         message = json.dumps(payload)

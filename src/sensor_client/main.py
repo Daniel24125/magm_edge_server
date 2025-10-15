@@ -23,10 +23,11 @@ class SensorClient():
 
     def init_sensor_client(self): 
         self.manager = SensorManager(self.config)
-        self.mqtt = MQTTClient(self.config)
+        self.mqtt = MQTTClient(self.mqtt_config)
         
     def init_config(self): 
         self.config = load_config(os.path.join(PROJECT_ROOT, "src/sensor_client/config/sensors.json"))
+        self.mqtt_config = load_config(os.path.join(PROJECT_ROOT, "src/shared/config/mqtt.json"))
         if "sampling" not in self.config:
             raise ValueError("Missing 'sampling' configuration.")
         self.read_interval = self.config["sampling"].get("sensor_interval", 1)
