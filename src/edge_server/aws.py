@@ -104,6 +104,11 @@ class AWSIoTClient(threading.Thread):
                 # Wait for data from MQTT
                 data = self.data_queue.get(timeout=1)
                 logger.info(f"Data received: {data}")
+                send_data ={
+                    **data,
+                    "topic": self.topic.get(data.get("source")),
+                }
+
                 self.publish_sensor_data(data)
                 time.sleep(0.1)
             except Exception:

@@ -44,7 +44,6 @@ class MQTTClient:
 
     def publish_sensor_data(self, readings: dict):
         payload = {
-            "timestamp": time.time(),
             "source": "rpi",
             "device_id": self.client_id,
             "data": {name: r.value if r else None for name, r in readings.items()}
