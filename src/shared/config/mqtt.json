@@ -2,8 +2,7 @@
   "mqtt": {
     "broker": "localhost",
     "port": 1883,
-    "topic_spectra": "nir/spectra",
-    "topic_sensors": "edge/sensors",
+    "topic": "data_aquisition/sensor_data/#",
     "client_id": "rpi_edge_server",
     "keepalive": 60
   }

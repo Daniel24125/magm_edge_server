@@ -19,7 +19,7 @@ except ImportError as e:
 broker_config = load_config(os.path.join(PROJECT_ROOT, "shared/config/mqtt.json")).get("mqtt", {})
 MQTT_HOST = broker_config.get("broker") 
 MQTT_PORT = broker_config.get("port", 1883)
-TOPIC_TO_SUBSCRIBE = f"{broker_config.get('topic_sensors', "/#")}"
+TOPIC_TO_SUBSCRIBE = f"{broker_config.get('topic', "/#")}"
 
 
 # --- Dependency: paho-mqtt ---
@@ -62,7 +62,11 @@ class MqttSubscriber(threading.Thread):
         """Callback function for when a PUBLISH message is received from the server."""
         try:
             payload = json.loads(msg.payload.decode())
-            self.data_queue.put(payload)
+            data_to_send = {
+                **payload,
+                "topic": msg.topic
+            }
+            self.data_queue.put(data_to_send)
             self.display_payload(payload, msg)
             
         except json.JSONDecodeError:

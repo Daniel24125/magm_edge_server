@@ -16,10 +16,9 @@ class MQTTClient:
         self.init_mqtt_client()
 
     def init_variables(self, config): 
-        print(config)
         self.broker = config.get("mqtt", {}).get("broker", "localhost")
         self.port = config.get("mqtt", {}).get("port", 1883)
-        self.topic = config.get("mqtt", {}).get("topic_sensors", "edge/sensors")
+        self.topic = config.get("mqtt", {}).get("topic", "edge/sensors").replace("#", "rpi_data")
         self.client_id = config.get("mqtt", {}).get("client_id", "sensor_client_01")
         self.keepalive = config.get("mqtt", {}).get("keepalive", 60)
 
