@@ -67,7 +67,7 @@ class MqttSubscriber(threading.Thread):
                 "topic": msg.topic
             }
             self.data_queue.put(data_to_send)
-            self.display_payload(payload, msg)
+            # self.display_payload(payload, msg)
             
         except json.JSONDecodeError:
             logger.error(f"Error decoding JSON payload: {msg.payload.decode()}")

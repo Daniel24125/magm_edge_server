@@ -49,7 +49,7 @@ class SensorClient():
             while True:
                 all_readings = self.manager.read_all_sensors()
                 if self.time_elapsed % self.read_interval == 0:
-                    self.display_readings(all_readings)
+                    # self.display_readings(all_readings)
                     self.mqtt.publish_sensor_data(all_readings)
                 time.sleep(1)
                 self.time_elapsed += 1

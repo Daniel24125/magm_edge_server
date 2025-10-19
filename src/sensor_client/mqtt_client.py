@@ -51,6 +51,8 @@ class MQTTClient:
         result = self.client.publish(self.topic, message, qos=1)
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning(f"Failed to publish message: {mqtt.error_string(result.rc)}")
+        else: 
+            logger.info(f"Published sensor data to topic '{self.topic}': {message}")
 
     def stop(self):
         self.client.loop_stop()
