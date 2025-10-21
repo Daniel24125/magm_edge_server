@@ -2,61 +2,38 @@
   "device_config": {
     "device_id": "d09454f7-6a4a-44af-9e0d-eb0bea17e9de"
   },
+  "sampling": {
+    "sensor_interval": 5,
+    "spectra_interval": 60,
+    "retry_upload_interval": 300
+  },
   "sensors": [
     {
-      "name": "Tank-A-Temp",
       "type": "Temperature",
+      "name": "Temperature Sensor 1",
       "unit": "Celsius",
       "enabled": true,
+      "pin": 4,
+      "calibration_offset": 0.2,
       "simulator_params": {
-        "min_val": 22.0,
-        "max_val": 26.0,
-        "period_seconds": 3600,
-        "noise": 0.1
-      }
-    },
-    {
-      "name": "Tank-A-pH",
-      "type": "pH",
-      "unit": "pH",
-      "enabled": true,
-      "simulator_params": {
-        "min_val": 7.8,
-        "max_val": 8.2,
-        "period_seconds": 7200,
-        "noise": 0.05
-      }
-    },
-    {
-      "name": "Tank-A-IonicStrength",
-      "type": "IonicStrength",
-      "unit": "mS/cm",
-      "enabled": false,
-      "simulator_params": {
-        "min_val": 45.0,
-        "max_val": 55.0,
+        "min_val": 18.0,
+        "max_val": 35.0,
         "period_seconds": 86400,
         "noise": 0.5
       }
     },
     {
-      "name": "Room-A-LightIntensity",
-      "type": "LightIntensity",
-      "unit": "µmol/m²/s",
-      "enabled": false,
+      "type": "pH",
+      "name": "pH Sensor 1",
+      "unit": "",
+      "enabled": true,
+      "calibration_offset": 0.1,
       "simulator_params": {
-        "min_val": 50.0,
-        "max_val": 400.0,
+        "min_val": 6.0,
+        "max_val": 8.5,
         "period_seconds": 43200,
-        "noise": 10
+        "noise": 0.05
       }
-    },
-    {
-      "name": "Disabled-Sensor-Example",
-      "type": "Temperature",
-      "unit": "Celsius",
-      "enabled": false,
-      "simulator_params": {}
     }
   ]
 }

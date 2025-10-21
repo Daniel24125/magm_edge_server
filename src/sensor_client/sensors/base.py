@@ -51,8 +51,6 @@ class AbstractSensor(abc.ABC):
         """
         raise NotImplementedError
     
-  
-    
     def simulator_init(self, SimulatorClass):
         logger.warning(f"{self.name} sensor running in simulation mode.")
         params = self.config.get("simulator_params", {})

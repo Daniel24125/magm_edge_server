@@ -19,6 +19,15 @@ DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
 
 
 class SessionController(threading.Thread):
+    config = load_config(DEFAULT_CONFIG_PATH)
+    current_session = None
+    session_active = False
+    start_time = 0
+    online_devices = {}
+    session_lock = threading.Lock()
+    _stop_event = threading.Event()
+
+
     def __init__(self, mqtt_subscriber):
         super().__init__(daemon=True)
         self.mqtt = mqtt_subscriber
@@ -29,17 +38,6 @@ class SessionController(threading.Thread):
         self.in_queue = getattr(self.mqtt, "data_queue", None)
         if self.in_queue is None:
             raise RuntimeError("mqtt_subscriber does not expose data_queue; ensure it places messages into a shared queue")
-
-        self.config = load_config(DEFAULT_CONFIG_PATH)
-
-        self.current_session: Optional[str] = None
-        self.session_active = False
-        self.session_lock = threading.Lock()
-
-        self.online_devices: Dict[str, Dict[str, Any]] = {}      # device_id -> status payload
-        self.latest_device_data: Dict[str, Dict[str, Any]] = {} # device_id -> last payload
-
-        self._stop_event = threading.Event()
    
     def _save_config(self):
         save_config(DEFAULT_CONFIG_PATH, self.config)
@@ -56,19 +54,13 @@ class SessionController(threading.Thread):
                 logger.warning("Session already active")
                 return
             self.current_session = session_id or f"session_{uuid.uuid4()}"
-            self.session_active = False  
+            self.session_active = True  
 
-        logger.info(f"Starting session {self.current_session}")
-        # publish start command to devices
-        start_payload = {
-            "session_id": self.current_session,
-            "start_time": int(time.time() * 1000)
-        }
+        start_payload = {"session_id": self.current_session,"start_time": int(time.time() * 1000)}
         self.mqtt.client.publish("/controller/commands/start", json.dumps(start_payload), qos=1)
 
         sync_payload = {"session_id": self.current_session, "action": "SYNC_START", "start_time": int(time.time() * 1000)}
         self.mqtt.client.publish("/controller/commands/sync", json.dumps(sync_payload), qos=1)
-        self.session_active = True
         logger.info(f"Session {self.current_session} is now ACTIVE")
 
     def stop_session(self):
@@ -143,8 +135,15 @@ class SessionController(threading.Thread):
             logger.info(f"Device {device_id} is already registered")
             return 
         self.online_devices[device_id] = payload
+        self.mqtt.client.publish("/controller/status/session_config_updated", json.dumps(self.config), qos=1)
         logger.info(f"Device {device_id} registered - {self.online_devices}")
 
     def _handle_device_disconnect(self, device_id, payload): 
         self.online_devices.pop(device_id, None)
         logger.info(f"Device {device_id} unregistered - {self.online_devices}")
+
+    def _handle_device_status(self, device_id, payload): 
+        pass
+
+    def _handle_device_data(self, device_id, payload): 
+        pass

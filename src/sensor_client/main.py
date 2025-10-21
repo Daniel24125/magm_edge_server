@@ -1,6 +1,7 @@
-import sys, os, time
+import sys, os, time, json
 from sensors.manager import SensorManager
 from mqtt_client import MQTTClient
+from config.config_manager import ConfigManager
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -9,6 +10,8 @@ if PROJECT_ROOT not in sys.path:
 
 from shared.utils.config_loader import load_config
 from shared.utils.logger import logger
+
+config_manager = ConfigManager()
 
 class SensorClient(): 
     time_elapsed = 0
@@ -19,9 +22,9 @@ class SensorClient():
 
     def init_sensor_client(self): 
         self.manager = SensorManager(self.config)
-        self.mqtt = MQTTClient(self.mqtt_config)
+        self.mqtt = MQTTClient(self.mqtt_config, self)
         self.mqtt.connect()  
-        
+    
     def init_config(self): 
         self.config = load_config(os.path.join(PROJECT_ROOT, "src/sensor_client/config/sensors.json"))
         self.mqtt_config = load_config(os.path.join(PROJECT_ROOT, "src/shared/config/mqtt.json"))
@@ -36,7 +39,7 @@ class SensorClient():
         self.session_config = config
         self.read_interval = config["sampling"].get("sensor_interval", 1)
 
-        
+    
     def display_readings(self, readings):
         print("\n--- Sensor Readings ---")
         for sensor_name, reading in readings.items():
