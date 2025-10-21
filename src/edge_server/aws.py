@@ -96,19 +96,19 @@ class AWSIoTClient(threading.Thread):
         try: 
             message = json.dumps(payload)
             logger.info(f"Publishing to {payload.get("topic")}: {message}")
-            self.client.publish(payload.get("topic"), message, qos=1)
+            # self.client.publish(payload.get("topic"), message, qos=1)
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
 
 
     def run(self): 
         logger.info("Listenning for sensor data...")
-        while not stop_event.is_set():
-            try:
-                # Wait for data from MQTT
-                data = self.data_queue.get(timeout=1)
-                if "topic" in data: 
-                    self.publish_sensor_data(data)
-                time.sleep(0.1)
-            except Exception as err:
-                continue
+        # while not stop_event.is_set():
+        #     try:
+        #         # Wait for data from MQTT
+        #         data = self.data_queue.get(timeout=1)
+        #         if "topic" in data: 
+        #             self.publish_sensor_data(data)
+        #         time.sleep(0.1)
+        #     except Exception as err:
+        #         continue

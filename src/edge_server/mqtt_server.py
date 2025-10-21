@@ -19,7 +19,7 @@ except ImportError as e:
 broker_config = load_config(os.path.join(PROJECT_ROOT, "shared/config/mqtt.json")).get("mqtt", {})
 MQTT_HOST = broker_config.get("broker") 
 MQTT_PORT = broker_config.get("port", 1883)
-TOPIC_TO_SUBSCRIBE = f"{broker_config.get('topic', "/#")}"
+TOPICS_TO_SUBSCRIBE = broker_config.get('topics', "/#")
 
 
 # --- Dependency: paho-mqtt ---
@@ -43,7 +43,7 @@ class MqttSubscriber(threading.Thread):
     def init_variables(self):
         self.host = MQTT_HOST
         self.port = MQTT_PORT
-        self.topic = TOPIC_TO_SUBSCRIBE
+        self.topic = TOPICS_TO_SUBSCRIBE
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
@@ -52,15 +52,18 @@ class MqttSubscriber(threading.Thread):
     def _on_connect(self, client, userdata, flags, rc, properties): 
         """Callback function for when the client receives a CONNACK response from the server."""
         if rc == 0:
-            logger.info(f"Successfully connected to MQTT broker. Subscribing to '{self.topic}'...")
             # Subscribe to the topic with QoS 1
-            client.subscribe(self.topic, qos=1)
+            # client.subscribe(self.topic, qos=1)
+            for topic in TOPICS_TO_SUBSCRIBE: 
+                logger.info(f"Successfully connected to MQTT broker. Subscribing to '{topic}'...")
+                client.subscribe(topic, qos=1)
         else:
             logger.error(f"Connection failed with code {rc}. Please ensure your local broker is running.")
             
     def _on_message(self, client, userdata, msg):
         """Callback function for when a PUBLISH message is received from the server."""
         try:
+            logger.info(f"Received message in topic {msg.topic}")
             payload = json.loads(msg.payload.decode())
             data_to_send = {
                 **payload,

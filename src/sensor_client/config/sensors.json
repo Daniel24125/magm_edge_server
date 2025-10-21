@@ -1,8 +1,6 @@
 {
-  "sampling": {
-    "sensor_interval": 5,
-    "spectra_interval": 60,
-    "retry_upload_interval": 300
+  "device_config": {
+    "device_id": "d09454f7-6a4a-44af-9e0d-eb0bea17e9de"
   },
   "sensors": [
     {

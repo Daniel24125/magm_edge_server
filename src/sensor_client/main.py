@@ -1,8 +1,6 @@
-import sys, os, time, platform
+import sys, os, time
 from sensors.manager import SensorManager
 from mqtt_client import MQTTClient
-
-
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -11,8 +9,6 @@ if PROJECT_ROOT not in sys.path:
 
 from shared.utils.config_loader import load_config
 from shared.utils.logger import logger
-
-
 
 class SensorClient(): 
     time_elapsed = 0
@@ -24,14 +20,23 @@ class SensorClient():
     def init_sensor_client(self): 
         self.manager = SensorManager(self.config)
         self.mqtt = MQTTClient(self.mqtt_config)
+        self.mqtt.connect()  
         
     def init_config(self): 
         self.config = load_config(os.path.join(PROJECT_ROOT, "src/sensor_client/config/sensors.json"))
         self.mqtt_config = load_config(os.path.join(PROJECT_ROOT, "src/shared/config/mqtt.json"))
-        if "sampling" not in self.config:
-            raise ValueError("Missing 'sampling' configuration.")
-        self.read_interval = self.config["sampling"].get("sensor_interval", 1)
+        if "device_config" not in self.config:
+            raise ValueError("Missing 'device_config' configuration.")
+        self.refresh_session_config()
 
+    def refresh_session_config(self):
+        config = load_config(os.path.join(PROJECT_ROOT, "src/edge_server/config/session.json"))
+        if "sampling" not in config:
+            raise ValueError("Missing 'sampling' configuration.")
+        self.session_config = config
+        self.read_interval = config["sampling"].get("sensor_interval", 1)
+
+        
     def display_readings(self, readings):
         print("\n--- Sensor Readings ---")
         for sensor_name, reading in readings.items():
@@ -43,7 +48,7 @@ class SensorClient():
 
     def start_acquisition_loop(self):
         
-        print(f"\nStarting main loop. Reading sensors every {self.read_interval} seconds.")
+        print(f"\nStarting main loop. Reading sensors every {self.read_interval} seconds.\n")
         print("Press Ctrl+C to exit.")
         try:
             while True:
@@ -62,4 +67,4 @@ class SensorClient():
 
 if __name__ == "__main__": 
     sensor_client = SensorClient()
-    sensor_client.start_acquisition_loop()
+    # sensor_client.start_acquisition_loop()

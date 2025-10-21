@@ -1,0 +1,7 @@
+{
+  "sampling": {
+    "sensor_interval": 5,
+    "spectra_interval": 60,
+    "retry_upload_interval": 300
+  }
+}

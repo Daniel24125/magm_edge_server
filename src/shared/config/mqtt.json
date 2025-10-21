@@ -4,6 +4,15 @@
     "port": 1883,
     "topic": "data_aquisition/sensor_data/#",
     "client_id": "rpi_edge_server",
-    "keepalive": 60
+    "keepalive": 60, 
+    "topics": [
+      "/ui/commands/#",
+      "/controller/commands/#",
+      "/devices/+/register",
+      "/devices/+/unregister",
+      "/devices/+/status",
+      "/devices/+/data",
+      "/devices/+/config"
+    ]
   }
 }

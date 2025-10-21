@@ -1,18 +1,19 @@
 
 from mqtt_server import MqttSubscriber
 from aws import AWSIoTClient
+from edge_server.session_controller import SessionController
 import  utils.thread_handler as t
 import sys, time
 
 
-
-
 def main():
-    subscriber_thread = MqttSubscriber(t.data_queue)    
-    aws_publisher_thread = AWSIoTClient(data_queue=t.data_queue)
+    mqtt = MqttSubscriber(t.data_queue)    
+    # aws = AWSIoTClient(data_queue=t.data_queue)
+    session_controller = SessionController(mqtt)
 
-    subscriber_thread.start()
-    aws_publisher_thread.start()
+    mqtt.start()
+    # aws.start()
+    session_controller.start()
 
     try:
         # Main thread can monitor health or just sleep
@@ -22,15 +23,12 @@ def main():
         print("🧹 Cleaning up resources...")
 
         # Wait for threads to exit
-        subscriber_thread.join(timeout=5)
-        aws_publisher_thread.join(timeout=5)
+        mqtt.join(timeout=5)
+        session_controller.join(timeout=5)
+        # aws.join(timeout=5)
 
         print("✅ Edge Server shut down cleanly.")
         sys.exit(0)
-
-    # print("Edge server running. Press Ctrl+C to exit.")
-    # subscriber_thread.join()
-    # aws_thread.join()
 
 
 
