@@ -57,6 +57,8 @@ class MqttSubscriber(threading.Thread):
             for topic in TOPICS_TO_SUBSCRIBE: 
                 logger.info(f"Successfully connected to MQTT broker. Subscribing to '{topic}'...")
                 client.subscribe(topic, qos=1)
+            self.client.publish("/devices/registration_request", json.dumps({"msg": "Registration requested"}), qos=1)
+            
         else:
             logger.error(f"Connection failed with code {rc}. Please ensure your local broker is running.")
             

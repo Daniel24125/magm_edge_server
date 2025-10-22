@@ -12,6 +12,8 @@ config_manager = ConfigManager()
 
 
 class MQTTClient:
+
+
     def __init__(self, config, sensor_manager):
         self.sensor_manager = sensor_manager
         self.init_variables(config)
@@ -53,6 +55,7 @@ class MQTTClient:
         self.register_device()
         self.subscribe_to_topics()
 
+
     def on_message(self, client, userdata, msg): 
         try:
             payload = json.loads(msg.payload.decode())
@@ -71,17 +74,23 @@ class MQTTClient:
             self.start_session(payload)
         elif topic.startswith(f"/controller/session/"):
             self.parse_session_commands(topic, payload)
-
-    
+        elif topic.startswith("/devices"): 
+            self.parse_device_commands(topic, payload)
+  
     def parse_session_commands(self, topic, payload):
         if topic.endswith("/measurement"):
             all_readings = self.sensor_manager.read_all_sensors()
             self.publish_sensor_data(all_readings, session_id=payload.get("session_id", ""))
 
+    def parse_device_commands(self, topic, payload): 
+        if topic.endswith("registration_request"):
+            self.register_device()
+
     def subscribe_to_topics(self):
         self.client.subscribe("/controller/retry")
         self.client.subscribe("/controller/status/session_config_updated")
         self.client.subscribe("/controller/commands/#")
+        self.client.subscribe("/devices/registration_request")
 
     def start_session(self, payload: str):
         session_id = payload.get("session_id")
@@ -98,6 +107,7 @@ class MQTTClient:
             }
         }
         self.client.publish(self.device_registration_topic, json.dumps(payload), qos=1)
+        logger.info("Device registration sent")
 
     def unregister_device(self): 
         payload = {
@@ -141,7 +151,6 @@ class MQTTClient:
         else: 
             logger.info(f"Published sensor data to topic '{self.publish_measurement_topic}': {message}")
 
-    
     def stop(self):
         self.client.loop_stop()
         self.client.disconnect()

@@ -118,7 +118,6 @@ class SessionController(threading.Thread):
         logger.info(f"payload: {payload}")
         if not "device_id" in payload: 
             raise Exception("The device id must be provided")
-        
         device_id = payload.get("device_id")
         if topic.endswith("/status"):
             self._handle_device_status(device_id, payload)
@@ -137,7 +136,7 @@ class SessionController(threading.Thread):
             logger.info(f"Device {device_id} is already registered")
             return 
         self.online_devices[device_id] = payload
-        # self.mqtt.client.publish("/controller/status/session_config_updated", json.dumps(self.config), qos=1)
+        self.mqtt.client.publish("/devices/{device_id}/registration_confirmation", json.dumps({"msg": "Resgistration completed"}), qos=1)
         logger.info(f"Device {device_id} registered - {self.online_devices}")
 
     def _handle_device_disconnect(self, device_id, payload): 
