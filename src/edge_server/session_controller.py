@@ -136,7 +136,6 @@ class SessionController(threading.Thread):
             logger.info(f"Device {device_id} is already registered")
             return 
         self.online_devices[device_id] = payload
-        self.mqtt.client.publish("/devices/{device_id}/registration_confirmation", json.dumps({"msg": "Resgistration completed"}), qos=1)
         logger.info(f"Device {device_id} registered - {self.online_devices}")
 
     def _handle_device_disconnect(self, device_id, payload): 
