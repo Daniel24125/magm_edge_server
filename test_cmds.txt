@@ -1,0 +1,2 @@
+mosquitto_pub -h localhost -t "/ui/commands/start_session" -m '{\"session_id\": \"wsknwkepfg-wefgwefwef-wefwefwe-fwef\", \"start_time\": 1761058576538}'
+mosquitto_pub -h localhost -t "/ui/commands/stop_session" -m '{\"session_id\": \"wsknwkepfg-wefgwefwef-wefwefwe-fwef\", \"start_time\": 1761058576538}'
