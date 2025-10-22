@@ -37,7 +37,6 @@ class SensorManager:
         Parses the sensor configuration list and creates instances of sensors.
         """
         for sensor in self.config.get("sensors"):
-            print(sensor)
             if sensor.get("enabled"):
                 sensor_class = self.SENSOR_TYPE_MAP[sensor.get("type")]
                 self.sensors.append(

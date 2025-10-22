@@ -26,6 +26,7 @@ class SessionController(threading.Thread):
     online_devices = {}
     session_lock = threading.Lock()
     _stop_event = threading.Event()
+    time_elapsed = 0
 
 
     def __init__(self, mqtt_subscriber):
@@ -62,17 +63,23 @@ class SessionController(threading.Thread):
         sync_payload = {"session_id": self.current_session, "action": "SYNC_START", "start_time": int(time.time() * 1000)}
         self.mqtt.client.publish("/controller/commands/sync", json.dumps(sync_payload), qos=1)
         logger.info(f"Session {self.current_session} is now ACTIVE")
+               # 🚀 start acquisition in a dedicated thread
+        self.acquisition_thread = threading.Thread(target=self.start_acquisition_loop, daemon=True)
+        self.acquisition_thread.start()
 
     def stop_session(self):
         with self.session_lock:
             if not self.session_active:
                 logger.warning("No active session to stop")
                 return
-            stop_payload = {"session_id": self.current_session, "timestamp": int(time.time() * 1000)}
-            self.mqtt.client.publish("/controller/commands/stop", json.dumps(stop_payload), qos=1)
-            logger.info(f"Published stop for {self.current_session}")
             self.session_active = False
             self.current_session = None
+            self.time_elapsed = 0
+
+        # 🧹 Wait for the acquisition thread to finish gracefully
+        if hasattr(self, "acquisition_thread") and self.acquisition_thread.is_alive():
+            self.acquisition_thread.join(timeout=2)
+            logger.info("Acquisition thread stopped successfully.")
 
     # -------------------- Main loop --------------------
     def run(self):
@@ -82,36 +89,30 @@ class SessionController(threading.Thread):
                 msg = self.in_queue.get(timeout=0.5)
                 topic = msg.get("topic")
                 payload = msg.get("payload") or {}
-                # route messages
                 if topic.startswith("/devices/"):
                   self.parse_device_commands(payload, topic)
-                elif topic == "/ui/commands/configure_session":
-                    self._handle_config_update(payload)
-                elif topic == "/ui/commands/start_session":
-                    session_id = payload.get("session_id")
-                    self.start_session(session_id=session_id)
-                elif topic == "/ui/commands/stop_session":
-                    self.stop_session()
-                elif topic == "/ui/commands/start_session_confirm":
-                    # handled inline during start; can also be used externally
-                    pass
+                elif topic.startswith("/ui/"):
+                    self.parse_user_commands(payload, topic)
                 else:
-                    # other topics ignored for now
                     pass
-
-                # if session active, attempt aggregation when frequency elapses
-                if self.session_active:
-                    self._run_aggregation_cycle()
 
             except Empty:
-                # still run aggregation cycle periodically
-                if self.session_active:
-                    self._run_aggregation_cycle()
                 continue
             except Exception:
                 logger.exception("Error in main loop")
 
         logger.info("SessionController stopped")
+
+    def parse_user_commands(self, payload, topic): 
+        if topic == "/ui/commands/configure_session":
+            self._handle_config_update(payload)
+        elif topic == "/ui/commands/start_session":
+            session_id = payload.get("session_id")
+            self.start_session(session_id=session_id)
+        elif topic == "/ui/commands/stop_session":
+            self.stop_session()
+        elif topic == "/ui/commands/start_session_confirm":
+            pass
 
     def parse_device_commands(self, payload, topic): 
         logger.info(f"payload: {payload}")
@@ -122,6 +123,7 @@ class SessionController(threading.Thread):
         if topic.endswith("/status"):
             self._handle_device_status(device_id, payload)
         elif topic.endswith("/data"):
+            logger.info("Received data drom the device")
             self._handle_device_data(device_id, payload)
         elif topic.endswith("/register"):
             self._handle_device_registration(device_id, payload)
@@ -135,7 +137,7 @@ class SessionController(threading.Thread):
             logger.info(f"Device {device_id} is already registered")
             return 
         self.online_devices[device_id] = payload
-        self.mqtt.client.publish("/controller/status/session_config_updated", json.dumps(self.config), qos=1)
+        # self.mqtt.client.publish("/controller/status/session_config_updated", json.dumps(self.config), qos=1)
         logger.info(f"Device {device_id} registered - {self.online_devices}")
 
     def _handle_device_disconnect(self, device_id, payload): 
@@ -146,4 +148,22 @@ class SessionController(threading.Thread):
         pass
 
     def _handle_device_data(self, device_id, payload): 
-        pass
+        logger.info(f"Data received from device {device_id}: {payload}")
+
+    # -------------------- Session Management --------------------
+    def start_acquisition_loop(self):
+        try:
+            self.read_interval = self.config.get("sampling").get("sensor_interval")
+            logger.info(f"Data aquisition loop started. Sending data every {self.read_interval} s")
+            
+            while self.session_active:
+                if self.time_elapsed % self.read_interval == 0:
+                    self.mqtt.client.publish(f"/controller/session/{self.current_session}/measurement", json.dumps({
+                        "msg": "Get measurement"
+                    }), qos=1)
+                time.sleep(1)
+                self.time_elapsed += 1
+        except KeyboardInterrupt:
+            logger.warning("Stopping sensor acquisition...")
+        except Exception as e:
+            logger.error(f"Unexpected error in acquisition loop: {e}")

@@ -22,7 +22,7 @@ class SensorClient():
 
     def init_sensor_client(self): 
         self.manager = SensorManager(self.config)
-        self.mqtt = MQTTClient(self.mqtt_config, self)
+        self.mqtt = MQTTClient(self.mqtt_config, self.manager)
         self.mqtt.connect()  
     
     def init_config(self): 
@@ -49,25 +49,24 @@ class SensorClient():
             else:
                 logger.error(f"{sensor_name}: Failed to read sensor.")
 
-    def start_acquisition_loop(self):
+    # def start_acquisition_loop(self):
         
-        print(f"\nStarting main loop. Reading sensors every {self.read_interval} seconds.\n")
-        print("Press Ctrl+C to exit.")
-        try:
-            while True:
-                all_readings = self.manager.read_all_sensors()
-                if self.time_elapsed % self.read_interval == 0:
-                    # self.display_readings(all_readings)
-                    self.mqtt.publish_sensor_data(all_readings)
-                time.sleep(1)
-                self.time_elapsed += 1
-        except KeyboardInterrupt:
-            logger.warning("Stopping sensor acquisition...")
-        except Exception as e:
-            logger.error(f"Unexpected error in acquisition loop: {e}")
+    #     print(f"\nStarting main loop. Reading sensors every {self.read_interval} seconds.\n")
+    #     print("Press Ctrl+C to exit.")
+    #     try:
+    #         while True:
+    #             all_readings = self.manager.read_all_sensors()
+    #             if self.time_elapsed % self.read_interval == 0:
+    #                 # self.display_readings(all_readings)
+    #                 self.mqtt.publish_sensor_data(all_readings)
+    #             time.sleep(1)
+    #             self.time_elapsed += 1
+    #     except KeyboardInterrupt:
+    #         logger.warning("Stopping sensor acquisition...")
+    #     except Exception as e:
+    #         logger.error(f"Unexpected error in acquisition loop: {e}")
 
 
 
 if __name__ == "__main__": 
     sensor_client = SensorClient()
-    # sensor_client.start_acquisition_loop()
