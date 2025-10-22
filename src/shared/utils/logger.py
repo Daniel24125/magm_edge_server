@@ -15,7 +15,7 @@ logging.Logger.state = state
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
+    format="%(module)s %(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler(), logging.FileHandler("src/logs/system.log")]
 )
 logger = logging.getLogger(__name__)

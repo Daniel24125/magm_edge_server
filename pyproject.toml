@@ -1,31 +1,25 @@
 [project]
 name = "magm-edge-server"
 version = "0.1.0"
-description = "Edge server for microalgae IoT monitoring using Raspberry Pi"
+description = ""
 authors = [
-  { name="Daniel Madalena", email="daniel.madalena@ceb.uminho.pt" }
+    {name = "Daniel24125",email = "danielmadalena@msn.com"}
 ]
-requires-python = ">=3.9"
+readme = "README.md"
+requires-python = ">=3.13"
 dependencies = [
-  "paho-mqtt",
-  "boto3",
-  "sqlite-utils",
-  "apscheduler",
-  "pyyaml",
-  "requests",
-  "python-dotenv"
+    "paho-mqtt (>=2.1.0,<3.0.0)",
+    "boto3 (>=1.40.56,<2.0.0)",
+    "sqlite-utils (>=3.38,<4.0)",
+    "apscheduler (>=3.11.0,<4.0.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "python-dotenv (>=1.1.1,<2.0.0)",
+    "sqlalchemy (>=2.0.44,<3.0.0)",
+    "pydantic (>=2.12.3,<3.0.0)",
+    "typing-extensions (>=4.15.0,<5.0.0)"
 ]
 
-[tool.black]
-line-length = 88
-
-[tool.flake8]
-max-line-length = 88
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.poetry.scripts]
-edge-server = "edge_server.main:main"
-sensor-client = "sensor_client.main:main"
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

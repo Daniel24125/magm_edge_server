@@ -153,15 +153,18 @@ class SessionController(threading.Thread):
         try:
             self.read_interval = self.config.get("sampling").get("sensor_interval")
             logger.info(f"Data aquisition loop started. Sending data every {self.read_interval} s")
-            
+            self.request_measurements()
             while self.session_active:
                 if self.time_elapsed % self.read_interval == 0:
-                    self.mqtt.client.publish(f"/controller/session/{self.current_session}/measurement", json.dumps({
-                        "msg": "Get measurement"
-                    }), qos=1)
-                time.sleep(1)
+                    self.request_measurements()
+                self._stop_event.wait(1)
                 self.time_elapsed += 1
         except KeyboardInterrupt:
             logger.warning("Stopping sensor acquisition...")
         except Exception as e:
             logger.error(f"Unexpected error in acquisition loop: {e}")
+
+    def request_measurements(self):
+        self.mqtt.client.publish(f"/controller/session/{self.current_session}/measurement", json.dumps({
+            "msg": "Get measurement"
+        }), qos=1)
