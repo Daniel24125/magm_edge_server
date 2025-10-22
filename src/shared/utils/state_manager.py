@@ -44,16 +44,16 @@ class StateManager:
 
     def update_mqtt_status(self, status: bool):
         self.mqtt_connected = status
-        logger.state(f"MQTT Connected: {status}")
+        logger.info(f"MQTT Connected: {status}")
 
     def update_aws_status(self, status: bool):
         self.aws_connected = status
         self.offline_mode = not status
-        logger.state(f"Connected: {status}")
+        logger.info(f"Connected: {status}")
 
     def update_simulation_mode(self, mode: bool):
         self.simulation_mode = mode
-        logger.state(f"Simulation Mode: {mode}")
+        logger.info(f"Simulation Mode: {mode}")
 
     def record_error(self):
         self.error_count += 1
@@ -61,4 +61,4 @@ class StateManager:
 
     def update_sync(self):
         self.last_sync = datetime.now()
-        logger.state(f"Last sync: {self.last_sync}")
+        logger.info(f"Last sync: {self.last_sync}")

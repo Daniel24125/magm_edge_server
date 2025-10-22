@@ -1,21 +1,64 @@
 import logging
+import os
+from logging.handlers import RotatingFileHandler
 
 
-# Define a new log level between INFO (20) and WARNING (30)
-STATE_LEVEL_NUM = 25
-logging.addLevelName(STATE_LEVEL_NUM, "STATE")
+# Base log directory (placed at project root)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
 
-def state(self, message, *args, **kwargs):
-    """Custom log method for system state changes."""
-    if self.isEnabledFor(STATE_LEVEL_NUM):
-        self._log(STATE_LEVEL_NUM, message, args, **kwargs)
+# File path for warnings and errors
+LOG_FILE_PATH = os.path.join(LOG_DIR, "system_warnings.log")
 
-# Add the new method to the Logger class
-logging.Logger.state = state
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(module)s %(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("src/logs/system.log")]
+# ----------------------------
+# HANDLERS
+# ----------------------------
+
+# Console handler — INFO and above
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter(
+    "%(module)s %(asctime)s [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S"
 )
-logger = logging.getLogger(__name__)
+console_handler.setFormatter(console_formatter)
+
+# File handler — only WARNING and above
+file_handler = RotatingFileHandler(
+    LOG_FILE_PATH,
+    maxBytes=5_000_000,  # 5 MB per file
+    backupCount=5        # Keep last 5 log files
+)
+file_handler.setLevel(logging.WARNING)
+file_formatter = logging.Formatter(
+    "%(module)s %(asctime)s [%(levelname)s] %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+)
+file_handler.setFormatter(file_formatter)
+
+# ----------------------------
+# ROOT LOGGER
+# ----------------------------
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+root_logger.addHandler(console_handler)
+root_logger.addHandler(file_handler)
+
+
+# ----------------------------
+# HELPER FUNCTION
+# ----------------------------
+def get_logger(name: str = None) -> logging.Logger:
+    """
+    Returns a module-specific logger that inherits the global configuration.
+    Usage:
+        from shared.utils.logger import get_logger
+        logger = get_logger(__name__)
+    """
+    return logging.getLogger(name)
+
+
+# ----------------------------
+# DEFAULT LOGGER (OPTIONAL)
+# ----------------------------
+logger = get_logger(__name__)
