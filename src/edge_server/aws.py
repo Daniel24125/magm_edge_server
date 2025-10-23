@@ -92,23 +92,25 @@ class AWSIoTClient(threading.Thread):
     def publish_sensor_data(self, payload: Dict[str, Any]):
         """
         Publish sensor or aggregated data to IoT Core.
+        payload: {
+            'source': str, 
+            'device_id': str, 
+            'session_id': str, 
+            'data': {
+                'sensor_name': float
+            },
+            'timestamp': str or int
+        }
         """
         try: 
             message = json.dumps(payload)
-            logger.info(f"Publishing to {payload.get("topic")}: {message}")
-            # self.client.publish(payload.get("topic"), message, qos=1)
+            source = payload.get("source", "")
+            topic = json.loads(AWS_PUBLISH_TOPIC).get(source)
+            logger.info(f"Publishing to {topic}: {message}")
+            self.client.publish(topic, message, qos=1)
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
 
 
     def run(self): 
         logger.info("Listenning for sensor data...")
-        # while not stop_event.is_set():
-        #     try:
-        #         # Wait for data from MQTT
-        #         data = self.data_queue.get(timeout=1)
-        #         if "topic" in data: 
-        #             self.publish_sensor_data(data)
-        #         time.sleep(0.1)
-        #     except Exception as err:
-        #         continue

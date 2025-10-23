@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import json,  sys, os
 from config.config_manager import ConfigManager
+import time 
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -142,7 +143,7 @@ class MQTTClient:
         }
         message = json.dumps({
             "payload": payload, 
-            "topic": self.publish_measurement_topic
+            "topic": self.publish_measurement_topic,
         })
 
         result = self.client.publish(self.publish_measurement_topic, message, qos=1)

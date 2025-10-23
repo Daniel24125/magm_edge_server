@@ -29,9 +29,10 @@ class SessionController(threading.Thread):
     time_elapsed = 0
 
 
-    def __init__(self, mqtt_subscriber):
+    def __init__(self, mqtt_subscriber, aws):
         super().__init__(daemon=True)
         self.mqtt = mqtt_subscriber
+        self.aws = aws
         self.init_variables()
         
     # -------------------- Initialization --------------------
@@ -147,7 +148,7 @@ class SessionController(threading.Thread):
 
     def _handle_device_data(self, device_id, payload): 
         logger.info(f"Data received from device {device_id}: {payload}")
-
+        self.aws.publish_sensor_data(payload)
     # -------------------- Session Management --------------------
     def start_acquisition_loop(self):
         try:
@@ -166,5 +167,5 @@ class SessionController(threading.Thread):
 
     def request_measurements(self):
         self.mqtt.client.publish(f"/controller/session/{self.current_session}/measurement", json.dumps({
-            "msg": "Get measurement"
+            "session_id": self.current_session
         }), qos=1)
