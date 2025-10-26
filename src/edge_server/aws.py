@@ -86,12 +86,7 @@ class AWSIoTClient(threading.Thread):
             logger.info("Forwarded AWS message to data_queue for SessionController.")
         else:
             self.parse_user_commands(payload, topic)
-        # if topic.startswith("ui/"):
-        #     if not hasattr(self, 'parse_user_commands'):
-        #         raise RuntimeError("No command callback registered. Please register a callback using register_command_callback().")
-        #     logger.info("Parsing user command from AWS IoT...")
-        #     self.parse_user_commands(payload, topic)
-
+        
     # --- Main API ---
     def connect(self):
         logger.info(f"Connecting to AWS IoT at {self.endpoint}:{self.port}")
