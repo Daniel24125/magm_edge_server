@@ -7,8 +7,7 @@ import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 const AWS_REGION = "eu-west-3";
 const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
 const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com"; 
-const COMMAND_TOPIC = "devices/commands";
-const RESPONSE_TOPIC = "devices/responses"; // optional device → web feedback
+const COMMAND_TOPIC = "ui/commands";
 const DATA_TOPIC = "data_aquisition/sensor_data/rpi_data";
 
 export default function Page() {
@@ -62,13 +61,11 @@ export default function Page() {
         connection.on("message", (topic, payload) => {
           const msg = JSON.parse(new TextDecoder().decode(payload));
           if (topic === DATA_TOPIC) setMessages((prev) => [msg, ...prev]);
-          else if (topic === RESPONSE_TOPIC) setResponses((prev) => [msg, ...prev]);
         });
 
         // 4️⃣ Connect & subscribe
         await connection.connect();
         await connection.subscribe(DATA_TOPIC, mqtt.QoS.AtLeastOnce);
-        await connection.subscribe(RESPONSE_TOPIC, mqtt.QoS.AtLeastOnce);
         setConnection(connection);
 
       } catch (err) {
@@ -94,18 +91,18 @@ export default function Page() {
       alert("Not connected to AWS IoT yet");
       return;
     }
-
+    const topic = `${COMMAND_TOPIC}/${action}`;
     const payload = {
       action,
+      topic,
       parameters,
       timestamp: new Date().toISOString(),
     };
 
-    const json = JSON.stringify(payload);
-    connection.publish(COMMAND_TOPIC, json, mqtt.QoS.AtLeastOnce);
-    console.log("📤 Sent command:", json);
+    const json_payload = JSON.stringify(payload);
+    connection.publish(topic, json_payload, mqtt.QoS.AtLeastOnce);
+    console.log("📤 Sent command to:", topic);
   };
-
 
   return (
     <main className="p-6 space-y-6">
@@ -123,13 +120,13 @@ export default function Page() {
       {/* Command Buttons */}
       <div className="flex gap-4 mt-4">
         <button
-          onClick={() => sendCommand("start_measurement")}
+          onClick={() => sendCommand("start_session")}
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
           ▶ Start Measurement
         </button>
         <button
-          onClick={() => sendCommand("shutdown")}
+          onClick={() => sendCommand("stop_session")}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           ⏹ Shutdown
