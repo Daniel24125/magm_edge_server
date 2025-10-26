@@ -9,6 +9,7 @@ import sys, time
 def main():
     mqtt = MqttSubscriber(t.data_queue)    
     aws = AWSIoTClient(data_queue=t.data_queue)
+    
     session_controller = SessionController(mqtt, aws)
 
     mqtt.start()

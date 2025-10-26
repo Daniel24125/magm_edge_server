@@ -3,11 +3,11 @@ import json
 import threading
 import os 
 import sys
-import time
-from typing import Dict, Any
+from typing import Dict, Any, Callable
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 from utils.thread_handler import stop_event
+from queue import Queue
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env.local"))
 AWS_ENDPOINT = os.getenv('AWS_ENDPOINT')
@@ -19,6 +19,7 @@ AWS_CLIENT_ID = os.getenv('AWS_CLIENT_ID')
 AWS_PUBLISH_TOPIC = os.getenv('AWS_PUBLISH_TOPIC')
 FILE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CERT_DIR = os.path.join(FILE_ROOT, "certs")
+
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
@@ -67,16 +68,29 @@ class AWSIoTClient(threading.Thread):
         if rc == 0:
             logger.info("Connected to AWS IoT Core")
             state_manager.update_aws_status(True)
+            self.client.subscribe("ui/commands/#", qos=1)
         else:
             logger.error(f"Connection failed with code {rc}")
             state_manager.update_aws_status(False)
 
     def on_disconnect(self, client, userdata, rc):
-        logger.warning("Disconnected from AWS IoT Core")
+        logger.warning(f"Disconnected from AWS IoT Core: {rc}")
         state_manager.update_aws_status(False)
 
     def on_message(self, client, userdata, msg):
-        logger.info(f"Received message on {msg.topic}: {msg.payload.decode()}")
+        topic = msg.topic
+        payload = msg.payload.decode()
+        logger.info(f"Received message from AWS on {topic}: {payload}")
+        if hasattr(self, "data_queue") and isinstance(self.data_queue, Queue):
+            self.data_queue.put({"topic": topic, "payload": json.loads(payload)})
+            logger.info("Forwarded AWS message to data_queue for SessionController.")
+        else:
+            self.parse_user_commands(payload, topic)
+        # if topic.startswith("ui/"):
+        #     if not hasattr(self, 'parse_user_commands'):
+        #         raise RuntimeError("No command callback registered. Please register a callback using register_command_callback().")
+        #     logger.info("Parsing user command from AWS IoT...")
+        #     self.parse_user_commands(payload, topic)
 
     # --- Main API ---
     def connect(self):
@@ -98,8 +112,7 @@ class AWSIoTClient(threading.Thread):
             'session_id': str, 
             'data': {
                 'sensor_name': float
-            },
-            'timestamp': str or int
+            }
         }
         """
         try: 
@@ -110,7 +123,6 @@ class AWSIoTClient(threading.Thread):
             self.client.publish(topic, message, qos=1)
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
-
 
     def run(self): 
         logger.info("Listenning for sensor data...")

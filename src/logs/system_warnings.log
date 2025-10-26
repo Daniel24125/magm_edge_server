@@ -26,3 +26,32 @@ aws 2025-10-23 17:37:48 [WARNING] shared.utils.logger: Disconnected from AWS IoT
 base 2025-10-25 23:32:03 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
 base 2025-10-25 23:32:03 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
 mqtt_client 2025-10-26 01:47:58 [ERROR] shared.utils.logger: The connection failed: MQTTClient.on_disconnect() takes 4 positional arguments but 6 were given
+base 2025-10-26 12:52:30 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-26 12:52:30 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-26 14:27:55 [ERROR] shared.utils.logger: The connection failed: MQTTClient.on_disconnect() takes 4 positional arguments but 6 were given
+base 2025-10-26 14:28:19 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-26 14:28:19 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+aws 2025-10-26 14:36:41 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core
+aws 2025-10-26 14:36:42 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core
+aws 2025-10-26 14:36:44 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core
+aws 2025-10-26 14:36:48 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core
+aws 2025-10-26 14:36:57 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core
+aws 2025-10-26 14:37:13 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core
+aws 2025-10-26 14:37:51 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: {rc}
+aws 2025-10-26 14:37:52 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: {rc}
+aws 2025-10-26 14:37:54 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: {rc}
+aws 2025-10-26 14:37:59 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: {rc}
+aws 2025-10-26 14:38:01 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: 7
+aws 2025-10-26 14:38:02 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: 7
+aws 2025-10-26 14:38:04 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: 7
+aws 2025-10-26 14:38:09 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: 7
+mqtt_client 2025-10-26 15:02:19 [ERROR] shared.utils.logger: The connection failed: MQTTClient.on_disconnect() takes 4 positional arguments but 6 were given
+aws 2025-10-26 15:02:20 [WARNING] shared.utils.logger: Disconnected from AWS IoT Core: 7
+base 2025-10-26 15:13:58 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-26 15:13:58 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-26 15:17:25 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-10-26 15:18:42 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-26 15:18:42 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-26 15:18:49 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-10-26 15:18:50 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-26 15:18:50 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.

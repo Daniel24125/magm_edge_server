@@ -52,8 +52,6 @@ class MqttSubscriber(threading.Thread):
     def _on_connect(self, client, userdata, flags, rc, properties): 
         """Callback function for when the client receives a CONNACK response from the server."""
         if rc == 0:
-            # Subscribe to the topic with QoS 1
-            # client.subscribe(self.topic, qos=1)
             for topic in TOPICS_TO_SUBSCRIBE: 
                 logger.info(f"Successfully connected to MQTT broker. Subscribing to '{topic}'...")
                 client.subscribe(topic, qos=1)
