@@ -81,7 +81,7 @@ class MqttSubscriber(threading.Thread):
         data = payload.get("data", {})
         for name, reading in data.items():
             print("-" * 50)
-            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING FROM {payload.get("source")}")
+            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING FROM {payload.get('source')}")
             print(f"  Topic: {msg.topic}")
             print(f"  Sensor: {name}")
             print(f"  Value: {reading}")
