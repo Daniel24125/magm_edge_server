@@ -10,15 +10,19 @@ if project_root not in sys.path:
 from shared.models.sensor_reading import SensorReading
 from shared.utils.logger import logger
 from shared.utils.state_manager import StateManager
+from shared.utils.config_loader import save_config
+
 state_manager = StateManager()
 state_manager.update_simulation_mode(platform.system() == "Windows")
  
 try: 
-    import RPi.GPIO as GPIO
-except ImportError:
+    import lgpio
+    chip = lgpio.gpiochip_open(0)
+except ModuleNotFoundError:
     print("GPIO module not found. Simulation mode activated!")
-    from utils.RPi_sim import MockGPIO as GPIO
-
+    from utils.RPi_sim import MockLGPIO
+    lgpio = MockLGPIO()
+    chip = lgpio.gpiochip_open(0)
 
 # --- Abstract Base Class for Sensors ---
 

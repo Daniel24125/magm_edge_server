@@ -1,6 +1,6 @@
 # mock_lgpio.py
 
-class MockGPIO:
+class MockLGPIO:
     # Constants
     # GPIO modes
     INPUT = 0

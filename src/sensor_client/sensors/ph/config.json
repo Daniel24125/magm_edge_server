@@ -1,4 +1,6 @@
 {
+    "acidic": 10,
+    "alkaline": 9,
     "acidic_value": 3689.6,
     "alkaline_value": 14253.6,
     "probe": 3

@@ -66,3 +66,6 @@ mqtt_client 2025-10-29 13:57:25 [ERROR] shared.utils.logger: The connection was 
 base 2025-10-29 13:58:28 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
 base 2025-10-29 13:58:28 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
 mqtt_client 2025-10-29 13:59:34 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-10-29 14:45:32 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-29 14:45:32 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-29 14:45:36 [ERROR] shared.utils.logger: The connection was interruped by the user

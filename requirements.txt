@@ -38,3 +38,4 @@ adafruit-circuitpython-requests==4.1.10
 adafruit-circuitpython-typing==1.11.2
 adafruit-platformdetect==3.77.0
 adafruit-pureio==1.1.11
+lgpio==0.2.2.0

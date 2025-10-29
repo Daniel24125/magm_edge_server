@@ -1,5 +1,5 @@
 import time
-from .base import AbstractSensor, SensorReading, state_manager, GPIO
+from .base import AbstractSensor, SensorReading, state_manager, lgpio
 
 SIMULATION_MODE = state_manager.simulation_mode
 
@@ -16,7 +16,7 @@ class TemperatureSensor(AbstractSensor):
             self.gpio_init()
 
     def gpio_init(self):
-        GPIO.setup(self.pin, GPIO.IN)
+        lgpio.setup(self.pin, lgpio.IN)
 
     def read(self) -> SensorReading:
         if SIMULATION_MODE and self.simulated_sensor:

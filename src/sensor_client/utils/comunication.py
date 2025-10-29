@@ -12,6 +12,8 @@ try:
     port_map = [ADS.P0, ADS.P1, ADS.P2, ADS.P3]
 except ImportError as err: 
     print("Error trying to import I2C libraries: ", err)
+except NotImplementedError as err: 
+    print("Error trying to import board: ", err)
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
@@ -35,12 +37,15 @@ class AnalogCommunication:
     converted_read=False
     ready = True
 
-    def __init__(self, calibration_config_path):
-        self.sensor_config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/sensors", calibration_config_path))
+    def __init__(self, sensor_config):
+        self.sensor_config = sensor_config
 
     def get_regression_params(self):
         try:
-            x = np.array([self.sensor_config.get("acidic_value"), self.sensor_config.get("alkaline_value")]).astype(np.float64)
+            x = np.array([
+                self.sensor_config.get("calibration").get("acidic_value"),
+                self.sensor_config.get("calibration").get("alkaline_value")
+            ]).astype(np.float64)
             y = np.array([4,7]).astype(np.float64)
             cal = stats.linregress(x,y)
             return (cal.slope, cal.intercept)
@@ -59,7 +64,7 @@ class AnalogCommunication:
         for i in range(NUM_MEAS_FOR_AVG):
 
             try:
-                probe = self.sensor_config.get(probe)
+                probe = self.sensor_config.get("probe")
                 an_read = AnalogIn(ads, port_map[probe]).value
                 analog_values[i] = an_read
             except Exception as err:
