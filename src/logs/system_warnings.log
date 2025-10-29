@@ -60,3 +60,9 @@ aws 2025-10-26 16:35:39 [WARNING] shared.utils.logger: Disconnected from AWS IoT
 base 2025-10-26 16:36:56 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
 base 2025-10-26 16:36:56 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
 mqtt_server 2025-10-29 13:09:08 [ERROR] shared.utils.logger: An error occurred: timed out
+base 2025-10-29 13:51:33 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-29 13:51:33 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-29 13:57:25 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-10-29 13:58:28 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-29 13:58:28 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-29 13:59:34 [ERROR] shared.utils.logger: The connection was interruped by the user
