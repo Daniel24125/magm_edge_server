@@ -2,7 +2,8 @@ import time
 import os
 from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, logger, save_config, project_root
 from utils.comunication import AnalogCommunication
-
+import json
+import numpy as np
 SIMULATION_MODE = state_manager.simulation_mode
 if SIMULATION_MODE:
     from ..simulators import SimulatedPHSensor 
@@ -100,3 +101,78 @@ class PHSensor(AbstractSensor):
         else:
             return  # pH is at target, no adjustment needed
         return (pump, pump_pin)
+
+
+
+class PHCalibrator:
+    """
+    pH sensor calibration and temperature-compensated measurement handler.
+    """
+
+    def __init__(self, calibration_file="ph_calibration.json", calibration_temp=25.0):
+        self.calibration_file = calibration_file
+        self.slope = None
+        self.intercept = None
+        self.calibration_temp = calibration_temp  # °C
+        self.load_calibration()
+
+    # ---------- Calibration Logic ----------
+    def calibrate(self, known_ph_values, measured_values, calibration_temp=None):
+        """
+        Calibrate the sensor with known pH buffer values and measured voltages.
+
+        Parameters:
+        - known_ph_values: list of known buffer pH values (e.g., [4.0, 7.0, 10.0])
+        - measured_values: list of measured voltages or ADC values (e.g., [2.52, 1.77, 1.05])
+        - calibration_temp: temperature at which calibration was performed (°C)
+        """
+        if len(known_ph_values) != len(measured_values):
+            raise ValueError("known_ph_values and measured_values must have the same length")
+
+        self.calibration_temp = calibration_temp or self.calibration_temp
+        coeffs = np.polyfit(known_ph_values, measured_values, 1)
+        self.slope, self.intercept = coeffs
+        self.save_calibration()
+        logger.info(f"✅ Calibration complete: slope={self.slope:.4f}, intercept={self.intercept:.4f} at {self.calibration_temp}°C")
+
+    # ---------- Conversion Logic ----------
+    def ph_from_reading(self, reading, temp_c=None):
+        """
+        Convert a sensor voltage/ADC reading to pH, compensating for temperature.
+
+        Parameters:
+        - reading: measured voltage (V) or ADC unit
+        - temp_c: current solution temperature (°C)
+        """
+        if self.slope is None or self.intercept is None:
+            raise RuntimeError("Sensor not calibrated yet.")
+
+        # Temperature-compensated slope
+        slope_corr = self.slope * self._nernst_factor(temp_c or self.calibration_temp)
+        return (reading - self.intercept) / slope_corr
+
+    def _nernst_factor(self, temp_c):
+        """
+        Compute relative Nernst slope correction factor for given temperature.
+        """
+        return (273.15 + temp_c) / (273.15 + self.calibration_temp)
+
+    # ---------- Persistence ----------
+    def save_calibration(self):
+        data = {
+            "slope": self.slope,
+            "intercept": self.intercept,
+            "calibration_temp": self.calibration_temp
+        }
+        with open(self.calibration_file, "w") as f:
+            json.dump(data, f, indent=2)
+
+    def load_calibration(self):
+        try:
+            with open(self.calibration_file, "r") as f:
+                data = json.load(f)
+                self.slope = data["slope"]
+                self.intercept = data["intercept"]
+                self.calibration_temp = data.get("calibration_temp", 25.0)
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
