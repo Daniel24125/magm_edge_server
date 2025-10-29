@@ -146,7 +146,7 @@ class SessionController(threading.Thread):
 
     def _handle_device_data(self, device_id, payload): 
         logger.info(f"Data received from device {device_id}: {payload}")
-        self.aws.publish_sensor_data(payload)
+        # self.aws.publish_sensor_data(payload)
 
     # -------------------- Session Management --------------------
     def start_acquisition_loop(self):
