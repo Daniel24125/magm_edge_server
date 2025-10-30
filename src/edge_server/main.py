@@ -8,12 +8,12 @@ import sys, time
 
 def main():
     mqtt = MqttSubscriber(t.data_queue)    
-    # aws = AWSIoTClient(data_queue=t.data_queue)
-    aws = ""
+    aws = AWSIoTClient(data_queue=t.data_queue)
+    # aws = ""
     session_controller = SessionController(mqtt, aws)
 
     mqtt.start()
-    # aws.start()
+    aws.start()
     session_controller.start()
 
     try:
@@ -26,7 +26,7 @@ def main():
         # Wait for threads to exit
         mqtt.join(timeout=5)
         session_controller.join(timeout=5)
-        # aws.join(timeout=5)
+        aws.join(timeout=5)
 
         print("✅ Edge Server shut down cleanly.")
         sys.exit(0)

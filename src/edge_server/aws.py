@@ -3,11 +3,14 @@ import json
 import threading
 import os 
 import sys
-from typing import Dict, Any, Callable
+from typing import Dict, Any
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 from utils.thread_handler import stop_event
 from queue import Queue
+import boto3
+from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env.local"))
 AWS_ENDPOINT = os.getenv('AWS_ENDPOINT')
@@ -17,6 +20,10 @@ AWS_ROOT_CERT = os.getenv('AWS_ROOT_CERT')
 AWS_PORT = os.getenv('AWS_PORT')
 AWS_CLIENT_ID = os.getenv('AWS_CLIENT_ID')
 AWS_PUBLISH_TOPIC = os.getenv('AWS_PUBLISH_TOPIC')
+AWS_USER_ACCESS_KEY = os.getenv('AWS_USER_ACCESS_KEY')
+AWS_USER_SECRET_KEY = os.getenv('AWS_USER_SECRET_KEY')
+AWS_EDGE_SERVER_ROLE = os.getenv('AWS_EDGE_SERVER_ROLE')
+
 FILE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CERT_DIR = os.path.join(FILE_ROOT, "certs")
 
@@ -34,9 +41,10 @@ class AWSIoTClient(threading.Thread):
         self.data_queue = data_queue
         self.topic = json.loads(AWS_PUBLISH_TOPIC)
         self.init_variables()
-        self._configure_tls()
-        self._register_callbacks()
-        self.connect()
+        self.conenct_via_websocket()
+        # self._configure_tls()
+        # self._register_callbacks()
+        # self.connect()
 
     def init_variables(self):
         self.endpoint = AWS_ENDPOINT
@@ -46,6 +54,33 @@ class AWSIoTClient(threading.Thread):
         self.keyfile = os.path.join(CERT_DIR,AWS_KEY)
         self.client_id = AWS_CLIENT_ID
         self.client = mqtt.Client(client_id=self.client_id)
+
+    def conenct_via_websocket(self):
+        # Step 1: Assume the IAM role to get temporary credentials
+        sts = boto3.client("sts",
+            aws_access_key_id=AWS_USER_ACCESS_KEY,
+            aws_secret_access_key=AWS_USER_SECRET_KEY,
+            region_name="eu-west-3"
+        )
+        
+        resp = sts.assume_role(
+            RoleArn=AWS_EDGE_SERVER_ROLE,
+            RoleSessionName="edge-session"
+        )
+
+        creds = resp["Credentials"]
+        # Step 2: Connect over WebSockets 443
+        mqtt = AWSIoTMQTTClient("rpi_edge", useWebsocket=True)
+        mqtt.configureEndpoint(self.endpoint, 443)
+        mqtt.configureCredentials(self.root_ca)
+        mqtt.configureIAMCredentials(
+            creds["AccessKeyId"],
+            creds["SecretAccessKey"],
+            creds["SessionToken"]
+        )
+
+        mqtt.connect()
+        print("Connected ✅")
 
     def _configure_tls(self):
         """Configure TLS mutual authentication for AWS IoT"""

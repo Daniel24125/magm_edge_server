@@ -3,9 +3,11 @@ import sys
 import os
 import time
 import threading
+from datetime import datetime, timezone
 from queue import Empty
-from typing import Optional
-import uuid
+from uuid import uuid4
+from database.db_manager import DatabaseHelper, SessionDAO
+
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
@@ -16,6 +18,7 @@ from shared.utils.config_loader import load_config, save_config
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
 
+
 class SessionController(threading.Thread):
     config = load_config(DEFAULT_CONFIG_PATH)
     current_session = None
@@ -25,6 +28,8 @@ class SessionController(threading.Thread):
     session_lock = threading.Lock()
     _stop_event = threading.Event()
     time_elapsed = 0
+    session_db=DatabaseHelper("database/sessions.db")
+    sessions=SessionDAO(session_db)
 
     def __init__(self, mqtt_subscriber, aws):
         super().__init__(daemon=True)
@@ -47,29 +52,43 @@ class SessionController(threading.Thread):
     def stop(self):
         self._stop_event.set()
 
-    def start_session(self, session_id: Optional[str] = None):
+    def start_session(self, user: str, project_id:str):
         with self.session_lock:
             if self.session_active:
                 logger.warning("Session already active")
                 return
-            self.current_session = session_id or f"session_{uuid.uuid4()}"
+            self.current_session = f"session_{uuid4()}"
             self.session_active = True  
 
-        start_payload = {"session_id": self.current_session,"start_time": int(time.time() * 1000)}
-        self.mqtt.client.publish("/controller/commands/start", json.dumps(start_payload), qos=1)
-
-        sync_payload = {"session_id": self.current_session, "action": "SYNC_START", "start_time": int(time.time() * 1000)}
-        self.mqtt.client.publish("/controller/commands/sync", json.dumps(sync_payload), qos=1)
+        payload = {
+            "id": self.current_session,
+            "project_id": project_id,
+            "start_time": datetime.now(timezone.utc).isoformat(),
+            "active": 1,
+            "user": user,
+            "notes": getattr(self, "notes", None)
+        }
+        self.mqtt.client.publish("/controller/commands/start", json.dumps(payload), qos=1)
+        self.session_db.add_record("sessions", payload)
         logger.info(f"Session {self.current_session} is now ACTIVE")
         # 🚀 start acquisition in a dedicated thread
         self.acquisition_thread = threading.Thread(target=self.start_acquisition_loop, daemon=True)
         self.acquisition_thread.start()
+
+    
+
 
     def stop_session(self):
         with self.session_lock:
             if not self.session_active:
                 logger.warning("No active session to stop")
                 return
+            self.db.update_record(
+                "sessions",
+                self.current_session,
+                {"active": 0, "end_time": datetime.now(timezone.utc).isoformat()},
+                id_column="id"
+            )
             self.session_active = False
             self.current_session = None
             self.time_elapsed = 0
@@ -99,18 +118,21 @@ class SessionController(threading.Thread):
                 continue
             except Exception:
                 logger.exception("Error in main loop")
-
         logger.info("SessionController stopped")
 
     def parse_user_commands(self, payload, topic): 
         logger.info("AWS User command received")
         if topic == "ui/commands/configure_session":
             self._handle_config_update(payload)
+
         elif topic == "ui/commands/start_session":
-            session_id = payload.get("session_id")
-            self.start_session(session_id=session_id)
+            user = payload.get("user")
+            project_id = payload.get("project_id")
+            self.start_session(user=user, project_id=project_id)
+        
         elif topic == "ui/commands/stop_session":
             self.stop_session()
+        
         elif topic == "ui/commands/start_session_confirm":
             pass
 
@@ -163,6 +185,8 @@ class SessionController(threading.Thread):
             logger.warning("Stopping sensor acquisition...")
         except Exception as e:
             logger.error(f"Unexpected error in acquisition loop: {e}")
+        finally: 
+            self.session_db.close()
 
     def request_measurements(self):
         self.mqtt.client.publish(f"/controller/session/{self.current_session}/measurement", json.dumps({

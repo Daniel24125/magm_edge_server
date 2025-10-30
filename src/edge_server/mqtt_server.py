@@ -2,6 +2,7 @@ import threading
 import json, sys, os, time
 from utils.thread_handler import stop_event
 
+
 # --- Configuration ---
 # Since this script is in src/, we need the sys.path fix to find config/
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -21,7 +22,6 @@ MQTT_HOST = broker_config.get("broker")
 MQTT_PORT = broker_config.get("port", 1883)
 TOPICS_TO_SUBSCRIBE = broker_config.get('topics', "/#")
 
-
 # --- Dependency: paho-mqtt ---
 try:
     import paho.mqtt.client as mqtt
@@ -39,6 +39,7 @@ class MqttSubscriber(threading.Thread):
         super().__init__(daemon=True)
         self.data_queue = data_queue
         self.init_variables()
+
 
     def init_variables(self):
         self.host = MQTT_HOST
