@@ -69,3 +69,13 @@ mqtt_client 2025-10-29 13:59:34 [ERROR] shared.utils.logger: The connection was 
 base 2025-10-29 14:45:32 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
 base 2025-10-29 14:45:32 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
 mqtt_client 2025-10-29 14:45:36 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-10-31 11:53:27 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-31 11:53:27 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-31 12:16:58 [ERROR] shared.utils.logger: The connection failed: MQTTClient.on_disconnect() takes 4 positional arguments but 6 were given
+base 2025-10-31 12:21:59 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-10-31 12:21:59 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+mqtt_client 2025-10-31 12:37:49 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_core 2025-10-31 12:49:09 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Subscribe timed out
+mqtt_core 2025-10-31 12:49:34 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Connect timed out
+mqtt_core 2025-10-31 12:52:43 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Subscribe timed out
+mqtt_core 2025-10-31 12:53:07 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Connect timed out

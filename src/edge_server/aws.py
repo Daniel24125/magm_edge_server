@@ -41,7 +41,6 @@ class AWSIoTClient(threading.Thread):
         self.data_queue = data_queue
         self.topic = json.loads(AWS_PUBLISH_TOPIC)
         self.init_variables()
-        self.conenct_via_websocket()
         # self._configure_tls()
         # self._register_callbacks()
         # self.connect()
@@ -53,10 +52,11 @@ class AWSIoTClient(threading.Thread):
         self.certfile = os.path.join(CERT_DIR,AWS_CERTIFICATE)
         self.keyfile = os.path.join(CERT_DIR,AWS_KEY)
         self.client_id = AWS_CLIENT_ID
-        self.client = mqtt.Client(client_id=self.client_id)
+        # self.client = mqtt.Client(client_id=self.client_id)
 
-    def conenct_via_websocket(self):
-        # Step 1: Assume the IAM role to get temporary credentials
+#----------------------- WEBSOCKET CONNECTION PORT 1883---------------------------
+
+    def fetch_websocket_credentials(self):
         sts = boto3.client("sts",
             aws_access_key_id=AWS_USER_ACCESS_KEY,
             aws_secret_access_key=AWS_USER_SECRET_KEY,
@@ -68,19 +68,33 @@ class AWSIoTClient(threading.Thread):
             RoleSessionName="edge-session"
         )
 
-        creds = resp["Credentials"]
+        return  resp["Credentials"]
+
+    def connect_via_websocket(self):
+        # Step 1: Assume the IAM role to get temporary credentials
+        creds = self.fetch_websocket_credentials()
+
         # Step 2: Connect over WebSockets 443
-        mqtt = AWSIoTMQTTClient("rpi_edge", useWebsocket=True)
-        mqtt.configureEndpoint(self.endpoint, 443)
-        mqtt.configureCredentials(self.root_ca)
-        mqtt.configureIAMCredentials(
+        self.client = AWSIoTMQTTClient("rpi_edge", useWebsocket=True)
+        self.client.configureEndpoint(self.endpoint, 443)
+        self.client.configureCredentials(self.root_ca)
+        self.client.configureIAMCredentials(
             creds["AccessKeyId"],
             creds["SecretAccessKey"],
             creds["SessionToken"]
         )
+        try: 
+            self.register_websocket_callbacks()
+            self.client.connect()
+        except Exception as err: 
+            logger.error("An error occured while trying to conenct to AWS: "+ str(err))
 
-        mqtt.connect()
-        print("Connected ✅")
+
+    def register_websocket_callbacks(self): 
+        self.client.onOnline= self.on_socket_connect
+        self.client.onOffline = self.on_disconnect
+
+#----------------------- TLS CONENCTION PORT 1883---------------------------
 
     def _configure_tls(self):
         """Configure TLS mutual authentication for AWS IoT"""
@@ -96,7 +110,13 @@ class AWSIoTClient(threading.Thread):
     def _register_callbacks(self):
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
-        self.client.on_message = self.on_message
+
+    def on_socket_connect(self): 
+        logger.info("Successfuly connected to AWS")
+        state_manager.update_aws_status(True)
+
+        self.client.subscribe("ui/commands/#", 1, self.on_message)
+        logger.info("\nListenning to AWS user commands.\n")
 
     # --- Callbacks ---
     def on_connect(self, client, userdata, flags, rc):
@@ -155,4 +175,6 @@ class AWSIoTClient(threading.Thread):
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
 
     def run(self): 
-        logger.info("Listenning for sensor data...")
+        logger.info("Running the AWS thread...")
+        self.connect_via_websocket()
+
