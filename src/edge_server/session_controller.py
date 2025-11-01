@@ -71,7 +71,6 @@ class SessionController(threading.Thread):
         self.mqtt.client.publish("/controller/commands/start", json.dumps(payload), qos=1)
         self.session_db.add_record("sessions", payload)
         logger.info(f"Session {self.current_session} is now ACTIVE")
-        # 🚀 start acquisition in a dedicated thread
         self.acquisition_thread = threading.Thread(target=self.start_acquisition_loop, daemon=True)
         self.acquisition_thread.start()
 

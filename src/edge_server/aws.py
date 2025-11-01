@@ -4,15 +4,14 @@ import threading
 import os 
 import sys
 from typing import Dict, Any
-import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
-from utils.thread_handler import stop_event
 from queue import Queue
 import boto3
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
-
+from utils.iot_client import WebSocketIoTClient
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env.local"))
+AWS_REGION = os.getenv('AWS_REGION')
 AWS_ENDPOINT = os.getenv('AWS_ENDPOINT')
 AWS_CERTIFICATE = os.getenv('AWS_CERTIFICATE')
 AWS_KEY = os.getenv('AWS_KEY')
@@ -36,100 +35,68 @@ from shared.utils.state_manager import StateManager
 state_manager = StateManager()
 
 class AWSIoTClient(threading.Thread):
+    topic = json.loads(AWS_PUBLISH_TOPIC)
+    endpoint = AWS_ENDPOINT
+    port = int(AWS_PORT)
+    root_ca = os.path.join(CERT_DIR,AWS_ROOT_CERT)
+    certfile = os.path.join(CERT_DIR,AWS_CERTIFICATE)
+    keyfile = os.path.join(CERT_DIR,AWS_KEY)
+    client_id = AWS_CLIENT_ID
+    region = AWS_REGION
+    creds = None
+
+
     def __init__(self, data_queue):
         super().__init__(daemon=True)
         self.data_queue = data_queue
-        self.topic = json.loads(AWS_PUBLISH_TOPIC)
-        self.init_variables()
-        # self._configure_tls()
-        # self._register_callbacks()
-        # self.connect()
 
-    def init_variables(self):
-        self.endpoint = AWS_ENDPOINT
-        self.port = int(AWS_PORT)
-        self.root_ca = os.path.join(CERT_DIR,AWS_ROOT_CERT)
-        self.certfile = os.path.join(CERT_DIR,AWS_CERTIFICATE)
-        self.keyfile = os.path.join(CERT_DIR,AWS_KEY)
-        self.client_id = AWS_CLIENT_ID
-        # self.client = mqtt.Client(client_id=self.client_id)
 
-#----------------------- WEBSOCKET CONNECTION PORT 1883---------------------------
 
     def fetch_websocket_credentials(self):
-        sts = boto3.client("sts",
+        logger.info("Fetching temporary IAM credentials via STS...")
+        sts = boto3.client(
+            "sts",
             aws_access_key_id=AWS_USER_ACCESS_KEY,
             aws_secret_access_key=AWS_USER_SECRET_KEY,
-            region_name="eu-west-3"
+            region_name=self.region,
         )
-        
-        resp = sts.assume_role(
-            RoleArn=AWS_EDGE_SERVER_ROLE,
-            RoleSessionName="edge-session"
+        try:
+            resp = sts.assume_role(
+                RoleArn=AWS_EDGE_SERVER_ROLE,
+                RoleSessionName="edge-session"
+            )
+            return resp["Credentials"]
+        except Exception as e:
+            logger.error(f"Failed to assume role {AWS_EDGE_SERVER_ROLE}: {e}")
+            raise
+
+    def connect_via_websocket(self): 
+        self.creds = self.fetch_websocket_credentials()
+        import uuid
+        unique_client_id = f"{self.client_id}-{uuid.uuid4().hex[:6]}"
+        self.client = WebSocketIoTClient(
+            client_id=unique_client_id,
+            endpoint=self.endpoint,
+            root_ca_path=self.root_ca,
+            access_key_id=self.creds["AccessKeyId"],
+            secret_access_key=self.creds["SecretAccessKey"],
+            session_token=self.creds["SessionToken"],
+            region=self.region, 
+            on_connect=self.on_connect,
+            on_disconnect=self.on_disconnect
         )
+        self.client.connect()
 
-        return  resp["Credentials"]
-
-    def connect_via_websocket(self):
-        # Step 1: Assume the IAM role to get temporary credentials
-        creds = self.fetch_websocket_credentials()
-
-        # Step 2: Connect over WebSockets 443
-        self.client = AWSIoTMQTTClient("rpi_edge", useWebsocket=True)
-        self.client.configureEndpoint(self.endpoint, 443)
-        self.client.configureCredentials(self.root_ca)
-        self.client.configureIAMCredentials(
-            creds["AccessKeyId"],
-            creds["SecretAccessKey"],
-            creds["SessionToken"]
-        )
-        try: 
-            self.register_websocket_callbacks()
-            self.client.connect()
-        except Exception as err: 
-            logger.error("An error occured while trying to conenct to AWS: "+ str(err))
-
-
-    def register_websocket_callbacks(self): 
-        self.client.onOnline= self.on_socket_connect
-        self.client.onOffline = self.on_disconnect
-
-#----------------------- TLS CONENCTION PORT 1883---------------------------
-
-    def _configure_tls(self):
-        """Configure TLS mutual authentication for AWS IoT"""
-        self.client.tls_set(
-            ca_certs=self.root_ca,
-            certfile=self.certfile,
-            keyfile=self.keyfile,
-            cert_reqs=ssl.CERT_REQUIRED,
-            tls_version=ssl.PROTOCOL_TLSv1_2
-        )
-        self.client.tls_insecure_set(False)
-
-    def _register_callbacks(self):
-        self.client.on_connect = self.on_connect
-        self.client.on_disconnect = self.on_disconnect
-
-    def on_socket_connect(self): 
-        logger.info("Successfuly connected to AWS")
-        state_manager.update_aws_status(True)
-
-        self.client.subscribe("ui/commands/#", 1, self.on_message)
-        logger.info("\nListenning to AWS user commands.\n")
-
+   
+     
     # --- Callbacks ---
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            logger.info("Connected to AWS IoT Core")
-            state_manager.update_aws_status(True)
-            self.client.subscribe("ui/commands/#", qos=1)
-        else:
-            logger.error(f"Connection failed with code {rc}")
-            state_manager.update_aws_status(False)
+    def on_connect(self):
+        logger.info("Connected to AWS IoT Core")
+        state_manager.update_aws_status(True)
+        self.client.subscribe("ui/commands/#", qos=1, callback=self.on_message)
 
-    def on_disconnect(self, client, userdata, rc):
-        logger.warning(f"Disconnected from AWS IoT Core: {rc}")
+    def on_disconnect(self):
+        logger.warning(f"Disconnected from AWS IoT Core:")
         state_manager.update_aws_status(False)
 
     def on_message(self, client, userdata, msg):
@@ -141,17 +108,6 @@ class AWSIoTClient(threading.Thread):
             logger.info("Forwarded AWS message to data_queue for SessionController.")
         else:
             self.parse_user_commands(payload, topic)
-        
-    # --- Main API ---
-    def connect(self):
-        logger.info(f"Connecting to AWS IoT at {self.endpoint}:{self.port}")
-        self.client.connect(self.endpoint, self.port, keepalive=60)
-        self.client.loop_start()
-
-    def disconnect(self):
-        logger.info("Disconnecting from AWS IoT Core")
-        self.client.loop_stop()
-        self.client.disconnect()
 
     def publish_sensor_data(self, payload: Dict[str, Any]):
         """
