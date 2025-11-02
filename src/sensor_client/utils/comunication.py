@@ -2,6 +2,7 @@ import numpy as np
 from scipy import stats
 import sys
 import os 
+from datetime import datetime, timezone
 try:
     from adafruit_ads1x15.analog_in import AnalogIn
     import adafruit_ads1x15.ads1115 as ADS
@@ -15,7 +16,6 @@ except ImportError as err:
 except NotImplementedError as err: 
     print("Error trying to import board: ", err)
 
-
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -23,6 +23,8 @@ if PROJECT_ROOT not in sys.path:
 from shared.utils.logger import logger
 try:
     from shared.utils.config_loader import load_config
+    from edge_server.database.db_manager import DatabaseHelper
+
 except ImportError as e:
     print(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
     sys.exit(1)
@@ -36,22 +38,14 @@ class AnalogCommunication:
     error = False
     converted_read=False
     ready = True
+    db = DatabaseHelper("src/edge_server/database/models/sessions.db")
+
 
     def __init__(self, sensor_config):
         self.sensor_config = sensor_config
+        self.cal_data = self.db.get_last_calibration("pH")
+       
 
-    def get_regression_params(self):
-        try:
-            x = np.array([
-                self.sensor_config.get("calibration").get("acidic_value"),
-                self.sensor_config.get("calibration").get("alkaline_value")
-            ]).astype(np.float64)
-            y = np.array([4,7]).astype(np.float64)
-            cal = stats.linregress(x,y)
-            return (cal.slope, cal.intercept)
-        except Exception as err:
-            self.error= True
-            print("Error while getting regression params",err)
 
     # This method is responsible for getting an analog read of the sensors. The read value corresponds to an average of 20 reads (i.e., 20 by default)
     def get_read(self, NUM_MEAS_FOR_AVG=20):
@@ -61,14 +55,13 @@ class AnalogCommunication:
     def get_analog_read(self, NUM_MEAS_FOR_AVG=20): 
         self.ready=False
         analog_values = np.zeros(NUM_MEAS_FOR_AVG)
+        probe = self.sensor_config.get("probe")
         for i in range(NUM_MEAS_FOR_AVG):
-
             try:
-                probe = self.sensor_config.get("probe")
                 an_read = AnalogIn(ads, port_map[probe]).value
                 analog_values[i] = an_read
             except Exception as err:
-                print(err)
+                print("Error while retrieving analog signal: ",err)
                 pass
 
         mask = np.ma.masked_equal(analog_values,0).compressed()
@@ -78,7 +71,7 @@ class AnalogCommunication:
 
     # This method is responsible for converting the analog read to the pH value according to the sensors' calibration curve
     def convert_analog(self, analog_read):
-        m,b=self.get_regression_params()
+        m, b, _, _, _ = self.cal_data
         return round(analog_read*m+b, 2)
 
     # this method is responsible for updating the classes' current values for the pH sensor
@@ -93,4 +86,12 @@ class AnalogCommunication:
         except Exception as err:
             print(err)
             self.error=True
+
+if __name__ == "__main__": 
+    config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/config/sensors.json"))
+    ph_config = filter(lambda s: s.get("type") == "pH", config.get("sensors"))
+    list_config = list(ph_config)[0]
+    analog = AnalogCommunication(list_config)
+    
+    print(analog.get_read())
 

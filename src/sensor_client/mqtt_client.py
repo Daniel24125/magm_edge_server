@@ -14,7 +14,6 @@ config_manager = ConfigManager()
 
 class MQTTClient:
 
-
     def __init__(self, config, sensor_manager):
         self.sensor_manager = sensor_manager
         self.init_variables(config)
@@ -32,7 +31,6 @@ class MQTTClient:
         self.publish_measurement_topic = f"/devices/{self.device_id}/data"
         self.device_registration_topic = f"/devices/{self.device_id}/register"
         self.device_unregistration_topic = f"/devices/{self.device_id}/unregister"
-
 
     def init_mqtt_client(self):
         self.client = mqtt.Client(

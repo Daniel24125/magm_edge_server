@@ -4,6 +4,7 @@ from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, lo
 from utils.comunication import AnalogCommunication
 import json
 import numpy as np
+
 SIMULATION_MODE = state_manager.simulation_mode
 if SIMULATION_MODE:
     from ..simulators import SimulatedPHSensor 
@@ -176,3 +177,4 @@ class PHCalibrator:
                 self.calibration_temp = data.get("calibration_temp", 25.0)
         except (FileNotFoundError, json.JSONDecodeError):
             pass
+

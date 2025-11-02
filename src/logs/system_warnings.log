@@ -1733,3 +1733,6 @@ ph 2025-11-02 15:51:21 [ERROR] shared.utils.logger: 'PHSensor' object has no att
 ph 2025-11-02 15:51:26 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
 ph 2025-11-02 15:51:31 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
 mqtt_client 2025-11-02 15:51:39 [ERROR] shared.utils.logger: The connection was interruped by the user
+heartbeat_service 2025-11-02 18:49:11 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+ph 2025-11-02 18:49:39 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
+ph 2025-11-02 18:49:44 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'

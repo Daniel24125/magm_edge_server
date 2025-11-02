@@ -1,13 +1,13 @@
 import  sys, os
-from .ph.ph import PHSensor
-from .temperature import TemperatureSensor
+from ph.ph import PHSensor
+from temperature import TemperatureSensor
 from typing import List, Dict, Any, Optional
-from .base import AbstractSensor
+from base import AbstractSensor
 
 # Add project root to sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 
 from shared.models.sensor_reading import SensorReading
@@ -56,4 +56,11 @@ class SensorManager:
         """
         return {sensor.name: sensor.read() for sensor in self.sensors}
 
-    
+if __name__ == "__main__": 
+    from shared.utils.config_loader import load_config
+    config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/config/sensors.json"))
+    ph_config = filter(lambda s: s.get("type") == "pH", config.get("sensors"))
+    list_config = list(ph_config)[0]
+    manager = SensorManager(
+        config=list_config
+    )
