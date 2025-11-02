@@ -34,27 +34,33 @@ class DatabaseHelper:
     def __init__(self, db_path: Path | str):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._conn = None
         self.db_init()
         self._create_schema()
         logger.info("SQLite ready at %s", self.db_path.as_posix())
     
-    
+        
+
     def db_init(self):
         # One shared connection per process; protect with an RLock
-        self._conn = sqlite3.connect(
-            self.db_path.as_posix(),
-            check_same_thread=False,     # allow access from multiple threads (we lock manually)
-            isolation_level=None,        # autocommit; we explicitly BEGIN IMMEDIATE when needed
-            timeout=5.0,
-            detect_types=sqlite3.PARSE_DECLTYPES,
-        )
+        self.connect()
         # Pragmas tuned for Raspberry Pi edge workloads
         self._conn.execute("PRAGMA foreign_keys = ON;")
         self._conn.execute("PRAGMA journal_mode = WAL;")
         self._conn.execute("PRAGMA synchronous = NORMAL;")
         self._conn.execute("PRAGMA busy_timeout = 8000;")
         self._lock = threading.RLock()
+        self.connected = True
 
+    def connect(self): 
+        if self._conn is None:
+            self._conn = sqlite3.connect(
+            self.db_path.as_posix(),
+            check_same_thread=False,     # allow access from multiple threads (we lock manually)
+            isolation_level=None,        # autocommit; we explicitly BEGIN IMMEDIATE when needed
+            timeout=5.0,
+            detect_types=sqlite3.PARSE_DECLTYPES,
+        )
     # ---------------- Schema ----------------
 
     def _create_schema(self) -> None:
@@ -86,12 +92,12 @@ class DatabaseHelper:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,          -- ISO UTC
                     session_id TEXT NOT NULL,
-                    sensor_type TEXT NOT NULL,        -- e.g., 'pH','CO2','Temp','Light'
-                    raw_value REAL,
+                    source TEXT NOT NULL,        -- e.g., 'rpi', 'nir'
+                    data TEXT NOT NULL,
                     processed_value REAL,
                     calibration_id INTEGER,
                     status TEXT,                      -- 'OK','OUT_OF_RANGE','ERROR',...
-                    FOREIGN KEY(session_id) REFERENCES sessions(id)
+                    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
                         ON UPDATE CASCADE ON DELETE CASCADE,
                     FOREIGN KEY(calibration_id) REFERENCES ph_calibration(id)
                         ON UPDATE CASCADE ON DELETE SET NULL
@@ -101,7 +107,7 @@ class DatabaseHelper:
                     ON sessions(active);
 
                 CREATE INDEX IF NOT EXISTS idx_meas_time_sensor
-                    ON sensor_measurements(sensor_type, timestamp);
+                    ON sensor_measurements(session_id, timestamp);
 
                 CREATE INDEX IF NOT EXISTS idx_meas_session
                     ON sensor_measurements(session_id);
@@ -125,7 +131,8 @@ class DatabaseHelper:
                 cur.close()
 
     def _begin_immediate(self, cur: sqlite3.Cursor) -> None:
-        cur.execute("BEGIN IMMEDIATE;")
+        if not self._conn.in_transaction:
+            cur.execute("BEGIN IMMEDIATE;")
 
     def _retrying_execute(
         self,
@@ -199,8 +206,8 @@ class DatabaseHelper:
     def insert_measurement(
         self,
         session_id: str,
-        sensor_type: str,
-        raw_value: Optional[float],
+        source: str,
+        data: str,
         processed_value: Optional[float] = None,
         calibration_id: Optional[int] = None,
         status: Optional[str] = "OK",
@@ -215,9 +222,9 @@ class DatabaseHelper:
             self._retrying_execute(
                 cur,
                 """INSERT INTO sensor_measurements
-                   (timestamp, session_id, sensor_type, raw_value, processed_value, calibration_id, status)
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (timestamp_iso, session_id, sensor_type, raw_value, processed_value, calibration_id, status),
+                (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
             )
             rid = cur.lastrowid
             self._conn.commit()
@@ -226,6 +233,8 @@ class DatabaseHelper:
     # ---------------- Generic CRUD ----------------
 
     def add_record(self, table: str, data: Dict[str, Any]) -> int:
+        if self._conn is None: 
+            self.connect()
         keys = ", ".join(data.keys())
         placeholders = ", ".join("?" for _ in data)
         sql = f"INSERT INTO {table} ({keys}) VALUES ({placeholders})"
@@ -237,6 +246,8 @@ class DatabaseHelper:
             return rid
 
     def update_record(self, table: str, record_id: Any, data: Dict[str, Any], id_column: str = "id") -> None:
+        if self._conn is None: 
+            self.connect()
         sets = ", ".join(f"{k}=?" for k in data.keys())
         sql = f"UPDATE {table} SET {sets} WHERE {id_column}=?"
         params = list(data.values()) + [record_id]
@@ -246,12 +257,16 @@ class DatabaseHelper:
             self._conn.commit()
 
     def delete_record(self, table: str, record_id: Any, id_column: str = "id") -> None:
+        if self._conn is None: 
+            self.connect()
         with self._locked_cursor() as cur:
             self._begin_immediate(cur)
             self._retrying_execute(cur, f"DELETE FROM {table} WHERE {id_column}=?", (record_id,))
             self._conn.commit()
 
     def fetch_records(self, table: str, where: Optional[str] = None, params: Iterable = ()) -> List[Tuple]:
+        if self._conn is None: 
+            self.connect()
         sql = f"SELECT * FROM {table}"
         if where:
             sql += f" WHERE {where}"
@@ -261,6 +276,8 @@ class DatabaseHelper:
 
     # Raw query helper (read-only)
     def fetch_records_raw(self, query: str, params: Iterable = ()) -> List[Tuple]:
+        if self._conn is None: 
+            self.connect()
         with self._locked_cursor() as cur:
             rows = self._retrying_execute(cur, query, params).fetchall()
             return rows
@@ -271,6 +288,7 @@ class DatabaseHelper:
         with self._lock:
             try:
                 self._conn.close()
+                self._conn = None
             except Exception as e:  # pragma: no cover
                 logger.warning("Error closing DB: %s", e)
 

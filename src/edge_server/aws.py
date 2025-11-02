@@ -37,14 +37,14 @@ class AWSIoTClient(threading.Thread):
     def __init__(self, data_queue):
         super().__init__(daemon=True)
         self.data_queue = data_queue
-
-    def connect_via_websocket(self): 
         self.client = AWSWSClient(
             endpoint=AWS_ENDPOINT,
             region=AWS_REGION,
             client_id=AWS_CLIENT_ID,
             role_arn=AWS_EDGE_SERVER_ROLE
         )
+
+    def connect_via_websocket(self): 
         self._register_callbacks()
         self.client.connect()
      
@@ -90,9 +90,12 @@ class AWSIoTClient(threading.Thread):
             source = payload.get("source", "")
             topic = json.loads(AWS_PUBLISH_TOPIC).get(source)
             logger.info(f"Publishing to {topic}: {message}")
-            self.client.publish(topic, message, qos=1)
+            self.client.publish(topic, message)
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
+
+    def publish_heartbeat(self, payload):
+        self.client.publish("status/heartbeat",payload)
 
     def run(self): 
         logger.info("Running the AWS thread...")

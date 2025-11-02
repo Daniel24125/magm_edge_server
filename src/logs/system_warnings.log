@@ -446,3 +446,962 @@ sqlite3.OperationalError: no such column: id
 heartbeat_service 2025-11-02 12:26:44 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
 heartbeat_service 2025-11-02 12:26:59 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
 command_handler 2025-11-02 12:27:18 [WARNING] shared.utils.logger: Unhandled UI command: ping
+base 2025-11-02 13:56:13 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-11-02 13:56:13 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+heartbeat_service 2025-11-02 13:56:19 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 13:56:49 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 13:57:19 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+mqtt_client 2025-11-02 13:57:39 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-11-02 13:57:40 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-11-02 13:57:40 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+session_controller 2025-11-02 13:57:46 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 27, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 90, in start_session
+    self.db.add_record("sessions", sess_payload.model_dump())
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 232, in add_record
+    with self._locked_cursor() as cur:
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 121, in _locked_cursor
+    cur = self._conn.cursor()
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+heartbeat_service 2025-11-02 13:57:49 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+session_controller 2025-11-02 13:57:57 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 29, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 243, in update_record
+    with self._locked_cursor() as cur:
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 121, in _locked_cursor
+    cur = self._conn.cursor()
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+heartbeat_service 2025-11-02 13:58:19 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 13:58:49 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 13:59:19 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 13:59:49 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 14:00:19 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 14:00:42 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+mqtt_client 2025-11-02 14:00:44 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-11-02 14:00:46 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-11-02 14:00:46 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+heartbeat_service 2025-11-02 14:05:32 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+session_controller 2025-11-02 14:05:39 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 42, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.aws.publish_sensor_data(payload)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AWSWSClient' object has no attribute 'publish_sensor_data'
+session_controller 2025-11-02 14:05:39 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 42, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.aws.publish_sensor_data(payload)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AWSWSClient' object has no attribute 'publish_sensor_data'
+session_controller 2025-11-02 14:05:44 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 42, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.aws.publish_sensor_data(payload)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AWSWSClient' object has no attribute 'publish_sensor_data'
+session_controller 2025-11-02 14:05:49 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 42, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.aws.publish_sensor_data(payload)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AWSWSClient' object has no attribute 'publish_sensor_data'
+session_controller 2025-11-02 14:05:54 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 42, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.aws.publish_sensor_data(payload)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AWSWSClient' object has no attribute 'publish_sensor_data'
+heartbeat_service 2025-11-02 14:11:01 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+mqtt_client 2025-11-02 14:12:27 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-11-02 14:12:28 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-11-02 14:12:28 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+session_controller 2025-11-02 14:12:35 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 26, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 90, in start_session
+    self.db.add_record("sessions", sess_payload.model_dump())
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 232, in add_record
+    with self._locked_cursor() as cur:
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 121, in _locked_cursor
+    cur = self._conn.cursor()
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+session_controller 2025-11-02 14:12:38 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 243, in update_record
+    with self._locked_cursor() as cur:
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 121, in _locked_cursor
+    cur = self._conn.cursor()
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+heartbeat_service 2025-11-02 14:20:07 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+heartbeat_service 2025-11-02 14:25:48 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+heartbeat_service 2025-11-02 14:28:52 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+db_manager 2025-11-02 14:28:56 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093736571.5625, 'session_88d13af8-db0d-4e75-b70f-8aa62e52b8ef', 'rpi', {'Temperature Sensor 1': 27.352168870170992, 'pH Sensor 1': 7.454473368889872}, None, None, 'OK'): table sensor_measurements has no column named data
+session_controller 2025-11-02 14:28:56 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 221, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 147, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: table sensor_measurements has no column named data
+session_controller 2025-11-02 14:28:56 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 220, in insert_measurement
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:01 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 220, in insert_measurement
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:06 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 220, in insert_measurement
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:10 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 254, in update_record
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:11 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 220, in insert_measurement
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:16 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 220, in insert_measurement
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:18 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 254, in update_record
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:19 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 254, in update_record
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:19 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 254, in update_record
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+session_controller 2025-11-02 14:29:21 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 220, in insert_measurement
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    cur.execute("BEGIN IMMEDIATE;")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: cannot start a transaction within a transaction
+heartbeat_service 2025-11-02 14:30:40 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+session_controller 2025-11-02 14:30:44 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 26, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 90, in start_session
+    self.db.add_record("sessions", sess_payload.model_dump())
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 242, in add_record
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    if not self.conn.in_transaction:
+           ^^^^^^^^^
+AttributeError: 'DatabaseHelper' object has no attribute 'conn'. Did you mean: '_conn'?
+session_controller 2025-11-02 14:30:49 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="session_id"
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 255, in update_record
+    self._begin_immediate(cur)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 134, in _begin_immediate
+    if not self.conn.in_transaction:
+           ^^^^^^^^^
+AttributeError: 'DatabaseHelper' object has no attribute 'conn'. Did you mean: '_conn'?
+heartbeat_service 2025-11-02 14:31:05 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+db_manager 2025-11-02 14:31:08 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093868169.24, 'session_c7a54ab9-8b6e-4b61-97bd-7104417f3f63', 'rpi', {'Temperature Sensor 1': 27.165226067559352, 'pH Sensor 1': 7.445765746334273}, None, None, 'OK'): table sensor_measurements has no column named data
+session_controller 2025-11-02 14:31:08 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: table sensor_measurements has no column named data
+db_manager 2025-11-02 14:31:08 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093868169.4312, 'session_c7a54ab9-8b6e-4b61-97bd-7104417f3f63', 'rpi', {'Temperature Sensor 1': 27.257239158391073, 'pH Sensor 1': 7.441726056530449}, None, None, 'OK'): table sensor_measurements has no column named data
+session_controller 2025-11-02 14:31:08 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: table sensor_measurements has no column named data
+db_manager 2025-11-02 14:31:13 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093873198.033, 'session_c7a54ab9-8b6e-4b61-97bd-7104417f3f63', 'rpi', {'Temperature Sensor 1': 27.670383718174126, 'pH Sensor 1': 7.429640747366851}, None, None, 'OK'): table sensor_measurements has no column named data
+session_controller 2025-11-02 14:31:13 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: table sensor_measurements has no column named data
+heartbeat_service 2025-11-02 14:31:31 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+db_manager 2025-11-02 14:31:36 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093896539.5356, 'session_e0bea3d3-ca57-4418-b7e0-c3b1894eef2b', 'rpi', {'Temperature Sensor 1': 27.26860619303246, 'pH Sensor 1': 7.41144688966119}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:31:36 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+db_manager 2025-11-02 14:31:36 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093896539.879, 'session_e0bea3d3-ca57-4418-b7e0-c3b1894eef2b', 'rpi', {'Temperature Sensor 1': 27.508916352622414, 'pH Sensor 1': 7.413540402290594}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:31:36 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+db_manager 2025-11-02 14:31:41 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762093901585.728, 'session_e0bea3d3-ca57-4418-b7e0-c3b1894eef2b', 'rpi', {'Temperature Sensor 1': 26.726678851418544, 'pH Sensor 1': 7.449436477397608}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:31:41 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+heartbeat_service 2025-11-02 14:34:48 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+db_manager 2025-11-02 14:34:51 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762094091509.0745, 'session_1ad3de72-6459-4481-a997-79e1dc51c2f8', 'rpi', {'Temperature Sensor 1': 27.12975577232079, 'pH Sensor 1': 7.539761756857135}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:34:51 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+db_manager 2025-11-02 14:34:51 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762094091509.2493, 'session_1ad3de72-6459-4481-a997-79e1dc51c2f8', 'rpi', {'Temperature Sensor 1': 27.218640203178094, 'pH Sensor 1': 7.49360646217976}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:34:51 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+heartbeat_service 2025-11-02 14:39:20 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+db_manager 2025-11-02 14:39:23 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762094363885.7988, 'session_8a521cf8-f98d-4472-b753-ac7940cef83b', 'rpi', {'Temperature Sensor 1': 27.629242794657706, 'pH Sensor 1': 7.501655174970005}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:39:23 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+db_manager 2025-11-02 14:39:23 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762094363886.0303, 'session_8a521cf8-f98d-4472-b753-ac7940cef83b', 'rpi', {'Temperature Sensor 1': 27.47147888098267, 'pH Sensor 1': 7.5573679129899105}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:39:23 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+db_manager 2025-11-02 14:39:28 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sensor_measurements
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)' params=(1762094368890.7585, 'session_8a521cf8-f98d-4472-b753-ac7940cef83b', 'rpi', {'Temperature Sensor 1': 27.392703643794828, 'pH Sensor 1': 7.499683595944511}, None, None, 'OK'): foreign key mismatch - "sensor_measurements" referencing "sessions"
+session_controller 2025-11-02 14:39:28 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: foreign key mismatch - "sensor_measurements" referencing "sessions"
+heartbeat_service 2025-11-02 14:39:45 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+session_controller 2025-11-02 14:39:48 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Error binding parameter 4: type 'dict' is not supported
+session_controller 2025-11-02 14:39:48 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 60, in run
+    self.command_handler.handle_device_message(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 41, in handle_device_message
+    self.controller._handle_device_data(device_id, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 157, in _handle_device_data
+    self.db.insert_measurement(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session_id=payload.get("session_id"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    
+    
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 222, in insert_measurement
+    self._retrying_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        cur,
+        ^^^^
+    ...<3 lines>...
+        (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 148, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Error binding parameter 4: type 'dict' is not supported

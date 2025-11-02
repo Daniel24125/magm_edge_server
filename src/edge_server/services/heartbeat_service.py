@@ -38,7 +38,7 @@ class HeartbeatService:
                 }
             }
             try:
-                self.aws.publish("status/heartbeat", payload)
+                self.aws.publish_heartbeat(payload)
                 logger.debug(f"Heartbeat sent: {payload}")
             except Exception as e:
                 logger.error(f"Failed to publish heartbeat: {e}")

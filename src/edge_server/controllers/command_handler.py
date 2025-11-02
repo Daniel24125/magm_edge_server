@@ -15,7 +15,6 @@ class CommandHandler:
     def handle_ui_command(self, payload: dict):
         try:
             cmd = CommandPayload(**payload)
-            print(payload)
         except Exception as e:
             logger.error(f"Invalid command payload: {payload} ({e})")
             return

@@ -15,7 +15,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from shared.utils.logger import logger
-from shared.utils.config_loader import load_config, save_config
+from shared.utils.config_loader import load_config
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
@@ -154,7 +154,14 @@ class SessionController(threading.Thread):
 
     def _handle_device_data(self, device_id, payload): 
         logger.info(f"Data received from device {device_id}: {payload}")
-        # self.aws.publish_sensor_data(payload)
+        self.db.insert_measurement(
+            session_id=payload.get("session_id"),
+            source=payload.get("source"),
+            data=json.dumps(payload.get("data")),
+            timestamp_iso=payload.get("timestamp")
+            
+        )
+        self.aws.publish_sensor_data(payload)
 
     def _get_online_status(self):
         return {d: True for d in self.online_devices.keys()}

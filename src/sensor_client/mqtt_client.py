@@ -94,7 +94,7 @@ class MQTTClient:
         self.client.subscribe("/devices/registration_request")
 
     def start_session(self, payload: str):
-        session_id = payload.get("id")
+        session_id = payload.get("session_id")
         logger.info(f"Starting session with ID: {session_id}")
         self.client.subscribe(f"/controller/session/{session_id}/#")
 
@@ -139,6 +139,7 @@ class MQTTClient:
             "source": "rpi",
             "device_id": self.device_id,
             "session_id": session_id,
+            "timestamp": time.time()*1000,
             "data": {name: r.value if r else None for name, r in readings.items()}
         }
         message = json.dumps({
