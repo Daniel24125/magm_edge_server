@@ -117,7 +117,6 @@ class SessionController(threading.Thread):
         try:
             self.read_interval = self.config.get("sampling").get("sensor_interval", 30)
             logger.info(f"Data aquisition loop started. Sending data every {self.read_interval} s")
-            self.request_measurements()
             while self.session_active:
                 if self.time_elapsed % self.read_interval == 0:
                     self.request_measurements()

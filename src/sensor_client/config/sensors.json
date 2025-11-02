@@ -12,7 +12,7 @@
       "type": "Temperature",
       "name": "Temperature Sensor 1",
       "unit": "Celsius",
-      "enabled": true,
+      "enabled": false,
       "pin": 4,
       "calibration_offset": 0.2,
       "simulator_params": {
