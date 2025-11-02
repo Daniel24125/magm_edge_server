@@ -20,13 +20,21 @@ class AWSWSClientConfig:
         self._session = boto3.Session(profile_name=profile_name)
         self._sts = self._session.client("sts")
 
+    def _get_expiration(self, creds):
+        expiration = creds["Expiration"]
+        if isinstance(expiration, datetime):
+            expiry_dt = expiration.astimezone(timezone.utc)
+        else:
+            expiry_dt = datetime.strptime(expiration, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        return expiry_dt
 
     def _assume_role(self):
         resp = self._sts.assume_role(RoleArn=self.role_arn, RoleSessionName="edge-session")
         creds = resp["Credentials"]
+        expiry_dt = self._get_expiration(creds)
         with self._lock:
             self._creds = creds
-            self._expiry = datetime.strptime(creds["Expiration"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            self._expiry = expiry_dt
         logger.info(f"New STS credentials valid until {self._expiry.isoformat()}")
         return creds
 

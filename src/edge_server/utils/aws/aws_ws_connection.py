@@ -1,12 +1,6 @@
 # src/edge_server/utils/aws_ws_connection.py
-from awscrt import io, mqtt, auth
+from awscrt import io
 from awsiot import mqtt_connection_builder
-
-import os, sys, time
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-from shared.utils.logger import logger
 
 
 class AWSWSConnection:

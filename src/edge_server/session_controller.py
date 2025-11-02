@@ -74,9 +74,6 @@ class SessionController(threading.Thread):
         self.acquisition_thread = threading.Thread(target=self.start_acquisition_loop, daemon=True)
         self.acquisition_thread.start()
 
-    
-
-
     def stop_session(self):
         with self.session_lock:
             if not self.session_active:

@@ -1,5 +1,5 @@
 # src/edge_server/utils/aws_ws_client.py
-import time, asyncio, threading
+import time, asyncio
 from awscrt import mqtt, auth
 from .aws_ws_client_config import AWSWSClientConfig
 from .aws_ws_connection import AWSWSConnection
@@ -12,6 +12,12 @@ from shared.utils.logger import logger
 
 
 class AWSWSClient:
+    _callbacks = {
+        "on_connect": None,
+        "on_disconnect": None,
+        "on_message": None
+    }
+
     def __init__(self, endpoint, region, client_id, role_arn, profile_name="admin"):
         self.endpoint = endpoint
         self.region = region
@@ -21,6 +27,10 @@ class AWSWSClient:
         self._mqtt = None
         self._config = AWSWSClientConfig(profile_name, role_arn, region)
 
+    def register_on_connect(self, cb): self._callbacks["on_connect"] = cb
+    def register_on_disconnect(self, cb): self._callbacks["on_disconnect"] = cb
+    def register_on_message(self, cb): self._callbacks["on_message"] = cb
+
     # Build credentials provider (dynamic)
     def _get_credentials_provider(self):
         creds = self._config.get_credentials()
@@ -28,15 +38,26 @@ class AWSWSClient:
             creds["AccessKeyId"], creds["SecretAccessKey"], creds["SessionToken"]
         )
 
+            
     def connect(self):
         self._config.auto_refresh_loop()  # start background refresh
         creds_provider = self._get_credentials_provider()
         conn_builder = AWSWSConnection(self.endpoint, self.region, self.client_id, creds_provider)
         self._mqtt = conn_builder.build()
-
         logger.info(f"Connecting {self.client_id} to AWS IoT over WebSocket...")
         self._mqtt.connect().result()
+
+        self._mqtt._on_connection_closed = self._callbacks["on_disconnect"]
+
+        if self._callbacks["on_message"]:
+            self._mqtt.on_message = self._callbacks["on_message"]
+        
         logger.info("✅ Connected and ready.")
+        if self._callbacks["on_connect"]:
+            try:
+                self._callbacks["on_connect"]()
+            except Exception as e:
+                logger.exception(f"Error in on_connect callback: {e}")
 
     def subscribe(self, topic, callback):
         if not self._mqtt:

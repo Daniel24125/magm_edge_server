@@ -139,3 +139,90 @@ mqtt_core 2025-11-01 18:59:39 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: S
 mqtt_core 2025-11-01 19:00:09 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Connect timed out
 mqtt_core 2025-11-01 19:00:25 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Connect timed out
 mqtt_core 2025-11-01 19:00:25 [ERROR] AWSIoTPythonSDK.core.protocol.mqtt_core: Subscribe timed out
+aws_ws_client 2025-11-02 09:38:25 [ERROR] shared.utils.logger: Error in on_connect callback: AWSIoTClient.on_connect() takes 1 positional argument but 5 were given
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 58, in connect
+    self._callbacks["on_connect"](self._mqtt, None, None, 0)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AWSIoTClient.on_connect() takes 1 positional argument but 5 were given
+aws_ws_client 2025-11-02 09:38:55 [ERROR] shared.utils.logger: Error in on_connect callback: AWSIoTClient.on_connect() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 58, in connect
+    self._callbacks["on_connect"](self._mqtt)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: AWSIoTClient.on_connect() takes 1 positional argument but 2 were given
+aws_ws_client 2025-11-02 09:39:13 [ERROR] shared.utils.logger: Error in on_connect callback: AWSWSClient.subscribe() got an unexpected keyword argument 'qos'
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 58, in connect
+    self._callbacks["on_connect"]()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\aws.py", line 62, in on_connect
+    self.client.subscribe("ui/commands/#", qos=1, callback=self.on_message)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AWSWSClient.subscribe() got an unexpected keyword argument 'qos'
+aws_ws_client 2025-11-02 09:39:50 [ERROR] shared.utils.logger: Error in on_connect callback: missing a required argument: 'client'
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 58, in connect
+    self._callbacks["on_connect"]()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\aws.py", line 62, in on_connect
+    self.client.subscribe("ui/commands/#", callback=self.on_message)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 66, in subscribe
+    self._mqtt.subscribe(topic=topic, qos=mqtt.QoS.AT_LEAST_ONCE, callback=callback)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\env\Lib\site-packages\awscrt\mqtt.py", line 636, in subscribe
+    uses_old_signature = self._check_uses_old_message_callback_signature(callback)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\env\Lib\site-packages\awscrt\mqtt.py", line 431, in _check_uses_old_message_callback_signature
+    callback_sig.bind(topic='topic', payload='payload')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\inspect.py", line 3295, in bind
+    return self._bind(args, kwargs)
+           ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\inspect.py", line 3208, in _bind
+    raise TypeError(msg) from None
+TypeError: missing a required argument: 'client'
+aws_ws_client 2025-11-02 09:40:04 [ERROR] shared.utils.logger: Error in on_connect callback: missing a required argument: 'client'
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 58, in connect
+    self._callbacks["on_connect"]()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\aws.py", line 63, in on_connect
+    self.client.subscribe("ui/commands/#", callback=self.on_message)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 66, in subscribe
+    self._mqtt.subscribe(topic=topic, qos=mqtt.QoS.AT_LEAST_ONCE, callback=callback)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\env\Lib\site-packages\awscrt\mqtt.py", line 636, in subscribe
+    uses_old_signature = self._check_uses_old_message_callback_signature(callback)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\env\Lib\site-packages\awscrt\mqtt.py", line 431, in _check_uses_old_message_callback_signature
+    callback_sig.bind(topic='topic', payload='payload')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\inspect.py", line 3295, in bind
+    return self._bind(args, kwargs)
+           ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\inspect.py", line 3208, in _bind
+    raise TypeError(msg) from None
+TypeError: missing a required argument: 'client'
+aws_ws_client 2025-11-02 09:42:00 [ERROR] shared.utils.logger: Error in on_connect callback: missing a required argument: 'client'
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 58, in connect
+    self._callbacks["on_connect"]()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\aws.py", line 62, in on_connect
+    self.client.subscribe("ui/commands/#", callback=self.on_message)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\utils\aws\aws_ws_client.py", line 66, in subscribe
+    self._mqtt.subscribe(topic=topic, qos=mqtt.QoS.AT_LEAST_ONCE, callback=callback)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\env\Lib\site-packages\awscrt\mqtt.py", line 636, in subscribe
+    uses_old_signature = self._check_uses_old_message_callback_signature(callback)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\env\Lib\site-packages\awscrt\mqtt.py", line 431, in _check_uses_old_message_callback_signature
+    callback_sig.bind(topic='topic', payload='payload')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\inspect.py", line 3295, in bind
+    return self._bind(args, kwargs)
+           ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\inspect.py", line 3208, in _bind
+    raise TypeError(msg) from None
+TypeError: missing a required argument: 'client'
