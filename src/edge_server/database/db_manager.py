@@ -62,7 +62,7 @@ class DatabaseHelper:
             cur.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS sessions (
-                    id TEXT PRIMARY KEY,
+                    session_id TEXT PRIMARY KEY,
                     project_id TEXT,
                     start_time TEXT NOT NULL,
                     end_time TEXT,
@@ -286,7 +286,7 @@ class SessionDAO:
         self.db = db
 
     def get_last_session_id(self, active_only: bool = True) -> Optional[str]:
-        q = "SELECT id FROM sessions"
+        q = "SELECT session_id FROM sessions"
         if active_only:
             q += " WHERE active = 1"
         q += " ORDER BY start_time DESC LIMIT 1"
@@ -295,7 +295,7 @@ class SessionDAO:
 
     def list_recent_sessions(self, limit: int = 10) -> List[Tuple]:
         return self.db.fetch_records_raw(
-            "SELECT id, start_time, end_time, active, user "
+            "SELECT session_id, start_time, end_time, active, user "
             "FROM sessions ORDER BY start_time DESC LIMIT ?",
             (limit,),
         )

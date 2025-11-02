@@ -94,7 +94,7 @@ class MQTTClient:
         self.client.subscribe("/devices/registration_request")
 
     def start_session(self, payload: str):
-        session_id = payload.get("session_id")
+        session_id = payload.get("id")
         logger.info(f"Starting session with ID: {session_id}")
         self.client.subscribe(f"/controller/session/{session_id}/#")
 

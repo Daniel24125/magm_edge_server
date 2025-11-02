@@ -86,17 +86,15 @@ export default function Page() {
 
 
   // 5️⃣ Send command to device
-  const sendCommand = (action: string, parameters: Record<string, any> = {}) => {
+  const sendCommand = (command: string, params: Record<string, any> = {}) => {
     if (!connection || !isConnected) {
       alert("Not connected to AWS IoT yet");
       return;
     }
-    const topic = `${COMMAND_TOPIC}/${action}`;
+    const topic = `${COMMAND_TOPIC}/${command}`;
     const payload = {
-      action,
-      topic,
-      parameters,
-      timestamp: new Date().toISOString(),
+      command,
+      params,
     };
 
     const json_payload = JSON.stringify(payload);
@@ -120,7 +118,11 @@ export default function Page() {
       {/* Command Buttons */}
       <div className="flex gap-4 mt-4">
         <button
-          onClick={() => sendCommand("start_session")}
+          onClick={() => sendCommand("start_session", {
+            user: "auth|09875407429'20842",
+            project_id: "WNDRIKGnwkerfnwe32324",
+            notes: "This is a note"
+          })}
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
           ▶ Start Measurement

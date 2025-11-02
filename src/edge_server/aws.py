@@ -5,8 +5,7 @@ import sys
 from typing import Dict, Any
 from dotenv import load_dotenv
 from queue import Queue
-import boto3
-from utils.aws.aws_ws_client import AWSWSClient
+from aws_controllers.aws_ws_client import AWSWSClient
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env.local"))
 AWS_REGION = os.getenv('AWS_REGION')

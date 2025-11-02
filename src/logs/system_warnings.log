@@ -226,3 +226,223 @@ Traceback (most recent call last):
   File "C:\Python313\Lib\inspect.py", line 3208, in _bind
     raise TypeError(msg) from None
 TypeError: missing a required argument: 'client'
+session_controller 2025-11-02 09:51:13 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 109, in run
+    self.parse_user_commands(payload, topic)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 130, in parse_user_commands
+    self.stop_session()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 82, in stop_session
+    self.db.update_record(
+    ^^^^^^^
+AttributeError: 'SessionController' object has no attribute 'db'
+base 2025-11-02 10:51:16 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-11-02 10:51:16 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+session_controller 2025-11-02 10:52:05 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 109, in run
+    self.parse_user_commands(payload, topic)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 130, in parse_user_commands
+    self.stop_session()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 82, in stop_session
+    self.db.update_record(
+    ^^^^^^^
+AttributeError: 'SessionController' object has no attribute 'db'
+mqtt_client 2025-11-02 10:57:45 [ERROR] shared.utils.logger: The connection was interruped by the user
+base 2025-11-02 10:57:47 [WARNING] shared.utils.logger: Temperature Sensor 1 sensor running in simulation mode.
+base 2025-11-02 10:57:47 [WARNING] shared.utils.logger: pH Sensor 1 sensor running in simulation mode.
+session_controller 2025-11-02 10:57:49 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 109, in run
+    self.parse_user_commands(payload, topic)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 127, in parse_user_commands
+    self.start_session(user=user, project_id=project_id)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 72, in start_session
+    self.session_db.add_record("sessions", payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 232, in add_record
+    with self._locked_cursor() as cur:
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 121, in _locked_cursor
+    cur = self._conn.cursor()
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+heartbeat_service 2025-11-02 12:10:14 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+command_handler 2025-11-02 12:10:27 [ERROR] shared.utils.logger: Invalid command payload: {'action': 'start_session', 'topic': 'ui/commands/start_session', 'parameters': {}, 'timestamp': '2025-11-02T12:10:27.694Z'} (1 validation error for CommandPayload
+command
+  Field required [type=missing, input_value={'action': 'start_session...25-11-02T12:10:27.694Z'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing)
+heartbeat_service 2025-11-02 12:10:44 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 12:11:14 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+command_handler 2025-11-02 12:11:29 [ERROR] shared.utils.logger: Invalid command payload: {'action': 'stop_session', 'topic': 'ui/commands/stop_session', 'parameters': {}, 'timestamp': '2025-11-02T12:11:29.821Z'} (1 validation error for CommandPayload
+command
+  Field required [type=missing, input_value={'action': 'stop_session'...25-11-02T12:11:29.821Z'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing)
+heartbeat_service 2025-11-02 12:11:44 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 12:15:35 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+command_handler 2025-11-02 12:15:36 [WARNING] shared.utils.logger: Unhandled UI command: ping
+command_handler 2025-11-02 12:15:36 [WARNING] shared.utils.logger: Unhandled UI command: ping
+command_handler 2025-11-02 12:15:46 [WARNING] shared.utils.logger: Unhandled UI command: ping
+session_controller 2025-11-02 12:15:51 [WARNING] shared.utils.logger: No active session to stop
+session_controller 2025-11-02 12:15:58 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 26, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 83, in start_session
+    project_id=payload.get("project_id", ""),
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+heartbeat_service 2025-11-02 12:16:05 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+session_controller 2025-11-02 12:16:07 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 28, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.session_db.update_record(
+    ^^^^^^^^^^^^^^^
+AttributeError: 'SessionController' object has no attribute 'session_db'. Did you mean: 'session_id'?
+heartbeat_service 2025-11-02 12:17:11 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+command_handler 2025-11-02 12:17:15 [WARNING] shared.utils.logger: Unhandled UI command: ping
+session_controller 2025-11-02 12:17:17 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command(topic, payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 26, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 83, in start_session
+    project_id=payload.get("project_id", ""),
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+heartbeat_service 2025-11-02 12:20:47 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+command_handler 2025-11-02 12:20:52 [WARNING] shared.utils.logger: Unhandled UI command: ping
+session_controller 2025-11-02 12:20:57 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 27, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 83, in start_session
+    project_id=payload.get("project_id", ""),
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+heartbeat_service 2025-11-02 12:21:17 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 12:21:22 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+session_controller 2025-11-02 12:21:29 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 27, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 83, in start_session
+    project_id=payload.get("project_id", ""),
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+heartbeat_service 2025-11-02 12:21:53 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+session_controller 2025-11-02 12:21:56 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 27, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 90, in start_session
+    self.db.add_record("sessions", sess_payload.model_dump_json())
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 229, in add_record
+    keys = ", ".join(data.keys())
+                     ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'keys'
+heartbeat_service 2025-11-02 12:22:23 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 12:22:53 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 12:23:37 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+db_manager 2025-11-02 12:23:41 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sessions (session_id, project_id, start_time, user, notes, active, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)' params=('session_ac400c3a-09a3-4cb9-b8ba-18b55559ac3b', 'WNDRIKGnwkerfnwe32324', '2025-11-02T12:23:41.447579+00:00', "auth|09875407429'20842", 'This is a note', 1, None): table sessions has no column named session_id
+session_controller 2025-11-02 12:23:41 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 27, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 90, in start_session
+    self.db.add_record("sessions", sess_payload.model_dump())
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 234, in add_record
+    self._retrying_execute(cur, sql, tuple(data.values()))
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 141, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: table sessions has no column named session_id
+heartbeat_service 2025-11-02 12:25:42 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+db_manager 2025-11-02 12:25:45 [ERROR] shared.utils.logger: SQLite OperationalError on 'INSERT INTO sessions (session_id, project_id, start_time, user, notes, active, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)' params=('session_66c93323-3334-4485-93d3-41d22bdd0d82', 'WNDRIKGnwkerfnwe32324', '2025-11-02T12:25:45.886133+00:00', "auth|09875407429'20842", 'This is a note', 1, None): table sessions has no column named session_id
+session_controller 2025-11-02 12:25:45 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 27, in handle_ui_command
+    self.controller.start_session(cmd.params)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 90, in start_session
+    self.db.add_record("sessions", sess_payload.model_dump())
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 234, in add_record
+    self._retrying_execute(cur, sql, tuple(data.values()))
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 141, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: table sessions has no column named session_id
+heartbeat_service 2025-11-02 12:26:14 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+db_manager 2025-11-02 12:26:27 [ERROR] shared.utils.logger: SQLite OperationalError on 'UPDATE sessions SET active=?, end_time=? WHERE id=?' params=[0, '2025-11-02T12:26:27.865432+00:00', 'session_68fc2e37-774d-4aaf-a245-2ab8e4d9322a']: no such column: id
+session_controller 2025-11-02 12:26:27 [ERROR] shared.utils.logger: Error in main loop
+Traceback (most recent call last):
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 62, in run
+    self.command_handler.handle_ui_command( payload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\controllers\command_handler.py", line 29, in handle_ui_command
+    self.controller.stop_session()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\session_controller.py", line 102, in stop_session
+    self.db.update_record(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        "sessions",
+        ^^^^^^^^^^^
+    ...<2 lines>...
+        id_column="id"
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 245, in update_record
+    self._retrying_execute(cur, sql, params)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\danie\Desktop\WD\magm_edge_server\src\edge_server\database\db_manager.py", line 141, in _retrying_execute
+    return cur.execute(query, params)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such column: id
+heartbeat_service 2025-11-02 12:26:44 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+heartbeat_service 2025-11-02 12:26:59 [ERROR] shared.utils.logger: Failed to publish heartbeat: 'AWSIoTClient' object has no attribute 'publish'
+command_handler 2025-11-02 12:27:18 [WARNING] shared.utils.logger: Unhandled UI command: ping
