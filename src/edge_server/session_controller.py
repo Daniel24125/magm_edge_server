@@ -11,9 +11,9 @@ from controllers.command_handler import CommandHandler
 from services.heartbeat_service import HeartbeatService
 
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 from shared.utils.logger import logger
 from shared.utils.config_loader import load_config
 

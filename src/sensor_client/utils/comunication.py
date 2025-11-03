@@ -5,10 +5,11 @@ from .ads_utils import ads
 from adafruit_ads1x15.analog_in import AnalogIn
 port_map = [0,1,2,3]
 
-
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 try:
-    from shared.utils.config_loader import load_config
     from edge_server.database.db_manager import DatabaseHelper
 
 except ImportError as e:

@@ -1,8 +1,8 @@
-import time
+import time, statistics
 import os
 from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, logger, save_config, project_root
-import json
-import numpy as np
+from collections import deque
+
 
 SIMULATION_MODE = state_manager.simulation_mode
 if SIMULATION_MODE:
@@ -36,12 +36,21 @@ class PHSensor(AbstractSensor):
 
     def __init__(self, name: str, unit: str, config: dict):
         super().__init__(name, unit, config)
+        self.config = config
+        self.init_read_settings()
         if SIMULATION_MODE:
             self.simulator_init(SimulatedPHSensor)
         else:
             self.init_gpio()
-            self.analog_comunicator = AnalogCommunication(config)
+            self.analog_comunicator = AnalogCommunication(self.config)
         
+    def init_read_settings(self):
+        self.window = self.config.get("read_window_size")
+        self.stability_threshold = self.config.get("read_stability_threshold")
+
+        self.values = deque(maxlen=self.window)
+        self.last_stable = False
+
     def init_gpio(self):  
         print("Setting GPIO mode.")
         self.acidic_pin = self.config.get("pin").get("acidic")
@@ -49,31 +58,35 @@ class PHSensor(AbstractSensor):
         lgpio.gpio_claim_output(chip, self.acidic_pin, level=1)
         lgpio.gpio_claim_output(chip, self.alkaline_pin, level=1)
 
-    def set_calibration_value(self, type, value):
-        save_config(os.path.join(project_root, 'sensor_client/config/sensors.json'),{
-            **self.config,
-            "calibration":{
-                **self.config.get("calibration"),
-                type: value
-            }
-        })
-
-
-
+    
     def read(self) -> SensorReading:
         try:
             if SIMULATION_MODE and self.simulated_sensor:
                 return self.simulated_sensor.read()
             else:
-                logger.info("Getting the current pH value...")
-                value = self.analog_comunicator.get_read()
-                return SensorReading(
-                    timestamp=time.time(),
-                    value=value,
-                    unit=self.unit
-                )
+                return self.get_instrument_read() 
         except Exception as err: 
             logger.error(err)
+
+    def get_instrument_read(self):
+        ph_val = self.analog_comunicator.get_read()  # your raw-to-pH conversion
+        self.values.append(ph_val)
+
+        is_stable = False
+        avg_ph = ph_val
+
+        if len(self.values) == self.values.maxlen:
+            delta = max(self.values) - min(self.values)
+            is_stable = delta < self.stability_threshold
+            avg_ph = statistics.mean(self.values)
+
+        self.last_stable = is_stable
+        return SensorReading(
+            timestamp=time.time(),
+            value=avg_ph,
+            unit=self.unit,
+            is_stable=is_stable
+        )
 
     def set_mode(self, mode):
         if mode != "acidic" or mode != "alkaline" or mode != "auto":
@@ -81,6 +94,7 @@ class PHSensor(AbstractSensor):
         self.mode = mode
     
 ####### UTIL METHODS ###########
+
     def calculate_pump_time(self, current_ph):
         ph_difference = abs(self.target_ph - current_ph)
         # Scale the pump time based on pH difference, max 10 seconds
@@ -105,77 +119,4 @@ class PHSensor(AbstractSensor):
         return (pump, pump_pin)
 
 
-
-class PHCalibrator:
-    """
-    pH sensor calibration and temperature-compensated measurement handler.
-    """
-
-    def __init__(self, calibration_file="ph_calibration.json", calibration_temp=25.0):
-        self.calibration_file = calibration_file
-        self.slope = None
-        self.intercept = None
-        self.calibration_temp = calibration_temp  # °C
-        self.load_calibration()
-
-    # ---------- Calibration Logic ----------
-    def calibrate(self, known_ph_values, measured_values, calibration_temp=None):
-        """
-        Calibrate the sensor with known pH buffer values and measured voltages.
-
-        Parameters:
-        - known_ph_values: list of known buffer pH values (e.g., [4.0, 7.0, 10.0])
-        - measured_values: list of measured voltages or ADC values (e.g., [2.52, 1.77, 1.05])
-        - calibration_temp: temperature at which calibration was performed (°C)
-        """
-        if len(known_ph_values) != len(measured_values):
-            raise ValueError("known_ph_values and measured_values must have the same length")
-
-        self.calibration_temp = calibration_temp or self.calibration_temp
-        coeffs = np.polyfit(known_ph_values, measured_values, 1)
-        self.slope, self.intercept = coeffs
-        self.save_calibration()
-        logger.info(f"✅ Calibration complete: slope={self.slope:.4f}, intercept={self.intercept:.4f} at {self.calibration_temp}°C")
-
-    # ---------- Conversion Logic ----------
-    def ph_from_reading(self, reading, temp_c=None):
-        """
-        Convert a sensor voltage/ADC reading to pH, compensating for temperature.
-
-        Parameters:
-        - reading: measured voltage (V) or ADC unit
-        - temp_c: current solution temperature (°C)
-        """
-        if self.slope is None or self.intercept is None:
-            raise RuntimeError("Sensor not calibrated yet.")
-
-        # Temperature-compensated slope
-        slope_corr = self.slope * self._nernst_factor(temp_c or self.calibration_temp)
-        return (reading - self.intercept) / slope_corr
-
-    def _nernst_factor(self, temp_c):
-        """
-        Compute relative Nernst slope correction factor for given temperature.
-        """
-        return (273.15 + temp_c) / (273.15 + self.calibration_temp)
-
-    # ---------- Persistence ----------
-    def save_calibration(self):
-        data = {
-            "slope": self.slope,
-            "intercept": self.intercept,
-            "calibration_temp": self.calibration_temp
-        }
-        with open(self.calibration_file, "w") as f:
-            json.dump(data, f, indent=2)
-
-    def load_calibration(self):
-        try:
-            with open(self.calibration_file, "r") as f:
-                data = json.load(f)
-                self.slope = data["slope"]
-                self.intercept = data["intercept"]
-                self.calibration_temp = data.get("calibration_temp", 25.0)
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
-
+   

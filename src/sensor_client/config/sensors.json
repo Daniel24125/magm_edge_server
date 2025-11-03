@@ -28,11 +28,8 @@
       "unit": "",
       "enabled": true,
       "probe": 3,
-      "calibration": {
-        "calibration_offset": 0.1,
-        "acidic_value": 3689.6,
-        "alkaline_value": 14253.6
-      },
+      "read_window_size": 10,
+      "read_stability_threshold": 0.02,
       "pin":{
           "acidic": 10,
           "alkaline": 9,

@@ -143,7 +143,12 @@ class MQTTClient:
             "device_id": self.device_id,
             "session_id": session_id,
             "timestamp": time.time()*1000,
-            "data": {name: r.value if r else None for name, r in readings.items()}
+            "data": {name: {
+                "value" : r.value,
+                "timestamp": r.timestamp,
+                "unit": r.unit,
+                "is_stable": r.is_stable
+            } if r else None for name, r in readings.items()}
         }
         message = json.dumps({
             "payload": payload, 

@@ -6,3 +6,4 @@ class SensorReading:
     timestamp: float
     value: float
     unit: str
+    is_stable: bool

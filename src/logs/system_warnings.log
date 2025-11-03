@@ -1752,3 +1752,20 @@ mqtt_client 2025-11-03 11:46:59 [ERROR] shared.utils.logger: The connection was 
 mqtt_client 2025-11-03 11:47:48 [ERROR] shared.utils.logger: The connection was interruped by the user
 mqtt_client 2025-11-03 11:48:05 [ERROR] shared.utils.logger: The connection was interruped by the user
 session_controller 2025-11-03 11:49:34 [WARNING] shared.utils.logger: No active session to stop
+heartbeat_service 2025-11-03 13:43:53 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+session_controller 2025-11-03 13:43:53 [WARNING] shared.utils.logger: Session already active
+session_controller 2025-11-03 13:43:56 [WARNING] shared.utils.logger: No active session to stop
+ph 2025-11-03 13:44:32 [ERROR] shared.utils.logger: 'AnalogCommunication' object has no attribute 'get_ph'
+ph 2025-11-03 13:44:37 [ERROR] shared.utils.logger: 'AnalogCommunication' object has no attribute 'get_ph'
+mqtt_client 2025-11-03 13:45:08 [ERROR] shared.utils.logger: The connection was interruped by the user
+heartbeat_service 2025-11-03 13:47:32 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+mqtt_client 2025-11-03 13:47:53 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_client 2025-11-03 13:48:05 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type SensorReading is not JSON serializable
+mqtt_client 2025-11-03 13:48:10 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type SensorReading is not JSON serializable
+mqtt_client 2025-11-03 13:50:25 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_client 2025-11-03 13:50:36 [ERROR] shared.utils.logger: An error occurred while processing message: 'SensorReading' object has no attribute 'is_stable'
+mqtt_client 2025-11-03 13:51:42 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_client 2025-11-03 13:52:37 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type bool is not JSON serializable
+mqtt_client 2025-11-03 13:52:42 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type bool is not JSON serializable
+mqtt_client 2025-11-03 13:52:47 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type bool is not JSON serializable
+mqtt_client 2025-11-03 13:52:52 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type bool is not JSON serializable

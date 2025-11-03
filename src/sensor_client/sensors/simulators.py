@@ -54,7 +54,8 @@ class SimulatedCyclicalSensor(AbstractSensor):
             return SensorReading(
                 timestamp=time.time(),
                 value=final_value,
-                unit=self.unit
+                unit=self.unit,
+                is_stable=True
             )
         except Exception:
             # In a real scenario, you would log this error
