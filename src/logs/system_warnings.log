@@ -1772,3 +1772,4 @@ mqtt_client 2025-11-03 13:52:52 [ERROR] shared.utils.logger: An error occurred w
 mqtt_client 2025-11-03 14:27:31 [ERROR] shared.utils.logger: An error occurred while processing message: Object of type bool is not JSON serializable
 mqtt_client 2025-11-03 14:29:20 [ERROR] shared.utils.logger: The connection was interruped by the user
 mqtt_client 2025-11-03 15:00:13 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_client 2025-11-03 15:01:29 [ERROR] shared.utils.logger: The connection was interruped by the user
