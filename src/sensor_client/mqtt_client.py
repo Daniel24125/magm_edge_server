@@ -93,7 +93,7 @@ class MQTTClient:
             self.calibrate_device(payload)
     
     def calibrate_device(self, payload: dict):
-        sensor_id = payload.get("device_id")
+        sensor_id = payload.get("sensor_id")
         sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
         self.ph_calibration = PHCalibrationManager(self.mqtt, self.db, self.device_id, sensor.read)
         self.ph_calibration.start()
@@ -102,13 +102,13 @@ class MQTTClient:
         self.client.subscribe("/controller/retry")
         self.client.subscribe("/controller/status/session_config_updated")
         self.client.subscribe("/controller/commands/#")
+        self.client.subscribe(f"/{self.device_id}/commands/#")
         self.client.subscribe("/devices/registration_request")
 
     def start_session(self, payload: str):
         session_id = payload.get("session_id")
         logger.info(f"Starting session with ID: {session_id}")
         self.client.subscribe(f"/controller/session/{session_id}/#")
-
 
     def register_device(self): 
         payload = {

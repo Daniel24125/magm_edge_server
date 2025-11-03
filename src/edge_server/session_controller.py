@@ -158,9 +158,17 @@ class SessionController(threading.Thread):
             source=payload.get("source"),
             data=json.dumps(payload.get("data")),
             timestamp_iso=payload.get("timestamp")
-            
         )
         self.aws.publish_sensor_data(payload)
 
     def _get_online_status(self):
         return {d: True for d in self.online_devices.keys()}
+
+    def forward_device_command(self , payload, cmd): 
+        device_id = payload.get("device_id", "")
+        topic = f"/devices/{device_id}/{cmd}"
+        self.mqtt.client.publish(
+            topic,
+            json.dumps(payload),
+            qos=1
+        )
