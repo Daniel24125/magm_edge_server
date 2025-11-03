@@ -1736,3 +1736,18 @@ mqtt_client 2025-11-02 15:51:39 [ERROR] shared.utils.logger: The connection was 
 heartbeat_service 2025-11-02 18:49:11 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
 ph 2025-11-02 18:49:39 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
 ph 2025-11-02 18:49:44 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
+heartbeat_service 2025-11-03 10:35:26 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+mqtt_client 2025-11-03 11:03:20 [ERROR] shared.utils.logger: The connection was interruped by the user
+ads_utils 2025-11-03 11:29:00 [ERROR] shared.utils.logger: ❌ Failed to init ADS1115: type object 'SafeI2C' has no attribute 'safe_lock'
+heartbeat_service 2025-11-03 11:42:54 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+ph 2025-11-03 11:44:42 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
+ph 2025-11-03 11:44:47 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
+heartbeat_service 2025-11-03 11:45:29 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+heartbeat_service 2025-11-03 11:45:35 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+heartbeat_service 2025-11-03 11:45:47 [ERROR] shared.utils.logger: Failed to publish heartbeat: Not connected.
+mqtt_client 2025-11-03 11:45:49 [ERROR] shared.utils.logger: The connection was interruped by the user
+ph 2025-11-03 11:46:01 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
+ph 2025-11-03 11:46:06 [ERROR] shared.utils.logger: 'PHSensor' object has no attribute 'comunicator'
+mqtt_client 2025-11-03 11:46:59 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_client 2025-11-03 11:47:48 [ERROR] shared.utils.logger: The connection was interruped by the user
+mqtt_client 2025-11-03 11:48:05 [ERROR] shared.utils.logger: The connection was interruped by the user

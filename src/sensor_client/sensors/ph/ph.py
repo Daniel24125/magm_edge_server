@@ -1,13 +1,14 @@
 import time
 import os
 from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, logger, save_config, project_root
-from utils.comunication import AnalogCommunication
 import json
 import numpy as np
 
 SIMULATION_MODE = state_manager.simulation_mode
 if SIMULATION_MODE:
     from ..simulators import SimulatedPHSensor 
+else:
+    from utils.comunication import AnalogCommunication
 
 
 class PHSensor(AbstractSensor):
@@ -39,7 +40,7 @@ class PHSensor(AbstractSensor):
             self.simulator_init(SimulatedPHSensor)
         else:
             self.init_gpio()
-        self.analog_comunicator = AnalogCommunication(config)
+            self.analog_comunicator = AnalogCommunication(config)
         
     def init_gpio(self):  
         print("Setting GPIO mode.")
@@ -65,7 +66,7 @@ class PHSensor(AbstractSensor):
                 return self.simulated_sensor.read()
             else:
                 logger.info("Getting the current pH value...")
-                value = self.comunicator.get_read()
+                value = self.analog_comunicator.get_read()
                 return SensorReading(
                     timestamp=time.time(),
                     value=value,

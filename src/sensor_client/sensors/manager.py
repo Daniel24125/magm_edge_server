@@ -1,8 +1,8 @@
 import  sys, os
-from ph.ph import PHSensor
-from temperature import TemperatureSensor
+from .ph.ph import PHSensor
+from .temperature import TemperatureSensor
+from .base import AbstractSensor
 from typing import List, Dict, Any, Optional
-from base import AbstractSensor
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
