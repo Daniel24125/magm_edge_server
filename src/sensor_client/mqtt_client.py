@@ -2,6 +2,8 @@ import paho.mqtt.client as mqtt
 import json,  sys, os
 from config.config_manager import ConfigManager
 import time 
+from sensors.manager import SensorManager
+from sensors.ph.calibration_manager import PHCalibrationManager
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -14,7 +16,7 @@ config_manager = ConfigManager()
 
 class MQTTClient:
 
-    def __init__(self, config, sensor_manager):
+    def __init__(self, config: dict, sensor_manager: SensorManager):
         self.sensor_manager = sensor_manager
         self.init_variables(config)
         self.define_publish_topics()
@@ -88,7 +90,13 @@ class MQTTClient:
             self.register_device()
         elif topic.endswith("start_calibration"):
             logger.info("Calibration process started")
-            
+            self.calibrate_device(payload)
+    
+    def calibrate_device(self, payload: dict):
+        sensor_id = payload.get("device_id")
+        sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
+        self.ph_calibration = PHCalibrationManager(self.mqtt, self.db, self.device_id, sensor.read)
+        self.ph_calibration.start()
 
     def subscribe_to_topics(self):
         self.client.subscribe("/controller/retry")
@@ -147,7 +155,7 @@ class MQTTClient:
                 "value" : r.value,
                 "timestamp": r.timestamp,
                 "unit": r.unit,
-                "is_stable": r.is_stable
+                "is_stable": bool(r.is_stable)
             } if r else None for name, r in readings.items()}
         }
         message = json.dumps({

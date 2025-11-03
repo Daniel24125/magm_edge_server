@@ -11,6 +11,7 @@
     {
       "type": "Temperature",
       "name": "Temperature Sensor 1",
+      "device_id": "e6cc7497-d0aa-4cd9-9e56-65sdf1g6s5d1vwes",
       "unit": "Celsius",
       "enabled": false,
       "pin": 4,
@@ -25,6 +26,7 @@
     {
       "type": "pH",
       "name": "pH Sensor 1",
+      "device_id": "e6cc7497-d0aa-4cd9-9e56-578b6f9db521",
       "unit": "",
       "enabled": true,
       "probe": 3,

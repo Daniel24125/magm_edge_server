@@ -2,7 +2,7 @@ import  sys, os
 from .ph.ph import PHSensor
 from .temperature import TemperatureSensor
 from .base import AbstractSensor
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -55,6 +55,9 @@ class SensorManager:
             A dictionary mapping sensor names to their SensorReading objects.
         """
         return {sensor.name: sensor.read() for sensor in self.sensors}
+
+    def get_sensor(self, sensor_id: str) -> Union[PHSensor, TemperatureSensor]: 
+        return list(filter(lambda s: s.get("sensor_id", "") == sensor_id))[0]
 
 if __name__ == "__main__": 
     from shared.utils.config_loader import load_config

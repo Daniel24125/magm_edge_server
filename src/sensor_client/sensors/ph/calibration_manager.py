@@ -3,16 +3,18 @@ import threading
 from statistics import mean
 from datetime import datetime
 import sys, os
+from typing import Callable
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from shared.utils.logger import logger
+from shared.models.sensor_reading import SensorReading
 from edge_server.database.db_manager import DatabaseHelper
 
 class PHCalibrationManager:
-    def __init__(self, mqtt_client, db: DatabaseHelper, device_id: str, read_ph_callback):
+    def __init__(self, mqtt_client, db: DatabaseHelper, device_id: str, read_ph_callback: Callable[[], SensorReading]):
         self.mqtt = mqtt_client
         self.db = db
         self.device_id = device_id
@@ -59,21 +61,15 @@ class PHCalibrationManager:
     def _wait_for_stable(self):
         start = time.time()
         while time.time() - start < self.timeout:
-            ph_val = self.read_ph()
-            with self._lock:
-                self.values.append(ph_val)
-                if len(self.values) > self.stability_window:
-                    self.values.pop(0)
-            if self._is_stable():
-                logger.info(f"✅ Stable pH detected: {mean(self.values):.3f}")
-                return mean(self.values)
+            read = self.read_ph()
+            ph_avg = read.value
+            is_stable = read.is_stable
+            if is_stable:
+                logger.info(f"✅ Stable pH detected: {ph_avg:.3f}")
+                return ph_avg
             time.sleep(self.sample_rate)
         raise TimeoutError("Calibration timed out waiting for stability.")
-
-    def _is_stable(self):
-        if len(self.values) < self.stability_window:
-            return False
-        return max(self.values) - min(self.values) < self.threshold
+    
 
     def _finalize(self):
         slope = (self.alkaline_value - self.acidic_value) / (7.0 - 4.0)
