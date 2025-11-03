@@ -60,7 +60,8 @@ class SessionController(threading.Thread):
                     self.command_handler.handle_device_message(topic, payload)
                 elif topic.startswith("ui/"):
                     self.command_handler.handle_ui_command( payload)
-                
+                else: 
+                    logger.warning("Command not recognized...")
             except Empty:
                 continue
             except Exception:
