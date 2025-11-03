@@ -27,7 +27,7 @@ class CommandHandler:
             case "stop_session":
                 self.controller.stop_session()
             case "start_calibration":
-                self.controller.forward_device_commands(cmd.params, cmd.command)
+                self.controller.forward_device_command(cmd.params, cmd.command)
             case _:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 
