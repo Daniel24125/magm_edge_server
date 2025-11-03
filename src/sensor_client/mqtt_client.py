@@ -31,6 +31,8 @@ class MQTTClient:
         self.publish_measurement_topic = f"/devices/{self.device_id}/data"
         self.device_registration_topic = f"/devices/{self.device_id}/register"
         self.device_unregistration_topic = f"/devices/{self.device_id}/unregister"
+        self.device_request_acidic = f"/devices/{self.device_id}/cal/acidic"
+        self.device_request_alkaline = f"/devices/{self.device_id}/cal/alkaline"
 
     def init_mqtt_client(self):
         self.client = mqtt.Client(
@@ -84,6 +86,9 @@ class MQTTClient:
     def parse_device_commands(self, topic, payload): 
         if topic.endswith("registration_request"):
             self.register_device()
+        elif topic.endswith("start_calibration"):
+            logger.info("Calibration process started")
+            
 
     def subscribe_to_topics(self):
         self.client.subscribe("/controller/retry")
