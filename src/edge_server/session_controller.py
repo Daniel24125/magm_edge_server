@@ -167,10 +167,7 @@ class SessionController(threading.Thread):
     def forward_device_command(self , payload, cmd): 
 
         device_id = payload.get("device_id", "")
-        logger.info(f"forward_device_command REACHED: {device_id}")
         topic = f"/{device_id}/commands/{cmd}"
-        logger.info(f"forward_device_command REACHED: {topic}")
-
         self.mqtt.client.publish(
             topic,
             json.dumps(payload),
