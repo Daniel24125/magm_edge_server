@@ -135,7 +135,7 @@ export default function Page() {
         </button>
         <button
           onClick={() => sendCommand("start_calibration", {
-            device_id: "e6cc7497-d0aa-4cd9-9e56-578b6f9db521",
+            device_id: "d09454f7-6a4a-44af-9e0d-eb0bea17e9de",
             user: "auth|09875407429'20842",
             user_name: "Daniel Madalena",
             sensor_id: "e6cc7497-d0aa-4cd9-9e56-578b6f9db521"
