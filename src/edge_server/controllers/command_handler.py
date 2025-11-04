@@ -13,6 +13,7 @@ class CommandHandler:
         self.controller = controller
 
     def handle_ui_command(self, payload: dict):
+
         try:
             cmd = CommandPayload(**payload)
         except Exception as e:

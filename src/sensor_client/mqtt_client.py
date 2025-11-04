@@ -28,6 +28,7 @@ class MQTTClient:
         self.broker = broker_config.get("mqtt", {}).get("broker", "localhost")
         self.port = broker_config.get("mqtt", {}).get("port", 1883)
         self.keepalive = broker_config.get("mqtt", {}).get("keepalive", 60)
+        self.ph_calibration = None
 
     def define_publish_topics(self): 
         self.publish_measurement_topic = f"/devices/{self.device_id}/data"
@@ -91,11 +92,18 @@ class MQTTClient:
         elif topic.endswith("start_calibration"):
             logger.info("Calibration process started")
             self.calibrate_device(payload)
+        elif topic.endswith("register_cal_measurement"):
+            logger.info("Calibration process started")
+            if getattr(self, "ph_calibration"):
+                self.ph_calibration.register_measurement_value(payload.get("measurement_type"))
+        elif topic.endswith("cancel_calibration"):
+            if getattr(self, "ph_calibration"):
+                self.ph_calibration.reset_calibration()
+                self.ph_calibration = None
     
     def calibrate_device(self, payload: dict):
-        sensor_id = payload.get("sensor_id")
-        sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
-        self.ph_calibration = PHCalibrationManager(self.mqtt, self.db, self.device_id, sensor.read)
+        sensor = self.sensor_manager.get_sensor(sensor_id=payload.get("sensor_id", ""))
+        self.ph_calibration = PHCalibrationManager(self.mqtt, self.db, sensor.read, payload)
         self.ph_calibration.start()
 
     def subscribe_to_topics(self):

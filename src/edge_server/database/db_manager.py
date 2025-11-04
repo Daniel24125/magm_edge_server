@@ -79,6 +79,8 @@ class DatabaseHelper:
 
                 CREATE TABLE IF NOT EXISTS ph_calibration (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sensor_id TEXT NOT NULL,
+                    device_id TEXT NOT NULL,
                     sensor_type TEXT NOT NULL,        -- e.g., 'pH'
                     date TEXT NOT NULL,               -- ISO UTC
                     slope REAL NOT NULL,

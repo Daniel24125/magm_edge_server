@@ -55,7 +55,6 @@ class SessionController(threading.Thread):
             try:
                 msg = self.in_queue.get(timeout=0.5)
                 topic, payload = msg.get("topic", ""), msg.get("payload", {})
-
                 if topic.startswith("/devices/"):
                     self.command_handler.handle_device_message(topic, payload)
                 elif topic.startswith("ui/"):
@@ -166,8 +165,12 @@ class SessionController(threading.Thread):
         return {d: True for d in self.online_devices.keys()}
 
     def forward_device_command(self , payload, cmd): 
+
         device_id = payload.get("device_id", "")
-        topic = f"/devices/{device_id}/{cmd}"
+        logger.info(f"forward_device_command REACHED: {device_id}")
+        topic = f"/{device_id}/commands/{cmd}"
+        logger.info(f"forward_device_command REACHED: {topic}")
+
         self.mqtt.client.publish(
             topic,
             json.dumps(payload),

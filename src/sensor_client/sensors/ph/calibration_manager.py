@@ -1,7 +1,6 @@
 import time
-import threading
 from statistics import mean
-from datetime import datetime
+from datetime import datetime, timezone
 import sys, os
 from typing import Callable
 
@@ -14,17 +13,14 @@ from shared.models.sensor_reading import SensorReading
 from edge_server.database.db_manager import DatabaseHelper
 
 class PHCalibrationManager:
-    def __init__(self, mqtt_client, db: DatabaseHelper, device_id: str, read_ph_callback: Callable[[], SensorReading]):
+    def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], payload: dict):
         self.mqtt = mqtt_client
         self.db = db
-        self.device_id = device_id
+        self.device_id = payload.get("device_id")
+        self.sensor_id = payload.get("sensor_id")
+        self.user = payload.get("user_name", "")
         self.read_ph = read_ph_callback  
-        self.state = "idle"
-        self.values = []
-        self.acidic_value = None
-        self.alkaline_value = None
-        self._lock = threading.Lock()
-        self.running = False
+        self.reset_calibration()
 
         # Calibration parameters
         self.stability_window = 10
@@ -37,26 +33,23 @@ class PHCalibrationManager:
             logger.warning("Calibration already running")
             return
         self.running = True
-        threading.Thread(target=self._run, daemon=True).start()
+        self._prompt_user("acidic", "Insert probe in pH 4.0 buffer")
 
-    def _run(self):
-        try:
-            self._prompt_user("acidic", "Insert probe in pH 4.0 buffer")
+
+    def register_measurement_value(self, measurement_type: str): 
+        if measurement_type == "acidic":
             self.acidic_value = self._wait_for_stable()
-            self._prompt_user("alkaline", "Insert probe in pH 7.0 buffer")
+        elif measurement_type == "alkaline":
             self.alkaline_value = self._wait_for_stable()
             self._finalize()
-        except Exception as e:
-            logger.error(f"Calibration failed: {e}")
-        finally:
-            self.running = False
+        else: 
+            raise ValueError("Incorrect measurement type chosen. Please choose between acidic or alkaline measurement")
+    
 
     def _prompt_user(self, phase, msg):
         topic = f"/devices/{self.device_id}/cal/{phase}"
-        logger.info(f"📡 {msg}")
-        self.mqtt.publish(topic, {"message": msg, "timestamp": datetime.utcnow().isoformat()})
-        self.values.clear()
-        time.sleep(2)
+        logger.info(msg)
+        self.mqtt.publish(topic, {"message": msg, "timestamp": datetime.now(timezone.utc()).isoformat()})
 
     def _wait_for_stable(self):
         start = time.time()
@@ -69,29 +62,36 @@ class PHCalibrationManager:
                 return ph_avg
             time.sleep(self.sample_rate)
         raise TimeoutError("Calibration timed out waiting for stability.")
-    
 
     def _finalize(self):
-        slope = (self.alkaline_value - self.acidic_value) / (7.0 - 4.0)
-        intercept = self.alkaline_value - slope * 7.0
-        logger.info(f"📈 Calibration complete: slope={slope:.4f}, intercept={intercept:.4f}")
+        try:
+            slope = (self.alkaline_value - self.acidic_value) / (7.0 - 4.0)
+            intercept = self.alkaline_value - slope * 7.0
+            logger.info(f"Calibration complete: slope={slope:.4f}, intercept={intercept:.4f}")
+            
+            self.save_cal_into_db(slope, intercept)
+            self._prompt_user("complete", "pH calibration finished successfully.")
+            logger.info("pH calibration finished successfully.")
 
+        except Exception as e: 
+            logger.error("An error occured trying to finalize the calibration process")
+        finally:
+            self.reset_calibration()
+
+    def save_cal_into_db(self, slope: float, intercept: float): 
         self.db.add_record("calibrations", {
-            "timestamp": datetime.utcnow().isoformat(),
+            "date": datetime.now(timezone.utc()).isoformat(),
             "device_id": self.device_id,
-            "sensor": "pH",
-            "acidic_value": self.acidic_value,
-            "alkaline_value": self.alkaline_value,
+            "sensor_id": self.sensor_id,
+            "sensor_type": "pH",
             "slope": slope,
             "intercept": intercept,
-            "status": "success"
+            "operator": self.user,
+            "calibration_temp": 25
         })
 
-        topic = f"/devices/{self.device_id}/cal/complete"
-        self.mqtt.publish(topic, {
-            "status": "success",
-            "slope": slope,
-            "intercept": intercept
-        })
+    def reset_calibration(self): 
+        self.acidic_value = None
+        self.alkaline_value = None
+        self.running = False
 
-        logger.info("🎯 pH calibration finished successfully.")

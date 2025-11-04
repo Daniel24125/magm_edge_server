@@ -69,8 +69,9 @@ class PHSensor(AbstractSensor):
             logger.error(err)
 
     def get_instrument_read(self):
-        ph_val = self.analog_comunicator.get_read()  # your raw-to-pH conversion
-        self.values.append(ph_val)
+        for i in range(10):
+            ph_val = self.analog_comunicator.get_read() 
+            self.values.append(ph_val)
 
         is_stable = False
         avg_ph = ph_val
