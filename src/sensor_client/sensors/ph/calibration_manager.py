@@ -11,7 +11,22 @@ from shared.utils.logger import logger
 from shared.models.sensor_reading import SensorReading
 from edge_server.database.db_manager import DatabaseHelper
 
+
+class PHCalibrationHelper:
+    STANDARDS = {"acidic": 4.0, "neutral": 7.0, "alkaline": 10.0}
+
+    @staticmethod
+    def detect_standard(ph_value: float, tolerance: float = 0.5) -> str:
+        """Infer which pH standard is being measured."""
+        if ph_value is None:
+            return "unknown"
+        diffs = {name: abs(ph_value - ref) for name, ref in PHCalibrationHelper.STANDARDS.items()}
+        name, delta = min(diffs.items(), key=lambda kv: kv[1])
+        return name if delta <= tolerance else "unknown"
+    
+
 class PHCalibrationManager:
+
     def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], payload: dict):
         self.mqtt = mqtt_client
         self.db = db
