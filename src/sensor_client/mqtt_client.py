@@ -11,6 +11,8 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from shared.utils.logger import logger
+from edge_server.database.db_manager import DatabaseHelper
+
 config_manager = ConfigManager()
 
 
@@ -29,6 +31,7 @@ class MQTTClient:
         self.port = broker_config.get("mqtt", {}).get("port", 1883)
         self.keepalive = broker_config.get("mqtt", {}).get("keepalive", 60)
         self.ph_calibration = None
+        self.db =  DatabaseHelper("src/edge_server/database/models/sessions.db")
 
     def define_publish_topics(self): 
         self.publish_measurement_topic = f"/devices/{self.device_id}/data"
@@ -63,7 +66,7 @@ class MQTTClient:
     def on_message(self, client, userdata, msg): 
         try:
             payload = json.loads(msg.payload.decode())
-            logger.info(f"Received message in topic {msg.topic} - {payload}")
+            logger.info(f"Received message in topic {msg.topic}")
             self.parse_message(msg.topic, payload)
 
         except json.JSONDecodeError:
@@ -72,6 +75,7 @@ class MQTTClient:
             logger.error(f"An error occurred while processing message: {e}")
     
     def parse_message(self, topic, payload):
+        logger.info("\nParsing Messgae from top: \n")
         if topic == "/controller/status/session_config_updated": 
             config_manager.update_config(payload)
         elif topic == "/controller/commands/start": 
@@ -87,13 +91,12 @@ class MQTTClient:
             self.publish_sensor_data(all_readings, session_id=payload.get("session_id", ""))
 
     def parse_device_commands(self, topic, payload): 
+        logger.info("\nParsing a device cammand\n")
         if topic.endswith("registration_request"):
             self.register_device()
         elif topic.endswith("start_calibration"):
-            logger.info("Calibration process started")
             self.calibrate_device(payload)
         elif topic.endswith("register_cal_measurement"):
-            logger.info("Calibration process started")
             if getattr(self, "ph_calibration"):
                 self.ph_calibration.register_measurement_value(payload.get("measurement_type"))
         elif topic.endswith("cancel_calibration"):
@@ -102,15 +105,16 @@ class MQTTClient:
                 self.ph_calibration = None
     
     def calibrate_device(self, payload: dict):
-        sensor = self.sensor_manager.get_sensor(sensor_id=payload.get("sensor_id", ""))
-        self.ph_calibration = PHCalibrationManager(self.mqtt, self.db, sensor.read, payload)
+        sensor_id =payload.get("sensor_id", "")
+        sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
+        self.ph_calibration = PHCalibrationManager(self.client, self.db, sensor.read, payload)
         self.ph_calibration.start()
 
     def subscribe_to_topics(self):
         self.client.subscribe("/controller/retry")
         self.client.subscribe("/controller/status/session_config_updated")
         self.client.subscribe("/controller/commands/#")
-        self.client.subscribe(f"/{self.device_id}/commands/#")
+        self.client.subscribe(f"/devices/{self.device_id}/commands/#")
         self.client.subscribe("/devices/registration_request")
 
     def start_session(self, payload: str):

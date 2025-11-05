@@ -34,8 +34,8 @@ class PHSensor(AbstractSensor):
     is_pumping_acid = False
     is_pumping_base = False
 
-    def __init__(self, name: str, unit: str, config: dict):
-        super().__init__(name, unit, config)
+    def __init__(self, name: str, unit: str, config: dict, sensor_id: str):
+        super().__init__(name, unit, config, sensor_id)
         self.config = config
         self.init_read_settings()
         if SIMULATION_MODE:

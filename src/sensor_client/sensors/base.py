@@ -31,11 +31,12 @@ class AbstractSensor(abc.ABC):
     An abstract base class that defines the common interface for all sensors.
     This ensures that any new sensor, real or simulated, will work with the manager.
     """
-    def __init__(self, name: str, unit: str, config: dict = {}):
+    def __init__(self, name: str, unit: str, config: dict , sensor_id: str):
         if not name:
             raise ValueError("Sensor name cannot be empty.")
         self.name = name
         self.unit = unit
+        self.sensor_id = sensor_id
         self.config = config
         self.simulated_sensor = None
         
@@ -61,6 +62,8 @@ class AbstractSensor(abc.ABC):
         self.simulated_sensor = SimulatorClass(
             name=self.name,
             unit=self.unit,
+            sensor_id=self.sensor_id,
+            config={},
             **params
         )
         

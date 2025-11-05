@@ -3,18 +3,22 @@
 import { useEffect, useState } from "react";
 import { mqtt, iot } from "aws-iot-device-sdk-v2";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import Calibration, { TCalibtationStatus } from "./calibration";
+
 
 const AWS_REGION = "eu-west-3";
 const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
 const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com"; 
 const COMMAND_TOPIC = "ui/commands";
 const DATA_TOPIC = "data_aquisition/sensor_data/rpi_data";
+const PROMPT_FROM_DEVICE = "user/device/prompt";
 
 export default function Page() {
   const [messages, setMessages] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
   const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [calibrationStatus, setCalibrationStatus] = useState<TCalibtationStatus>("READY");
   
   
   useEffect(() => {
@@ -59,13 +63,16 @@ export default function Page() {
         });
 
         connection.on("message", (topic, payload) => {
-          const msg = JSON.parse(new TextDecoder().decode(payload));
-          if (topic === DATA_TOPIC) setMessages((prev) => [msg, ...prev]);
+          console.log("📥 Message received on topic:", topic);
+          const parsed_payload = JSON.parse(new TextDecoder().decode(payload));
+          if (topic === DATA_TOPIC) {setMessages((prev) => [parsed_payload, ...prev]);}
+          if (topic === PROMPT_FROM_DEVICE) {handleDevicePrompts(parsed_payload)}
         });
 
         // 4️⃣ Connect & subscribe
         await connection.connect();
         await connection.subscribe(DATA_TOPIC, mqtt.QoS.AtLeastOnce);
+        await connection.subscribe(PROMPT_FROM_DEVICE, mqtt.QoS.AtLeastOnce);
         setConnection(connection);
 
       } catch (err) {
@@ -84,6 +91,19 @@ export default function Page() {
     };
   }, []);
 
+  type TDevicePromptPayload = {
+    type: string, 
+    message: string,
+    timestamp: string, 
+    device_id: string, 
+    data: any
+  }
+  const handleDevicePrompts = (payload: TDevicePromptPayload)=>{
+    console.log("Prompt received from device", payload)
+    if (payload.type === "calibration"){
+      setCalibrationStatus(payload.data.device_status)
+    }
+  }
 
   // 5️⃣ Send command to device
   const sendCommand = (command: string, params: Record<string, any> = {}) => {
@@ -133,18 +153,11 @@ export default function Page() {
         >
           ⏹ Shutdown
         </button>
-        <button
-          onClick={() => sendCommand("start_calibration", {
-            device_id: "d09454f7-6a4a-44af-9e0d-eb0bea17e9de",
-            user: "auth|09875407429'20842",
-            user_name: "Daniel Madalena",
-            sensor_id: "e6cc7497-d0aa-4cd9-9e56-578b6f9db521"
-
-          })}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Start Calibraiton
-        </button>
+        <Calibration 
+          connection={connection}
+          calibrationStatus={calibrationStatus}
+          setCalibrationStatus={setCalibrationStatus}
+        />
       </div>
 
       {/* Live Sensor Data */}

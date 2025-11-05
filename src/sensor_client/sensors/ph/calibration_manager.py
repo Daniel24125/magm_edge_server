@@ -1,9 +1,8 @@
 import time
-from statistics import mean
 from datetime import datetime, timezone
-import sys, os
+import sys, os, threading
 from typing import Callable
-
+import json
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -16,6 +15,7 @@ class PHCalibrationManager:
     def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], payload: dict):
         self.mqtt = mqtt_client
         self.db = db
+
         self.device_id = payload.get("device_id")
         self.sensor_id = payload.get("sensor_id")
         self.user = payload.get("user_name", "")
@@ -33,23 +33,51 @@ class PHCalibrationManager:
             logger.warning("Calibration already running")
             return
         self.running = True
-        self._prompt_user("acidic", "Insert probe in pH 4.0 buffer")
+        threading.Thread(target=self._run, daemon=True).start()
+
+
+    def _run(self):
+        # TODO: AUTO DETECT BUFFER SO THAT THE MEASUREMETN DOES NOT DEPEND ONLY ON THE STABILITY 
+        self.running = True
+        logger.info("Calibration process started")
+
+        self._prompt_user("ACIDIC", "Waiting for the acidic buffer (pH 4.0) to stabilize...")
+        self.register_measurement_value("acidic")
+        self._prompt_user("ALKALINE", "Waiting for the alkaline buffer (pH 7.0) to stabilize...")
+        self.register_measurement_value("alkaline")
 
 
     def register_measurement_value(self, measurement_type: str): 
+        time.sleep(2)
+        is_buffer_ready = True
+
         if measurement_type == "acidic":
-            self.acidic_value = self._wait_for_stable()
+            if is_buffer_ready:
+                self.acidic_value = self._wait_for_stable()
         elif measurement_type == "alkaline":
-            self.alkaline_value = self._wait_for_stable()
-            self._finalize()
+            if is_buffer_ready:
+                self.alkaline_value = self._wait_for_stable()
+                self._finalize()
         else: 
             raise ValueError("Incorrect measurement type chosen. Please choose between acidic or alkaline measurement")
     
 
-    def _prompt_user(self, phase, msg):
-        topic = f"/devices/{self.device_id}/cal/{phase}"
+    def _prompt_user(self, status, msg):
+        topic = f"/devices/{self.device_id}/cal/prompt_user"
         logger.info(msg)
-        self.mqtt.publish(topic, {"message": msg, "timestamp": datetime.now(timezone.utc()).isoformat()})
+        payload = {
+            "topic": topic,
+            "payload": {
+                "type": "calibration",
+                "message": msg,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "device_id": self.device_id,
+                "data":{
+                    "device_status": status,
+                }
+            }
+        }
+        self.mqtt.publish(topic, json.dumps(payload))
 
     def _wait_for_stable(self):
         start = time.time()
@@ -70,17 +98,17 @@ class PHCalibrationManager:
             logger.info(f"Calibration complete: slope={slope:.4f}, intercept={intercept:.4f}")
             
             self.save_cal_into_db(slope, intercept)
-            self._prompt_user("complete", "pH calibration finished successfully.")
+            self._prompt_user("READY", "pH calibration finished successfully.")
             logger.info("pH calibration finished successfully.")
 
         except Exception as e: 
-            logger.error("An error occured trying to finalize the calibration process")
+            logger.error(f"An error occured trying to finalize the calibration process: {e}")
         finally:
             self.reset_calibration()
 
     def save_cal_into_db(self, slope: float, intercept: float): 
-        self.db.add_record("calibrations", {
-            "date": datetime.now(timezone.utc()).isoformat(),
+        self.db.add_record("ph_calibration", {
+            "date": datetime.now(timezone.utc).isoformat(),
             "device_id": self.device_id,
             "sensor_id": self.sensor_id,
             "sensor_type": "pH",

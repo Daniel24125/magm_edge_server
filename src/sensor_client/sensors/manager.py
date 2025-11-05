@@ -36,14 +36,16 @@ class SensorManager:
         """
         Parses the sensor configuration list and creates instances of sensors.
         """
-        for sensor in self.config.get("sensors"):
+        self.sensor_list = self.config.get("sensors")
+        for sensor in self.sensor_list:
             if sensor.get("enabled"):
                 sensor_class = self.SENSOR_TYPE_MAP[sensor.get("type")]
                 self.sensors.append(
                     sensor_class(
                         name = sensor.get("name"), 
                         unit = sensor.get("unit"), 
-                        config = sensor
+                        config = sensor,
+                        sensor_id = sensor.get("sensor_id")
                     )
                 )
 
@@ -57,7 +59,7 @@ class SensorManager:
         return {sensor.name: sensor.read() for sensor in self.sensors}
 
     def get_sensor(self, sensor_id: str) -> Union[PHSensor, TemperatureSensor]: 
-        return list(filter(lambda s: s.get("sensor_id", "") == sensor_id))[0]
+        return list(filter(lambda s: s.sensor_id == sensor_id, self.sensors))[0]
 
 if __name__ == "__main__": 
     from shared.utils.config_loader import load_config

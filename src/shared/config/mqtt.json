@@ -8,6 +8,7 @@
     "topics": [
       "/ui/commands/#",
       "/devices/+/register",
+      "/devices/+/cal/#",
       "/devices/+/unregister",
       "/devices/+/status",
       "/devices/+/data",

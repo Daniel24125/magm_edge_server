@@ -34,7 +34,8 @@ class CommandHandler:
 
     def handle_device_message(self, topic: str, payload: dict):
         if not payload.get("device_id"):
-            logger.error("Missing device_id in payload")
+            logger.error(f"Missing device_id in payload: {payload}")
+
             return
         device_id = payload["device_id"]
 
@@ -46,3 +47,5 @@ class CommandHandler:
             self.controller._handle_device_registration(device_id, payload)
         elif topic.endswith("/unregister"):
             self.controller._handle_device_disconnect(device_id, payload)
+        elif topic.endswith("/prompt_user"):
+            self.controller._handle_user_prompt(payload)
