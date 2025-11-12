@@ -94,9 +94,9 @@ class AWSIoTClient(threading.Thread):
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
 
-    def publish_prompt_user(self, payload):
+    def publish_prompt_user(self, device_id, payload, command):
         logger.info("Sending message to user...")
-        self.client.publish("user/device/prompt", json.dumps(payload))
+        self.client.publish(f"/devices/{device_id}/cal/{command}", json.dumps(payload))
 
     def publish_heartbeat(self, payload):
         self.client.publish("status/heartbeat",json.dumps(payload))

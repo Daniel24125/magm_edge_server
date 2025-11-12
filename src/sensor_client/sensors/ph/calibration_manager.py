@@ -1,7 +1,7 @@
 import time
 from datetime import datetime, timezone
 import sys, os, threading
-from typing import Callable
+from typing import Callable, Dict
 import json
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
 if PROJECT_ROOT not in sys.path:
@@ -27,21 +27,28 @@ class PHCalibrationHelper:
 
 class PHCalibrationManager:
 
+
     def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], payload: dict):
         self.mqtt = mqtt_client
         self.db = db
+        self.read_ph = read_ph_callback
 
         self.device_id = payload.get("device_id")
         self.sensor_id = payload.get("sensor_id")
-        self.user = payload.get("user_name", "")
-        self.read_ph = read_ph_callback  
-        self.reset_calibration()
+        self.user = payload.get("user_name", "unknown")
 
-        # Calibration parameters
-        self.stability_window = 10
-        self.threshold = 0.02
+         # --- Calibration control variables ---
+        self.running = False
+        self.calibration_data: Dict[str, float] = {}
         self.sample_rate = 1.0
-        self.timeout = 120
+        self.timeout = 180
+        self.stability_min_count = 5
+        self.detection_tolerance = 0.5
+        self.publish_live_interval = 1.0
+
+        # --- Temporary slope/intercept before confirmation ---
+        self.slope = None
+        self.intercept = None
 
     def start(self):
         if self.running:
@@ -49,92 +56,174 @@ class PHCalibrationManager:
             return
         self.running = True
         threading.Thread(target=self._run, daemon=True).start()
+        threading.Thread(target=self._broadcast_live_readings, daemon=True).start()
+
+    def reset_calibration(self):
+        """Cancel calibration gracefully."""
+        if not self.running:
+            logger.info("Calibration not active, nothing to reset.")
+            return
+        self.running = False
+        self.calibration_data.clear()
+        self._notify_user("READY", "pH calibration was cancelled by the user.")
+        logger.info("Calibration cancelled by user.")
+
+    def finalize_from_user(self):
+        """Commit pending calibration results to DB after UI confirmation."""
+        try:
+            if not self.slope or not self.intercept:
+                logger.warning("No computed calibration to finalize.")
+                return
+            self.save_cal_into_db()
+           
+            self._notify_user("CONFIRM", "Calibration confirmed and saved successfully.")
+            logger.info("Calibration confirmed by user and stored.")
+            self.running = False
+        except Exception as e:
+            logger.error(f"Failed to finalize calibration: {e}")
+            self._notify_user("ERROR", f"Failed to store calibration: {e}")
 
 
+    # ---------- Internal Methods ----------
     def _run(self):
-        # TODO: AUTO DETECT BUFFER SO THAT THE MEASUREMETN DOES NOT DEPEND ONLY ON THE STABILITY 
-        self.running = True
-        logger.info("Calibration process started")
+        logger.info("Starting automatic pH calibration.")
+        self._notify_user("START", "Place the probe in the first buffer (pH 4, 7, or 10).")
 
-        self._prompt_user("ACIDIC", "Waiting for the acidic buffer (pH 4.0) to stabilize...")
-        self.register_measurement_value("acidic")
-        self._prompt_user("ALKALINE", "Waiting for the alkaline buffer (pH 7.0) to stabilize...")
-        self.register_measurement_value("alkaline")
+        start_time = time.time()
+        last_detected, stable_counter = None, 0
+
+        while self.running and (time.time() - start_time < self.timeout):
+            try:
+                reading = self.read_ph()
+                if not reading:
+                    time.sleep(self.sample_rate)
+                    continue
+
+                ph_val, is_stable = reading.value, reading.is_stable
+                detected = PHCalibrationHelper.detect_standard(ph_val, self.detection_tolerance)
+
+                if detected != "unknown" and is_stable:
+                    if detected == last_detected:
+                        stable_counter += 1
+                    else:
+                        stable_counter, last_detected = 1, detected
+
+                    if stable_counter >= self.stability_min_count and detected not in self.calibration_data:
+                        self._register_standard(detected, ph_val)
+                        if len(self.calibration_data) >= 2:
+                            break
+                        self._notify_user(
+                            "NEXT",
+                            f"{detected.capitalize()} buffer registered. Move to next standard."
+                        )
+                        stable_counter, last_detected = 0, None
+                else:
+                    stable_counter = 0
+                    if detected == "unknown":
+                        last_detected = None
+
+                time.sleep(self.sample_rate)
+            except Exception as e:
+                logger.error(f"Error during calibration loop: {e}")
+                self._notify_user("ERROR", f"Calibration loop error: {e}")
+                self.running = False
+                return
+
+        if len(self.calibration_data) >= 2 and self.running:
+            self._compute_pending_results()
+        elif self.running:
+            self._notify_user("ERROR", "Calibration incomplete: insufficient stable standards.")
+        self.running = False
 
 
-    def register_measurement_value(self, measurement_type: str): 
-        time.sleep(2)
-        is_buffer_ready = True
+    def _register_standard(self, name: str, value: float):
+        self.calibration_data[name] = value
+        logger.info(f"✅ Registered {name} buffer at {value:.2f} pH")
+        self._notify_user("STABLE", f"Stable {name} buffer detected ({value:.2f}).")
 
-        if measurement_type == "acidic":
-            if is_buffer_ready:
-                self.acidic_value = self._wait_for_stable()
-        elif measurement_type == "alkaline":
-            if is_buffer_ready:
-                self.alkaline_value = self._wait_for_stable()
-                self._finalize()
-        else: 
-            raise ValueError("Incorrect measurement type chosen. Please choose between acidic or alkaline measurement")
-    
+    def _compute_pending_results(self):
+        try:
+            items = sorted(
+                self.calibration_data.items(),
+                key=lambda kv: PHCalibrationHelper.STANDARDS[kv[0]],
+            )
+            (name1, v1), (name2, v2) = items[0], items[1]
+            p1, p2 = PHCalibrationHelper.STANDARDS[name1], PHCalibrationHelper.STANDARDS[name2]
+            self.slope = (v2 - v1) / (p2 - p1)
+            self.intercept = v1 - self.slope * p1
 
-    def _prompt_user(self, status, msg):
+            logger.info(
+                f"Calibration computed from {name1}({p1}) and {name2}({p2}): "
+                f"slope={self.slope:.5f}, intercept={self.intercept:.5f}"
+            )
+            self._notify_user(
+                "COMPLETE",
+                f"Calibration ready. slope={self.slope:.4f}, intercept={self.intercept:.4f}. Awaiting user confirmation."
+            )
+        except Exception as e:
+            logger.error(f"Failed computing calibration: {e}")
+            self._notify_user("ERROR", f"Computation failed: {e}")
+
+    def _broadcast_live_readings(self):
+        while self.running:
+            try:
+                r = self.read_ph()
+                if not r:
+                    time.sleep(self.publish_live_interval)
+                    continue
+                topic = f"/devices/{self.device_id}/cal/live_readings"
+                payload = {
+                    "ph_value": r.value,
+                    "is_stable": r.is_stable,
+                    "stability_index": 1.0 if r.is_stable else 0.5,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+                self._send_message_to_user(topic, payload)
+            except Exception as e:
+                logger.debug(f"Live broadcast error: {e}")
+            time.sleep(self.publish_live_interval)
+  
+    def _notify_user(self, status: str, message: str):
+        """Notify UI through AWS IoT via edge bridge."""
         topic = f"/devices/{self.device_id}/cal/prompt_user"
-        logger.info(msg)
         payload = {
             "topic": topic,
             "payload": {
                 "type": "calibration",
-                "message": msg,
+                "status": status,
+                "message": message,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "device_id": self.device_id,
-                "data":{
-                    "device_status": status,
-                }
-            }
+                "data": {"calibration_data": self.calibration_data},
+            },
         }
-        self.mqtt.publish(topic, json.dumps(payload))
+        logger.info(f"[CAL] {status}: {message}")
+        self._send_message_to_user(topic, payload)
 
-    def _wait_for_stable(self):
-        start = time.time()
-        while time.time() - start < self.timeout:
-            read = self.read_ph()
-            ph_avg = read.value
-            is_stable = read.is_stable
-            if is_stable:
-                logger.info(f"✅ Stable pH detected: {ph_avg:.3f}")
-                return ph_avg
-            time.sleep(self.sample_rate)
-        raise TimeoutError("Calibration timed out waiting for stability.")
-
-    def _finalize(self):
+    def _send_message_to_user(self, topic: str, payload: dict):
         try:
-            slope = (self.alkaline_value - self.acidic_value) / (7.0 - 4.0)
-            intercept = self.alkaline_value - slope * 7.0
-            logger.info(f"Calibration complete: slope={slope:.4f}, intercept={intercept:.4f}")
-            
-            self.save_cal_into_db(slope, intercept)
-            self._prompt_user("READY", "pH calibration finished successfully.")
-            logger.info("pH calibration finished successfully.")
+            self.mqtt.publish(topic, json.dumps({
+                "topic": topic,
+                "payload": {
+                    **payload,
+                    "device_id": self.device_id,
+                    "sensor_id": self.sensor_id,
+                    "source": "rpi"
+                }
+            }), qos=1)
+        except Exception as e:
+            logger.error(f"MQTT publish failed: {e}")
 
-        except Exception as e: 
-            logger.error(f"An error occured trying to finalize the calibration process: {e}")
-        finally:
-            self.reset_calibration()
-
-    def save_cal_into_db(self, slope: float, intercept: float): 
+    def save_cal_into_db(self): 
         self.db.add_record("ph_calibration", {
             "date": datetime.now(timezone.utc).isoformat(),
             "device_id": self.device_id,
             "sensor_id": self.sensor_id,
             "sensor_type": "pH",
-            "slope": slope,
-            "intercept": intercept,
+            "slope": self.slope,
+            "intercept": self.intercept,
             "operator": self.user,
-            "calibration_temp": 25
+            "calibration_temp": 25,
         })
 
-    def reset_calibration(self): 
-        self.acidic_value = None
-        self.alkaline_value = None
-        self.running = False
+
 

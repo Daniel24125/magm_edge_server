@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { mqtt, iot } from "aws-iot-device-sdk-v2";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
-import Calibration, { TCalibtationStatus } from "./calibration";
+import Calibration, { TCalibrationStatus } from "./calibration";
 
 
 const AWS_REGION = "eu-west-3";
@@ -11,15 +11,24 @@ const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
 const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com"; 
 const COMMAND_TOPIC = "ui/commands";
 const DATA_TOPIC = "data_aquisition/sensor_data/rpi_data";
-const PROMPT_FROM_DEVICE = "user/device/prompt";
+const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
+const CAL_PROMPT_TOPIC = `/devices/${DEVICE_ID}/cal/prompt_user`;
+const CAL_LIVE_TOPIC = `/devices/${DEVICE_ID}/cal/live_readings`;
+const CAL_TOPICS = [
+ CAL_PROMPT_TOPIC,
+  CAL_LIVE_TOPIC,
+  DATA_TOPIC,
+];
 
 export default function Page() {
   const [messages, setMessages] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
   const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [calibrationStatus, setCalibrationStatus] = useState<TCalibtationStatus>("READY");
-  
+  const [calibrationStatus, setCalibrationStatus] = useState<TCalibrationStatus>("READY");
+  const [calibrationData, setCalibrationData] = useState<any | null>(null);
+  const [liveReading, setLiveReading] = useState<{ph?: number, stability?: number} | null>(null);
+  const [wizardStep, setWizardStep] = useState<string>("IDLE");
   
   useEffect(() => {
     async function connectAndSubscribe() {
@@ -63,16 +72,32 @@ export default function Page() {
         });
 
         connection.on("message", (topic, payload) => {
-          console.log("📥 Message received on topic:", topic);
           const parsed_payload = JSON.parse(new TextDecoder().decode(payload));
+          console.log("📥 Message received on:", topic, parsed_payload);
+          
           if (topic === DATA_TOPIC) {setMessages((prev) => [parsed_payload, ...prev]);}
-          if (topic === PROMPT_FROM_DEVICE) {handleDevicePrompts(parsed_payload)}
+          if (topic === CAL_LIVE_TOPIC) {
+            setLiveReading({
+              ph: parsed_payload.ph_value,
+              stability: parsed_payload.stability_index
+            });
+          }
+
+          if (topic === CAL_PROMPT_TOPIC) {
+            const { status, message, data } = parsed_payload.payload;
+            setCalibrationStatus(status);
+            setCalibrationData(data);
+            setWizardStep(status);
+            console.log("🧪 Calibration status:", status, message);
+          }
         });
 
         // 4️⃣ Connect & subscribe
         await connection.connect();
-        await connection.subscribe(DATA_TOPIC, mqtt.QoS.AtLeastOnce);
-        await connection.subscribe(PROMPT_FROM_DEVICE, mqtt.QoS.AtLeastOnce);
+        for(const topic of CAL_TOPICS){
+          console.log("Subscribing to topic:", topic);
+          await connection.subscribe(topic, mqtt.QoS.AtLeastOnce);
+        }
         setConnection(connection);
 
       } catch (err) {
@@ -153,9 +178,11 @@ export default function Page() {
         >
           ⏹ Shutdown
         </button>
-        <Calibration 
+        <Calibration
           connection={connection}
           calibrationStatus={calibrationStatus}
+          calibrationData={calibrationData}
+          liveReading={liveReading}
           setCalibrationStatus={setCalibrationStatus}
         />
       </div>

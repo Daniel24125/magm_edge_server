@@ -23,9 +23,9 @@ DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
 
 class SessionController(threading.Thread):
 
-    def __init__(self, mqtt_subscriber, aws):
+    def __init__(self, mqtt, aws):
         super().__init__(daemon=True)
-        self.mqtt = mqtt_subscriber
+        self.mqtt = mqtt
         self.aws = aws
         self.config = load_config(DEFAULT_CONFIG_PATH)
         self.db = DatabaseHelper("src/edge_server/database/models/sessions.db")
@@ -42,7 +42,7 @@ class SessionController(threading.Thread):
 
         self.in_queue = getattr(self.mqtt, "data_queue", None)
         if self.in_queue is None:
-            raise RuntimeError("mqtt_subscriber missing data_queue")
+            raise RuntimeError("mqtt missing data_queue")
         
     def stop(self):
         self._stop_event.set()
@@ -55,9 +55,9 @@ class SessionController(threading.Thread):
             try:
                 msg = self.in_queue.get(timeout=0.5)
                 topic, payload = msg.get("topic", ""), msg.get("payload", {})
-                if topic.startswith("/devices/"):
+                if topic.startswith("devices/") or topic.startswith("/devices/"):
                     self.command_handler.handle_device_message(topic, payload)
-                elif topic.startswith("ui/"):
+                elif topic.startswith("ui/") or topic.startswith("/ui/"):
                     self.command_handler.handle_ui_command( payload)
                 else: 
                     logger.warning("Command not recognized...")
@@ -151,18 +151,21 @@ class SessionController(threading.Thread):
     def _handle_device_status(self, device_id, payload): 
          self.online_devices[device_id] = True
 
-    def _handle_device_data(self, device_id, payload): 
-        logger.info(f"Data received from device {device_id}: {payload}")
+    def _handle_session_data(self,  device_id, payload):
         self.db.insert_measurement(
             session_id=payload.get("session_id"),
             source=payload.get("source"),
             data=json.dumps(payload.get("data")),
             timestamp_iso=payload.get("timestamp")
         )
+        self._handle_device_data(device_id, payload)
+
+    def _handle_device_data(self, device_id, payload): 
+        logger.info(f"Data received from device {device_id}: {payload}") 
         self.aws.publish_sensor_data(payload)
 
-    def _handle_user_prompt(self, payload): 
-        self.aws.publish_prompt_user(payload)
+    def _handle_user_prompt(self,device_id, payload, command): 
+        self.aws.publish_prompt_user(device_id, payload, command)
 
     def _get_online_status(self):
         return {d: True for d in self.online_devices.keys()}

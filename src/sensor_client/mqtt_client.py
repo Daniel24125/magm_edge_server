@@ -40,6 +40,15 @@ class MQTTClient:
         self.device_request_acidic = f"/devices/{self.device_id}/cal/acidic"
         self.device_request_alkaline = f"/devices/{self.device_id}/cal/alkaline"
 
+    def subscribe_to_topics(self):
+        self.client.subscribe("/controller/retry")
+        self.client.subscribe("/controller/status/session_config_updated")
+        self.client.subscribe("/controller/commands/#")
+        self.client.subscribe(f"/devices/{self.device_id}/commands/#")
+        self.client.subscribe("/devices/registration_request")
+        self.client.subscribe(f"/devices/{self.device_id}/cal/confirm")
+        self.client.subscribe(f"/devices/{self.device_id}/cal/cancel")
+
     def init_mqtt_client(self):
         self.client = mqtt.Client(
             client_id=self.device_id,
@@ -75,7 +84,7 @@ class MQTTClient:
             logger.error(f"An error occurred while processing message: {e}")
     
     def parse_message(self, topic, payload):
-        logger.info("\nParsing Messgae from top: \n")
+        logger.info(f"\nParsing Message from topic: {topic} - Payload: {payload}\n")
         if topic == "/controller/status/session_config_updated": 
             config_manager.update_config(payload)
         elif topic == "/controller/commands/start": 
@@ -91,7 +100,7 @@ class MQTTClient:
             self.publish_sensor_data(all_readings, session_id=payload.get("session_id", ""))
 
     def parse_device_commands(self, topic, payload): 
-        logger.info("\nParsing a device cammand\n")
+        logger.info("\nParsing a device command:\n")
         if topic.endswith("registration_request"):
             self.register_device()
         elif topic.endswith("start_calibration"):
@@ -99,23 +108,20 @@ class MQTTClient:
         elif topic.endswith("register_cal_measurement"):
             if getattr(self, "ph_calibration"):
                 self.ph_calibration.register_measurement_value(payload.get("measurement_type"))
-        elif topic.endswith("cancel_calibration"):
+        elif topic.endswith("cal/cancel"):
             if getattr(self, "ph_calibration"):
+                print("CANCEL CALIBRATION")
                 self.ph_calibration.reset_calibration()
                 self.ph_calibration = None
+        elif topic.endswith("cal/confirm"):
+            if getattr(self, "ph_calibration"):
+                self.ph_calibration.finalize_from_user()
     
     def calibrate_device(self, payload: dict):
         sensor_id =payload.get("sensor_id", "")
         sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
         self.ph_calibration = PHCalibrationManager(self.client, self.db, sensor.read, payload)
         self.ph_calibration.start()
-
-    def subscribe_to_topics(self):
-        self.client.subscribe("/controller/retry")
-        self.client.subscribe("/controller/status/session_config_updated")
-        self.client.subscribe("/controller/commands/#")
-        self.client.subscribe(f"/devices/{self.device_id}/commands/#")
-        self.client.subscribe("/devices/registration_request")
 
     def start_session(self, payload: str):
         session_id = payload.get("session_id")

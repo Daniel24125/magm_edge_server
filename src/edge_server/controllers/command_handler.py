@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, json
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -29,6 +29,19 @@ class CommandHandler:
                 self.controller.stop_session()
             case "start_calibration":
                 self.controller.forward_device_command(cmd.params, cmd.command)
+            case "confirm_calibration":
+                topic = f"/devices/{cmd.params.device_id}/cal/confirm"
+                self.controller.mqtt.client.publish(topic, json.dumps(cmd.params))
+            case "cancel_calibration":
+                device_id = cmd.params.get("device_id")
+                topic = f"/devices/{device_id}/cal/cancel"
+                self.controller.mqtt.client.publish(topic, json.dumps({
+                   "topic": topic, 
+                   "payload": {
+                    **cmd.params,
+                    "device_id": device_id
+                   }
+                }))
             case _:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 
@@ -42,10 +55,13 @@ class CommandHandler:
         if topic.endswith("/status"):
             self.controller._handle_device_status(device_id, payload)
         elif topic.endswith("/data"):
-            self.controller._handle_device_data(device_id, payload)
+            self.controller._handle_session_data(device_id, payload)
         elif topic.endswith("/register"):
             self.controller._handle_device_registration(device_id, payload)
         elif topic.endswith("/unregister"):
             self.controller._handle_device_disconnect(device_id, payload)
         elif topic.endswith("/prompt_user"):
-            self.controller._handle_user_prompt(payload)
+            self.controller._handle_user_prompt(device_id, payload, "prompt_user")
+        elif topic.endswith("/live_readings"):
+            logger.info("Live reading from calibration")
+            self.controller._handle_user_prompt(device_id, payload, "live_readings")

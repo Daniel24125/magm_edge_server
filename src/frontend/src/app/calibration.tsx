@@ -1,64 +1,124 @@
 import { mqtt } from 'aws-iot-device-sdk-v2';
 import React from 'react'
 
-export type TCalibtationStatus = "READY" | "ACIDIC" | "ALKALINE" | "FAILED";
+export type TCalibrationStatus =
+  | "READY"
+  | "START"
+  | "STABLE"
+  | "NEXT"
+  | "COMPLETE"
+  | "CONFIRM"
+  | "ERROR"
+  | "CANCELLED";
 
-type TCalibrationButtonProps = {
+type Props  = {
     connection: mqtt.MqttClientConnection | null;
-    calibrationStatus: TCalibtationStatus;
-    setCalibrationStatus: React.Dispatch<React.SetStateAction<TCalibtationStatus>>;
-    // calibrationData: any;
+    calibrationStatus: TCalibrationStatus;
+    calibrationData?: any;
+    liveReading?: { ph?: number; stability?: number } | null;
+    setCalibrationStatus: React.Dispatch<React.SetStateAction<TCalibrationStatus>>;
 }
+const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
+const SENSOR_ID = "e6cc7497-d0aa-4cd9-9e56-578b6f9db521";
 
-const Calibration = ({connection, calibrationStatus, setCalibrationStatus}: TCalibrationButtonProps) => {
-
-    const sendCalibationFeedback = (params: any )=>{
+const Calibration = ({
+    connection,
+    calibrationStatus,
+    calibrationData,
+    liveReading,
+    setCalibrationStatus
+}: Props) => {
+    const publishCommand = (command: string, params: Record<string, any> = {}) => {
         if (!connection) {
-            alert("Not connected to AWS IoT yet");
-            return;
-            }
-            const topic = `ui/commands/start_calibration`;
+        alert("Not connected to AWS IoT yet");
+        return;
+        }
+        const topic = `ui/commands/${command}`;
+        const payload = JSON.stringify({
+        command,
+        params: { device_id: DEVICE_ID, sensor_id:SENSOR_ID,  ...params },
+        });
+        connection.publish(topic, payload, mqtt.QoS.AtLeastOnce);
+        console.log("📤 Sent command:", command, payload);
+    };
 
-            const json_payload = JSON.stringify(params);
-            connection.publish(topic, json_payload, mqtt.QoS.AtLeastOnce);
-            console.log("📤 Sent calibration command to:", topic);
-    }
+    const start = () => publishCommand("start_calibration");
+    const confirm = () => publishCommand("confirm_calibration");
+    const cancel = () => publishCommand("cancel_calibration");
+    
+    
 
     
 
-    return <>
-         <button
-            disabled={calibrationStatus !== "READY"}
-            onClick={() => sendCalibationFeedback({
-                command: "start_calibration",
-                params:{
-                    device_id: "d09454f7-6a4a-44af-9e0d-eb0bea17e9de",
-                    user: "auth|09875407429'20842",
-                    user_name: "Daniel Madalena",
-                    sensor_id: "e6cc7497-d0aa-4cd9-9e56-578b6f9db521"
-                }
+    return (
+        <div className="p-4 border rounded bg-gray-50 w-full max-w-md">
+        <h3 className="font-bold text-lg mb-2">pH Calibration</h3>
 
-            })}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        {calibrationStatus === "READY" && (
+            <button
+            onClick={start}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-            Start Calibraiton
-        </button>
-        {calibrationStatus !== "READY" && <button
-            // disabled={calibrationData!.is_stable === false}
-            // onClick={() => sendCalibationFeedback("start_calibration", {
-            //     device_id: "d09454f7-6a4a-44af-9e0d-eb0bea17e9de",
-            //     user: "auth|09875407429'20842",
-            //     user_name: "Daniel Madalena",
-            //     sensor_id: "e6cc7497-d0aa-4cd9-9e56-578b6f9db521"
-            // })}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-            {calibrationStatus === "ACIDIC" ? "Next Standard" : 
-             calibrationStatus === "ALKALINE" ? "Finish Calibration" :
-             calibrationStatus === "FAILED" ? "Retry Calibration" :
-             "Calibrating..."}
-        </button>}
-    </>
+            Start Calibration
+            </button>
+        )}
+
+        {calibrationStatus !== "READY" && (
+            <div className="space-y-3">
+            <p className="text-sm">
+                <b>Status:</b> {calibrationStatus}
+            </p>
+            {liveReading && (
+                <div className="text-sm">
+                <p>
+                    pH:{" "}
+                    <span className="font-semibold">
+                    {liveReading.ph?.toFixed(2)}
+                    </span>
+                </p>
+                <p>
+                    Stability:{" "}
+                    <span className="font-semibold">
+                    {(liveReading.stability ?? 0) * 100}%
+                    </span>
+                </p>
+                </div>
+            )}
+            {calibrationData?.calibration_data && (
+                <pre className="bg-gray-100 p-2 rounded text-xs">
+                {JSON.stringify(calibrationData.calibration_data, null, 2)}
+                </pre>
+            )}
+
+            {calibrationStatus === "COMPLETE" && (
+                <div className="flex gap-2">
+                <button
+                    onClick={confirm}
+                    className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                    ✅ Confirm Calibration
+                </button>
+                <button
+                    onClick={cancel}
+                    className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                    ❌ Cancel
+                </button>
+                </div>
+            )}
+
+            {calibrationStatus !== "COMPLETE" && (
+                <button
+                onClick={cancel}
+                className="w-full px-3 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                >
+                Cancel
+                </button>
+            )}
+            </div>
+        )}
+        </div>
+    );
 }
 
 export default Calibration
