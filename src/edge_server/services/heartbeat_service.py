@@ -1,4 +1,4 @@
-import threading, time, os, sys
+import threading, time, os, sys, json
 from datetime import datetime, timezone
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -12,34 +12,34 @@ class HeartbeatService:
         self.aws = aws_client
         self.status_callback = status_callback
         self.interval = interval
-        self._stop = threading.Event()
-        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self.running = False
 
     def start(self):
-        logger.info("Heartbeat service started")
-        self._stop.clear()
-        self._thread.start()
+        if self.running:
+            return
+        self.running = True
+        threading.Thread(target=self._run, daemon=True).start()
+        logger.info("Edge heartbeat service started.")
 
     def stop(self):
-        logger.info("Stopping heartbeat service...")
-        self._stop.set()
-        self._thread.join(timeout=3)
+        self.running = False
+        logger.info("Edge heartbeat service stopped.")
 
-    def _loop(self):
-        while not self._stop.is_set():
-            status = self.status_callback()
-            payload = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "online_devices": status,
-                "summary": {
-                    "total": len(status),
-                    "online": sum(status.values()),
-                    "offline": len(status) - sum(status.values())
-                }
-            }
+    def _run(self):
+        while self.running:
             try:
-                self.aws.publish_heartbeat(payload)
-                logger.debug(f"Heartbeat sent: {payload}")
+                # Get current device status from the session controller
+                device_status = self.controller._get_online_status()
+                payload = {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "edge_id": self.controller.device_id if hasattr(self.controller, "device_id") else "edge_server",
+                    "devices_online": device_status,
+                    "status": "ONLINE"
+                }
+
+                topic = "system/device_status"
+                self.aws.publish_heartbeat(topic, json.dumps(payload))
+                logger.debug(f"Heartbeat published to AWS with {len(device_status)} devices.")
             except Exception as e:
-                logger.error(f"Failed to publish heartbeat: {e}")
+                logger.error(f"Error in heartbeat service: {e}")
             time.sleep(self.interval)

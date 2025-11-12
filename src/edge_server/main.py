@@ -20,9 +20,9 @@ def main():
             t.stop_event.wait(timeout=0.5)
     finally:
         print("🧹 Cleaning up resources...")
-
         mqtt.join(timeout=5)
         session_controller.join(timeout=5)
+        aws._notify_user("rpi_disconnected", "")
         aws.join(timeout=5)
 
         print("✅ Edge Server shut down cleanly.")

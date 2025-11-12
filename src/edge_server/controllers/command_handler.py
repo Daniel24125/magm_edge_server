@@ -25,6 +25,9 @@ class CommandHandler:
                 self.controller._handle_config_update(cmd.params)
             case "start_session":
                 self.controller.start_session(cmd.params)
+            case "ping_device":
+                self.controller.aws._notify_user("rpi_connected", f"")
+                self.controller._notify_user("device_connected", f"")
             case "stop_session":
                 self.controller.stop_session()
             case "start_calibration":
@@ -61,7 +64,7 @@ class CommandHandler:
         elif topic.endswith("/unregister"):
             self.controller._handle_device_disconnect(device_id, payload)
         elif topic.endswith("/prompt_user"):
-            self.controller._handle_user_prompt(device_id, payload, "prompt_user")
+            self.controller._handle_user_prompt( payload, "cal/prompt_user")
         elif topic.endswith("/live_readings"):
             logger.info("Live reading from calibration")
-            self.controller._handle_user_prompt(device_id, payload, "live_readings")
+            self.controller._handle_user_prompt(payload, "cal/live_readings")

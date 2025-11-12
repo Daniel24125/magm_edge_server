@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { mqtt, iot } from "aws-iot-device-sdk-v2";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import Calibration, { TCalibrationStatus } from "./calibration";
@@ -9,15 +9,20 @@ import Calibration, { TCalibrationStatus } from "./calibration";
 const AWS_REGION = "eu-west-3";
 const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
 const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com"; 
+const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
+
+
 const COMMAND_TOPIC = "ui/commands";
 const DATA_TOPIC = "data_aquisition/sensor_data/rpi_data";
-const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
 const CAL_PROMPT_TOPIC = `/devices/${DEVICE_ID}/cal/prompt_user`;
 const CAL_LIVE_TOPIC = `/devices/${DEVICE_ID}/cal/live_readings`;
+const SYSTEM_NOTIF_TOPIC = "system/notifications";
+
 const CAL_TOPICS = [
  CAL_PROMPT_TOPIC,
   CAL_LIVE_TOPIC,
   DATA_TOPIC,
+  SYSTEM_NOTIF_TOPIC
 ];
 
 export default function Page() {
@@ -25,11 +30,13 @@ export default function Page() {
   const [responses, setResponses] = useState<any[]>([]);
   const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isRPIConnected, setIsRPIConnected] = useState(false);
   const [calibrationStatus, setCalibrationStatus] = useState<TCalibrationStatus>("READY");
   const [calibrationData, setCalibrationData] = useState<any | null>(null);
   const [liveReading, setLiveReading] = useState<{ph?: number, stability?: number} | null>(null);
   const [wizardStep, setWizardStep] = useState<string>("IDLE");
-  
+  const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     async function connectAndSubscribe() {
       try {
@@ -64,8 +71,10 @@ export default function Page() {
         // 3️⃣ Handle events
         connection.on("connect", () => {
           console.log("✅ Connected to AWS IoT Core")
-          setIsConnected(true)
+          setIsConnected(true)          
+
         });
+
         connection.on("disconnect", () => {
           console.log("⚠️ Disconnected from AWS IoT Core");
           setIsConnected(false);
@@ -89,6 +98,28 @@ export default function Page() {
             setCalibrationData(data);
             setWizardStep(status);
             console.log("🧪 Calibration status:", status, message);
+          }
+          if (topic === SYSTEM_NOTIF_TOPIC ) {
+            if (topic === SYSTEM_NOTIF_TOPIC) {
+              console.log("🔔 System Notification:", parsed_payload);
+              if (parsed_payload.event === "rpi_connected") {
+                setIsRPIConnected(true)
+              }
+              if (parsed_payload.event === "rpi_disconnected") {
+                setIsRPIConnected(false)
+                setOnlineDevices({})
+              }
+              if (parsed_payload.event === "device_connected") {
+                setOnlineDevices(parsed_payload.devices_online)
+                console.log(parsed_payload.message) 
+              }
+              if (parsed_payload.event === "device_disconnected") {
+               console.log(parsed_payload.message) 
+                setOnlineDevices(parsed_payload.devices_online)
+
+              }
+            }
+     
           }
         });
 
@@ -116,24 +147,18 @@ export default function Page() {
     };
   }, []);
 
-  type TDevicePromptPayload = {
-    type: string, 
-    message: string,
-    timestamp: string, 
-    device_id: string, 
-    data: any
-  }
-  const handleDevicePrompts = (payload: TDevicePromptPayload)=>{
-    console.log("Prompt received from device", payload)
-    if (payload.type === "calibration"){
-      setCalibrationStatus(payload.data.device_status)
+  useEffect(() => {
+    console.log("isConnected: ", isConnected)
+    if (isConnected && connection) {
+      sendCommand("ping_device", { device_id: DEVICE_ID});
     }
-  }
+  }, [isConnected, connection]);
+
 
   // 5️⃣ Send command to device
-  const sendCommand = (command: string, params: Record<string, any> = {}) => {
+  const sendCommand = useCallback((command: string, params: Record<string, any> = {}) => {
     if (!connection || !isConnected) {
-      alert("Not connected to AWS IoT yet");
+      console.warn("Cannot send command, not connected");
       return;
     }
     const topic = `${COMMAND_TOPIC}/${command}`;
@@ -145,19 +170,28 @@ export default function Page() {
     const json_payload = JSON.stringify(payload);
     connection.publish(topic, json_payload, mqtt.QoS.AtLeastOnce);
     console.log("📤 Sent command to:", topic);
-  };
+  }, [connection, isConnected]);
 
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold mb-2">AWS IoT Live Data & Control Panel</h1>
-
-      <div className="flex items-center gap-2">
-        <span
-          className={`h-3 w-3 rounded-full ${
-            isConnected ? "bg-green-500" : "bg-red-500"
-          }`}
-        ></span>
-        <span>{isConnected ? "Connected" : "Disconnected"}</span>
+      <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-3 w-3 rounded-full ${
+              isConnected ? "bg-green-500" : "bg-red-500"
+            }`}
+          ></span>
+          <span>{isConnected ? " AWS Connected" : "AWS Disconnected"}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-3 w-3 rounded-full ${
+              isRPIConnected ? "bg-green-500" : "bg-red-500"
+            }`}
+          ></span>
+          <span>{isRPIConnected ? " RPI Connected" : "RPI Disconnected"}</span>
+        </div>
       </div>
 
       {/* Command Buttons */}
@@ -186,7 +220,17 @@ export default function Page() {
           setCalibrationStatus={setCalibrationStatus}
         />
       </div>
-
+      <section className="mt-4">
+        <h2 className="font-semibold text-lg">Connected Devices</h2>
+        <ul className="space-y-1 mt-2">
+          {Object.entries(onlineDevices).map(([id, online]) => (
+            <li key={id} className="text-sm flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-red-500"}`}></span>
+              <span>{id}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
       {/* Live Sensor Data */}
       <section>
         <h2 className="text-xl font-semibold mt-6 mb-2">📡 Incoming Sensor Data</h2>

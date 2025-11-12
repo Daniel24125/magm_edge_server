@@ -6,6 +6,7 @@ from typing import Dict, Any
 from dotenv import load_dotenv
 from queue import Queue
 from aws_controllers.aws_ws_client import AWSWSClient
+from datetime import datetime, timezone
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env.local"))
 AWS_REGION = os.getenv('AWS_REGION')
@@ -30,7 +31,10 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from shared.utils.logger import logger
 from shared.utils.state_manager import StateManager
+from sensor_client.config.config_manager import ConfigManager
 state_manager = StateManager()
+
+DEVICE_ID = ConfigManager().get_config().get("device_config").get("device_id")
 
 class AWSIoTClient(threading.Thread):
 
@@ -59,10 +63,13 @@ class AWSIoTClient(threading.Thread):
         logger.info("Connected to AWS IoT Core")
         state_manager.update_aws_status(True)
         self.client.subscribe("ui/commands/#", callback=self.on_message)
+        self._notify_user("rpi_connected", "The edge server is connected")
+
 
     def on_disconnect(self):
         logger.warning(f"Disconnected from AWS IoT Core:")
         state_manager.update_aws_status(False)
+        self._notify_user("rpi_disconnected", "The edge server is disconnected")
 
     def on_message(self, topic, payload, dup, qos, retain, **kwargs):
         parsed_payload = payload.decode()
@@ -93,14 +100,25 @@ class AWSIoTClient(threading.Thread):
             self.client.publish(topic, message)
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
+    
+    def _notify_user(self, event, message):
+        topic = "system/notifications"
+        payload = {
+            "type": "connection",
+            "source": "edge",
+            "event": event,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "message": message,
+        }
+        try:
+            self.client.publish(topic, json.dumps(payload))
+        except Exception as e:
+            logger.error(f"Failed to publish connection notification: {e}")
 
-    def publish_prompt_user(self, device_id, payload, command):
+    def publish_prompt_user(self, payload, command):
         logger.info("Sending message to user...")
-        self.client.publish(f"/devices/{device_id}/cal/{command}", json.dumps(payload))
-
-    def publish_heartbeat(self, payload):
-        self.client.publish("status/heartbeat",json.dumps(payload))
-
+        self.client.publish(f"/devices/{DEVICE_ID}/{command}", json.dumps(payload))
+   
     def run(self): 
         logger.info("Running the AWS thread...")
         self.connect_via_websocket()
