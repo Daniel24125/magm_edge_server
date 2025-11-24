@@ -13,7 +13,7 @@ class SimulatedCyclicalSensor(AbstractSensor):
     This is useful for simulating environmental data like temperature, which
     often follows daily cycles.
     """
-    def __init__(self, name: str, unit: str, sensor_id: str, min_val: float, max_val: float, period_seconds: int, noise: float, config:dict={}):
+    def __init__(self, name: str, unit: str, sensor_type: str, sensor_id: str, min_val: float, max_val: float, period_seconds: int, noise: float, config:dict={}):
         super().__init__(name, unit, sensor_id=sensor_id, config=config)
         if min_val >= max_val:
             raise ValueError("min_val must be less than max_val")
@@ -22,6 +22,7 @@ class SimulatedCyclicalSensor(AbstractSensor):
             
         self.min_val = min_val
         self.max_val = max_val
+        self.sensor_type = sensor_type
         self.period_seconds = period_seconds
         self.noise = noise
         
@@ -55,7 +56,8 @@ class SimulatedCyclicalSensor(AbstractSensor):
                 timestamp=time.time(),
                 value=final_value,
                 unit=self.unit,
-                is_stable=True
+                is_stable=True,
+                sensor_type=self.sensor_type
             )
         except Exception:
             # In a real scenario, you would log this error

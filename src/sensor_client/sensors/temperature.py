@@ -11,7 +11,7 @@ class TemperatureSensor(AbstractSensor):
         super().__init__(name, unit, config)
 
         if SIMULATION_MODE:
-            self.simulator_init(SimulatedTemperatureSensor)
+            self.simulator_init(SimulatedTemperatureSensor, "Temperature")
         else:
             self.gpio_init()
 
@@ -26,5 +26,6 @@ class TemperatureSensor(AbstractSensor):
             return SensorReading(
                 timestamp=time.time(),
                 value=value,
-                unit=self.unit
+                unit=self.unit,
+                sensor_type="Temperature"
             )

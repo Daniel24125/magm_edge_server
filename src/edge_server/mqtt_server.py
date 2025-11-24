@@ -20,7 +20,9 @@ except ImportError as e:
 broker_config = load_config(os.path.join(PROJECT_ROOT, "shared/config/mqtt.json")).get("mqtt", {})
 MQTT_HOST = broker_config.get("broker") 
 MQTT_PORT = broker_config.get("port", 1883)
-TOPICS_TO_SUBSCRIBE = broker_config.get('topics', "/#")
+TOPICS_TO_SUBSCRIBE = broker_config.get('topics', ["/#"])
+if isinstance(TOPICS_TO_SUBSCRIBE, str):
+    TOPICS_TO_SUBSCRIBE = [TOPICS_TO_SUBSCRIBE]
 
 # --- Dependency: paho-mqtt ---
 try:

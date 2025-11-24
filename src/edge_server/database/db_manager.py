@@ -116,6 +116,21 @@ class DatabaseHelper:
 
                 CREATE INDEX IF NOT EXISTS idx_calib_date
                     ON ph_calibration(date);
+
+                CREATE TABLE IF NOT EXISTS alerts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    sensor_type TEXT NOT NULL,
+                    value REAL NOT NULL,
+                    message TEXT NOT NULL,
+                    acknowledged INTEGER DEFAULT 0,
+                    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
+                        ON UPDATE CASCADE ON DELETE CASCADE
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_alerts_session
+                    ON alerts(session_id);
                 """
             )
         # Major op: table creation/ensure
@@ -227,6 +242,31 @@ class DatabaseHelper:
                    (timestamp, session_id, source, data, processed_value, calibration_id, status)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
+            )
+            rid = cur.lastrowid
+            self._conn.commit()
+            return rid
+
+    def insert_alert(
+        self,
+        session_id: str,
+        sensor_type: str,
+        value: float,
+        message: str,
+        timestamp_iso: Optional[str] = None,
+    ) -> int:
+        """
+        Returns the inserted alert row id.
+        """
+        timestamp_iso = timestamp_iso or utcnow_iso()
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            self._retrying_execute(
+                cur,
+                """INSERT INTO alerts
+                   (timestamp, session_id, sensor_type, value, message)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (timestamp_iso, session_id, sensor_type, value, message),
             )
             rid = cur.lastrowid
             self._conn.commit()

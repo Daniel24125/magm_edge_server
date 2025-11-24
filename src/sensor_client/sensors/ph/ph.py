@@ -39,7 +39,7 @@ class PHSensor(AbstractSensor):
         self.config = config
         self.init_read_settings()
         if SIMULATION_MODE:
-            self.simulator_init(SimulatedPHSensor)
+            self.simulator_init(SimulatedPHSensor, "pH")
         else:
             self.init_gpio()
             self.analog_comunicator = AnalogCommunication(self.config)
@@ -86,7 +86,8 @@ class PHSensor(AbstractSensor):
             timestamp=time.time(),
             value=avg_ph,
             unit=self.unit,
-            is_stable=is_stable
+            is_stable=is_stable,
+            sensor_type="pH"
         )
 
     def set_mode(self, mode):

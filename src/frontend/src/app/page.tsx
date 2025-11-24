@@ -5,10 +5,18 @@ import { mqtt, iot } from "aws-iot-device-sdk-v2";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import Calibration, { TCalibrationStatus } from "./calibration";
 
+type TAlert = {
+  session_id: string;
+  device_id: string;
+  sensor_type: string;
+  value: number;
+  message: string;
+  timestamp: string;
+}
 
 const AWS_REGION = "eu-west-3";
 const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
-const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com"; 
+const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com";
 const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
 
 
@@ -17,12 +25,13 @@ const DATA_TOPIC = "data_aquisition/sensor_data/rpi_data";
 const CAL_PROMPT_TOPIC = `/devices/${DEVICE_ID}/cal/prompt_user`;
 const CAL_LIVE_TOPIC = `/devices/${DEVICE_ID}/cal/live_readings`;
 const SYSTEM_NOTIF_TOPIC = "system/notifications";
-
+const ALERT_TOPIC = "ui/alerts";
 const CAL_TOPICS = [
- CAL_PROMPT_TOPIC,
+  CAL_PROMPT_TOPIC,
   CAL_LIVE_TOPIC,
   DATA_TOPIC,
-  SYSTEM_NOTIF_TOPIC
+  SYSTEM_NOTIF_TOPIC,
+  ALERT_TOPIC
 ];
 
 export default function Page() {
@@ -33,9 +42,10 @@ export default function Page() {
   const [isRPIConnected, setIsRPIConnected] = useState(false);
   const [calibrationStatus, setCalibrationStatus] = useState<TCalibrationStatus>("READY");
   const [calibrationData, setCalibrationData] = useState<any | null>(null);
-  const [liveReading, setLiveReading] = useState<{ph?: number, stability?: number} | null>(null);
+  const [liveReading, setLiveReading] = useState<{ ph?: number, stability?: number } | null>(null);
   const [wizardStep, setWizardStep] = useState<string>("IDLE");
   const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
+  const [alerts, setAlerts] = useState<TAlert[]>([]);
 
   useEffect(() => {
     async function connectAndSubscribe() {
@@ -71,7 +81,7 @@ export default function Page() {
         // 3️⃣ Handle events
         connection.on("connect", () => {
           console.log("✅ Connected to AWS IoT Core")
-          setIsConnected(true)          
+          setIsConnected(true)
 
         });
 
@@ -83,8 +93,8 @@ export default function Page() {
         connection.on("message", (topic, payload) => {
           const parsed_payload = JSON.parse(new TextDecoder().decode(payload));
           console.log("📥 Message received on:", topic, parsed_payload);
-          
-          if (topic === DATA_TOPIC) {setMessages((prev) => [parsed_payload, ...prev]);}
+
+          if (topic === DATA_TOPIC) { setMessages((prev) => [parsed_payload, ...prev]); }
           if (topic === CAL_LIVE_TOPIC) {
             setLiveReading({
               ph: parsed_payload.ph_value,
@@ -99,7 +109,7 @@ export default function Page() {
             setWizardStep(status);
             console.log("🧪 Calibration status:", status, message);
           }
-          if (topic === SYSTEM_NOTIF_TOPIC ) {
+          if (topic === SYSTEM_NOTIF_TOPIC) {
             if (topic === SYSTEM_NOTIF_TOPIC) {
               console.log("🔔 System Notification:", parsed_payload);
               if (parsed_payload.event === "rpi_connected") {
@@ -111,21 +121,22 @@ export default function Page() {
               }
               if (parsed_payload.event === "device_connected") {
                 setOnlineDevices(parsed_payload.devices_online)
-                console.log(parsed_payload.message) 
+                console.log(parsed_payload.message)
               }
               if (parsed_payload.event === "device_disconnected") {
-               console.log(parsed_payload.message) 
+                console.log(parsed_payload.message)
                 setOnlineDevices(parsed_payload.devices_online)
-
               }
             }
-     
+          }
+          if (topic === ALERT_TOPIC) {
+            setAlerts((prev) => [parsed_payload, ...prev]);
           }
         });
 
         // 4️⃣ Connect & subscribe
         await connection.connect();
-        for(const topic of CAL_TOPICS){
+        for (const topic of CAL_TOPICS) {
           console.log("Subscribing to topic:", topic);
           await connection.subscribe(topic, mqtt.QoS.AtLeastOnce);
         }
@@ -150,7 +161,7 @@ export default function Page() {
   useEffect(() => {
     console.log("isConnected: ", isConnected)
     if (isConnected && connection) {
-      sendCommand("ping_device", { device_id: DEVICE_ID});
+      sendCommand("ping_device", { device_id: DEVICE_ID });
     }
   }, [isConnected, connection]);
 
@@ -178,17 +189,15 @@ export default function Page() {
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-2">
           <span
-            className={`h-3 w-3 rounded-full ${
-              isConnected ? "bg-green-500" : "bg-red-500"
-            }`}
+            className={`h-3 w-3 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"
+              }`}
           ></span>
           <span>{isConnected ? " AWS Connected" : "AWS Disconnected"}</span>
         </div>
         <div className="flex items-center gap-2">
           <span
-            className={`h-3 w-3 rounded-full ${
-              isRPIConnected ? "bg-green-500" : "bg-red-500"
-            }`}
+            className={`h-3 w-3 rounded-full ${isRPIConnected ? "bg-green-500" : "bg-red-500"
+              }`}
           ></span>
           <span>{isRPIConnected ? " RPI Connected" : "RPI Disconnected"}</span>
         </div>
@@ -230,6 +239,29 @@ export default function Page() {
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* Active Alerts */}
+      <section>
+        <h2 className="text-xl font-semibold mt-6 mb-2 text-red-600">⚠️ Active Alerts</h2>
+        {alerts.length === 0 ? (
+          <p className="text-gray-500 italic">No active alerts.</p>
+        ) : (
+          <ul className="space-y-2">
+            {alerts.map((alert, i) => (
+              <li key={i} className="border border-red-200 p-3 rounded bg-red-50 flex flex-col gap-1">
+                <div className="flex justify-between items-start">
+                  <span className="font-bold text-red-700">{alert.sensor_type} Anomaly</span>
+                  <span className="text-xs text-gray-500">{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <p className="text-sm text-gray-800">{alert.message}</p>
+                <div className="text-xs text-gray-600">
+                  Value: <span className="font-mono">{alert.value}</span> | Device: <span className="font-mono">{alert.device_id}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
       {/* Live Sensor Data */}
       <section>

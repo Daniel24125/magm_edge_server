@@ -15,7 +15,7 @@ class CommandHandler:
     def __init__(self, mqtt, aws):
         self.aws = aws
         self.mqtt = mqtt
-        self.session_controller = SessionController(mqtt)
+        self.session_controller = SessionController(mqtt, aws)
         self.device_controller = DeviceController(mqtt, aws)
 
     def handle_ui_command(self, payload: dict):
@@ -41,11 +41,11 @@ class CommandHandler:
                 self.device_controller.forward_device_command(cmd.params, cmd.command)
             case "confirm_calibration":
                 topic = f"/devices/{cmd.params.device_id}/cal/confirm"
-                self.controller.mqtt.client.publish(topic, json.dumps(cmd.params))
+                self.mqtt.client.publish(topic, json.dumps(cmd.params))
             case "cancel_calibration":
                 device_id = cmd.params.get("device_id")
                 topic = f"/devices/{device_id}/cal/cancel"
-                self.controller.mqtt.client.publish(topic, json.dumps({
+                self.mqtt.client.publish(topic, json.dumps({
                    "topic": topic, 
                    "payload": {
                     **cmd.params,
@@ -58,14 +58,13 @@ class CommandHandler:
     def handle_device_message(self, topic: str, payload: dict):
         if not payload.get("device_id"):
             logger.error(f"Missing device_id in payload: {payload}")
-
             return
         device_id = payload["device_id"]
 
         if topic.endswith("/status"):
             self.device_controller._handle_device_status(device_id, payload)
         elif topic.endswith("/data"):
-            # self.device_controller._handle_session_data(device_id, payload)
+            self.session_controller._handle_session_data(device_id, payload)
             self.device_controller._handle_device_data(device_id, payload)
         elif topic.endswith("/register"):
             self.device_controller._handle_device_registration(device_id, payload)
@@ -74,5 +73,4 @@ class CommandHandler:
         elif topic.endswith("/prompt_user"):
             self.device_controller._handle_user_prompt( payload, "cal/prompt_user")
         elif topic.endswith("/live_readings"):
-            logger.info("Live reading from calibration")
             self.device_controller._handle_user_prompt(payload, "cal/live_readings")

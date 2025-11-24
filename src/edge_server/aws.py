@@ -20,7 +20,11 @@ AWS_USER_ACCESS_KEY = os.getenv('AWS_USER_ACCESS_KEY')
 AWS_USER_SECRET_KEY = os.getenv('AWS_USER_SECRET_KEY')
 
 AWS_EDGE_SERVER_ROLE = os.getenv('AWS_EDGE_SERVER_ROLE')
-AWS_PUBLISH_TOPIC = os.getenv('AWS_PUBLISH_TOPIC')
+try:
+    AWS_PUBLISH_TOPIC_MAP = json.loads(os.getenv('AWS_PUBLISH_TOPIC', '{}'))
+except json.JSONDecodeError:
+    AWS_PUBLISH_TOPIC_MAP = {}
+    logger.error("Failed to parse AWS_PUBLISH_TOPIC env var")
 
 FILE_ROOT = os.path.dirname(os.path.abspath(__file__))
 CERT_DIR = os.path.join(FILE_ROOT, "certs")
@@ -95,12 +99,29 @@ class AWSIoTClient(threading.Thread):
         try: 
             message = json.dumps(payload)
             source = payload.get("source", "")
-            topic = json.loads(AWS_PUBLISH_TOPIC).get(source)
+            topic = AWS_PUBLISH_TOPIC_MAP.get(source)
             logger.info(f"Publishing to {topic}: {message}")
+            if not state_manager.aws_connected:
+                return
+            
             self.client.publish(topic, message)
         except Exception as err: 
             logger.error(f"An error occured while trying to send to AWS IoT core: {err}")
     
+    def publish_alert(self, payload: Dict[str, Any]):
+        """
+        Publish an alert to the UI.
+        """
+        try:
+            topic = "ui/alerts"
+            message = json.dumps(payload)
+            logger.info(f"Publishing alert to {topic}: {message}")
+            if not state_manager.aws_connected:
+                return
+            self.client.publish(topic, message)
+        except Exception as err:
+            logger.error(f"Failed to publish alert: {err}")
+
     def _notify_user(self, event, message):
         topic = "system/notifications"
         payload = {

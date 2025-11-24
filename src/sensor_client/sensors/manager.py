@@ -27,7 +27,7 @@ class SensorManager:
         "pH": PHSensor,
     }
 
-    def __init__(self, config: List[Dict[str, Any]]):
+    def __init__(self, config: Dict[str, Any]):
         self.sensors: List[AbstractSensor] = []
         self.config = config
         self._initialize_sensors()

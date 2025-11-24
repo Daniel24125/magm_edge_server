@@ -164,6 +164,7 @@ class MQTTClient:
             logger.error("The connection was interruped by the user")
 
     def publish_sensor_data(self, readings: dict, session_id: str = None):
+        print("READINGS: ",readings)
         payload = {
             "source": "rpi",
             "device_id": self.device_id,
@@ -173,7 +174,8 @@ class MQTTClient:
                 "value" : r.value,
                 "timestamp": r.timestamp,
                 "unit": r.unit,
-                "is_stable": bool(r.is_stable)
+                "is_stable": bool(r.is_stable),
+                "sensor_type": r.sensor_type
             } if r else None for name, r in readings.items()}
         }
         message = json.dumps({

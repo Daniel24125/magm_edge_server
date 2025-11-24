@@ -10,21 +10,26 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 from shared.utils.logger import logger
 from shared.utils.config_loader import load_config
+from edge_server.services.anomaly_detector import AnomalyDetector
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../","config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
+ALERTS_CONFIG_PATH = os.path.join(CONFIG_DIR, "alerts.json")
 
 
 class SessionController: 
-    def __init__(self, mqtt):
+    def __init__(self, mqtt, aws):
         self.mqtt = mqtt
+        self.aws = aws
         self.config = load_config(DEFAULT_CONFIG_PATH)
+        self.detector = AnomalyDetector(ALERTS_CONFIG_PATH)
         self.db = DatabaseHelper("src/edge_server/database/models/sessions.db")
         self.sessions = SessionDAO(self.db)
         self.session_active = False
         self.session_lock = threading.Lock()
         self.time_elapsed = 0
         self.session_id = None
+        self.last_saved_map = {}
 
 
      # -------------------- Session Management --------------------
@@ -66,6 +71,7 @@ class SessionController:
             self.session_active = False
             self.session_id = None
             self.time_elapsed = 0
+            self.last_saved_map = {}
 
         if hasattr(self, "acquisition_thread") and self.acquisition_thread.is_alive():
             self.acquisition_thread.join(timeout=2)
@@ -94,9 +100,49 @@ class SessionController:
         )
 
     def _handle_session_data(self,  device_id, payload):
-        self.db.insert_measurement(
-            session_id=payload.get("session_id"),
-            source=payload.get("source"),
-            data=json.dumps(payload.get("data")),
-            timestamp_iso=payload.get("timestamp")
-        )
+        source = payload.get("source")
+        key = f"{device_id}_{source}"
+        now = time.time()
+        # Anomaly Detection
+        try:
+            data = payload.get("data", {})
+            if isinstance(data, dict):
+                for sensor_type, reading in data.items():
+
+                    value = float(reading.get("value"))
+                    alert_msg = self.detector.check_reading(reading.get("sensor_type"), value)
+                    if alert_msg:
+                        logger.warning(f"Anomaly detected: {alert_msg}")
+                        # 1. Save to DB
+                        self.db.insert_alert(
+                            session_id=payload.get("session_id"),
+                            sensor_type=sensor_type,
+                            value=value,
+                            message=alert_msg,
+                            timestamp_iso=payload.get("timestamp")
+                        )
+                        # 2. Notify User (AWS)
+                        self.aws.publish_alert({
+                            "session_id": payload.get("session_id"),
+                            "device_id": device_id,
+                            "sensor_type": sensor_type,
+                            "value": value,
+                            "message": alert_msg,
+                            "timestamp": payload.get("timestamp")
+                        })
+        except Exception as e:
+            logger.error(f"Error in anomaly detection: {e}")
+        
+        last_saved = self.last_saved_map.get(key, 0)
+        if now - last_saved >= 60:
+            self.db.insert_measurement(
+                session_id=payload.get("session_id"),
+                source=source,
+                data=json.dumps(payload.get("data")),
+                timestamp_iso=payload.get("timestamp")
+            )
+            self.last_saved_map[key] = now
+            logger.info(f"Stored measurement for {key}")
+        else:
+            # Data skipped for storage (downsampling)
+            pass

@@ -7,3 +7,4 @@ class SensorReading:
     value: float
     unit: str
     is_stable: bool
+    sensor_type: str
