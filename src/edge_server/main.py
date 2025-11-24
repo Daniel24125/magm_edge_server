@@ -1,19 +1,19 @@
 
 from mqtt_server import MqttSubscriber
 from aws import AWSIoTClient
-from edge_server.session_controller import SessionController
+from edge_server.manager import ManagerController
 import  utils.thread_handler as t
 import sys
 
 
 def main():
     mqtt = MqttSubscriber(t.data_queue)    
-    aws = AWSIoTClient(data_queue=t.data_queue)
-    session_controller = SessionController(mqtt, aws)
+    aws = AWSIoTClient(t.data_queue)
+    manager = ManagerController(mqtt, aws)
 
     mqtt.start()
     aws.start()
-    session_controller.start()
+    manager.start()
 
     try:
         while not t.stop_event.is_set():
@@ -21,7 +21,7 @@ def main():
     finally:
         print("🧹 Cleaning up resources...")
         mqtt.join(timeout=5)
-        session_controller.join(timeout=5)
+        manager.join(timeout=5)
         aws._notify_user("rpi_disconnected", "")
         aws.join(timeout=5)
 

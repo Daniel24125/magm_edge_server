@@ -40,7 +40,6 @@ class MqttSubscriber(threading.Thread):
         self.data_queue = data_queue
         self.init_variables()
 
-
     def init_variables(self):
         self.host = MQTT_HOST
         self.port = MQTT_PORT

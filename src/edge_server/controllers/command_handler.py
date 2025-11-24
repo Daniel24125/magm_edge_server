@@ -1,4 +1,7 @@
 import os, sys, json
+from .session_controller import SessionController
+from .device_controller import DeviceController
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -9,8 +12,11 @@ from edge_server.models.schemas import CommandPayload
 class CommandHandler:
     """Responsible for parsing commands and dispatching them to the controller."""
 
-    def __init__(self, controller):
-        self.controller = controller
+    def __init__(self, mqtt, aws):
+        self.aws = aws
+        self.mqtt = mqtt
+        self.session_controller = SessionController(mqtt)
+        self.device_controller = DeviceController(mqtt, aws)
 
     def handle_ui_command(self, payload: dict):
 
@@ -22,16 +28,17 @@ class CommandHandler:
 
         match cmd.command:
             case "configure_session":
-                self.controller._handle_config_update(cmd.params)
+                self.session_controller._handle_config_update(cmd.params)
             case "start_session":
-                self.controller.start_session(cmd.params)
+                self.session_controller.start_session(cmd.params)
+
             case "ping_device":
-                self.controller.aws._notify_user("rpi_connected", f"")
-                self.controller._notify_user("device_connected", f"")
+                self.aws._notify_user("rpi_connected", f"")
+
             case "stop_session":
-                self.controller.stop_session()
+                self.session_controller.stop_session()
             case "start_calibration":
-                self.controller.forward_device_command(cmd.params, cmd.command)
+                self.device_controller.forward_device_command(cmd.params, cmd.command)
             case "confirm_calibration":
                 topic = f"/devices/{cmd.params.device_id}/cal/confirm"
                 self.controller.mqtt.client.publish(topic, json.dumps(cmd.params))
@@ -56,15 +63,16 @@ class CommandHandler:
         device_id = payload["device_id"]
 
         if topic.endswith("/status"):
-            self.controller._handle_device_status(device_id, payload)
+            self.device_controller._handle_device_status(device_id, payload)
         elif topic.endswith("/data"):
-            self.controller._handle_session_data(device_id, payload)
+            # self.device_controller._handle_session_data(device_id, payload)
+            self.device_controller._handle_device_data(device_id, payload)
         elif topic.endswith("/register"):
-            self.controller._handle_device_registration(device_id, payload)
+            self.device_controller._handle_device_registration(device_id, payload)
         elif topic.endswith("/unregister"):
-            self.controller._handle_device_disconnect(device_id, payload)
+            self.device_controller._handle_device_disconnect(device_id, payload)
         elif topic.endswith("/prompt_user"):
-            self.controller._handle_user_prompt( payload, "cal/prompt_user")
+            self.device_controller._handle_user_prompt( payload, "cal/prompt_user")
         elif topic.endswith("/live_readings"):
             logger.info("Live reading from calibration")
-            self.controller._handle_user_prompt(payload, "cal/live_readings")
+            self.device_controller._handle_user_prompt(payload, "cal/live_readings")
