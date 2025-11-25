@@ -131,6 +131,19 @@ class DatabaseHelper:
 
                 CREATE INDEX IF NOT EXISTS idx_alerts_session
                     ON alerts(session_id);
+
+                CREATE TABLE IF NOT EXISTS projects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sessions TEXT NOT NULL,
+                    reactor_name TEXT NOT NULL,
+                    project_name TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    session_parameters TEXT NOT NULL, -- 'co2_pressure','medium_composition','data_aquisition_frequency', 'temperature_setpoint', 'ph_setpoint', ... 
+                    user TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_projects
+                    ON projects(project_name, user, id);
                 """
             )
         # Major op: table creation/ensure
