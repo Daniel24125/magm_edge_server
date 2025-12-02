@@ -2,7 +2,7 @@
 import { useApplication } from '@/contexts/ApplicationContext';
 import { useMemo } from 'react'
 import { Button } from '../ui/button';
-import { Bell, Cloud, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, RadioReceiver, Server, Settings, SquareKanban } from 'lucide-react';
+import { Bell, Cloud, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, Plus, RadioReceiver, Server, Settings, SquareKanban } from 'lucide-react';
 import { MAGMLogo } from '../logos';
 import Link from 'next/link';
 import { TConnectionItem, TNavigationItem } from '@/types';
@@ -12,17 +12,18 @@ import { useDeviceManager } from '@/contexts/DeviceManagerContext';
 import { Separator } from '../ui/separator';
 import { Avatar } from '../ui/avatar';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Sidebar = () => {
     const { isSidebarOpen } = useApplication();
 
     return (
-        <aside
-            style={{
-                transition: 'width 0.3s ease-in-out',
-                width: isSidebarOpen ? '280px' : '72px'
-            }}
-            className='h-screen bg-sidebar-background flex flex-col shrink-0 px-4 py-10 gap-10 justify-between'>
+        <motion.aside
+            initial={{ width: isSidebarOpen ? '280px' : '72px' }}
+            animate={{ width: isSidebarOpen ? '280px' : '72px' }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className='h-screen bg-sidebar-background flex flex-col shrink-0 px-4 py-10 gap-10 justify-between overflow-hidden border-r border-sidebar-border'
+        >
             <section className='flex flex-col gap-10'>
                 <SidebarHeader />
                 <CreateProjectButton />
@@ -34,7 +35,7 @@ const Sidebar = () => {
                 <Separator />
                 <AccountElement />
             </section>
-        </aside>
+        </motion.aside>
     )
 }
 
@@ -42,9 +43,20 @@ const SidebarHeader = () => {
     const { toggleSidebar, isSidebarOpen } = useApplication();
 
     return (
-        <header className='flex items-center justify-between'>
-            <MAGMLogo width={194} />
-            <Button className='text-text-faded' variant="ghost" onClick={toggleSidebar}>
+        <header className='flex items-center justify-between h-10'>
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <MAGMLogo width={194} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <Button className='text-text-faded shrink-0 ml-auto' variant="ghost" onClick={toggleSidebar}>
                 {isSidebarOpen ? <PanelLeftClose className='size-6' /> : <PanelLeftOpen className='size-6' />}
             </Button>
         </header>
@@ -52,9 +64,30 @@ const SidebarHeader = () => {
 }
 
 const CreateProjectButton = () => {
+    const { isSidebarOpen } = useApplication();
     return (
-        <Button variant="default" className='w-full bg-primary'>
-            Create Project
+        <Button variant="default" className={`${isSidebarOpen ? 'w-full' : 'w-12 h-12 px-3'} bg-primary overflow-hidden whitespace-nowrap`}>
+            <AnimatePresence mode="wait">
+                {isSidebarOpen ? (
+                    <motion.span
+                        key="text"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        Create Project
+                    </motion.span>
+                ) : (
+                    <motion.span
+                        key="icon"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <Plus className='size-6' />
+                    </motion.span>
+                )}
+            </AnimatePresence>
         </Button>
     )
 }
@@ -96,13 +129,29 @@ const NavigationItem = ({
 }: TNavigationItem) => {
     const pathname = usePathname();
     const isActive = useMemo(() => pathname === href, [pathname]);
+    const { isSidebarOpen } = useApplication();
 
     return (
         <Link href={href}>
-            <Button variant="ghost" className={`w-full hover:bg-primary-faded py-4 hover:text-primary justify-start h-12 ${isActive ? 'bg-primary-faded text-primary' : ''}`}>
+            <Button variant="ghost" className={`hover:bg-primary-faded py-4 hover:text-primary justify-start h-12 
+                ${isActive ? 'bg-primary-faded text-primary' : ''} 
+                ${isSidebarOpen ? 'w-full' : 'w-12 px-3'} overflow-hidden`}
+            >
                 <div className='flex items-center gap-2'>
-                    {icon}
-                    <span>{label}</span>
+                    <div className="shrink-0">{icon}</div>
+                    <AnimatePresence>
+                        {isSidebarOpen && (
+                            <motion.span
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: "auto" }}
+                                exit={{ opacity: 0, width: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="whitespace-nowrap"
+                            >
+                                {label}
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
                 </div>
             </Button>
         </Link>
@@ -112,12 +161,33 @@ const NavigationItem = ({
 
 
 const ConnectionElement = ({ icon, label, isConnected }: TConnectionItem) => {
-    return <div className='w-full flex items-center justify-between'>
+    const { isSidebarOpen } = useApplication();
+    return <div className='w-full flex items-center justify-between h-8 overflow-hidden'>
         <div className='flex items-center gap-2 text-text-faded'>
-            {icon}
-            <span className='text-sm font-bold'>{label}</span>
+            <div className={`shrink-0 ${isSidebarOpen ? "" : `${isConnected ? 'text-green-500' : 'text-red-500'} pl-2`}`}>{icon}</div>
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        className='text-sm font-bold whitespace-nowrap'
+                    >
+                        {label}
+                    </motion.span>
+                )}
+            </AnimatePresence>
         </div>
-        <div className={`${isConnected ? 'bg-green-500' : 'bg-red-500'} h-3 w-3 rounded-full`}></div>
+        <AnimatePresence>
+            {isSidebarOpen && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className={`${isConnected ? 'bg-green-500' : 'bg-red-500'} h-3 w-3 rounded-full shrink-0`}
+                ></motion.div>
+            )}
+        </AnimatePresence>
     </div>
 }
 
@@ -134,20 +204,41 @@ const DeviceConnectionStatus = () => {
 
 const AccountElement = () => {
     const { name, email, picture } = { name: "John Doe", email: "john.doe@example.com", picture: "https://github.com/shadcn.png" };
-    return <div className='w-full flex items-center justify-between'>
+    const { isSidebarOpen } = useApplication();
+
+    return <div className='w-full flex items-center justify-between overflow-hidden h-12'>
         <div className='flex items-center gap-3 text-text-faded'>
-            <Avatar>
+            <Avatar className="shrink-0">
                 <AvatarImage src={picture} />
                 <AvatarFallback>JD</AvatarFallback>
             </Avatar>
-            <div className='flex flex-col'>
-                <span className='text-sm font-bold'>{name}</span>
-                <span className='text-xs text-text-faded'>{email}</span>
-            </div>
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        className='flex flex-col whitespace-nowrap'
+                    >
+                        <span className='text-sm font-bold'>{name}</span>
+                        <span className='text-xs text-text-faded'>{email}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
-        <Button variant="ghost" className='text-text-faded'>
-            <LogOut />
-        </Button>
+        <AnimatePresence>
+            {isSidebarOpen && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                >
+                    <Button variant="ghost" className='text-text-faded shrink-0'>
+                        <LogOut />
+                    </Button>
+                </motion.div>
+            )}
+        </AnimatePresence>
     </div>
 }
 export default Sidebar

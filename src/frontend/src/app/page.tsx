@@ -68,22 +68,7 @@ export default function Page() {
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold mb-2">AWS IoT Live Data & Control Panel</h1>
-      <div className="flex items-center gap-5">
-        <div className="flex items-center gap-2">
-          <span
-            className={`h-3 w-3 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"
-              }`}
-          ></span>
-          <span>{isConnected ? " AWS Connected" : "AWS Disconnected"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={`h-3 w-3 rounded-full ${isRPIConnected ? "bg-green-500" : "bg-red-500"
-              }`}
-          ></span>
-          <span>{isRPIConnected ? " RPI Connected" : "RPI Disconnected"}</span>
-        </div>
-      </div>
+
 
       {/* Command Buttons */}
       <div className="flex gap-4 mt-4">
