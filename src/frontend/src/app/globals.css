@@ -40,7 +40,7 @@
   --color-temperature: var(--temperature);
   --color-information: var(--information);
   --color-ph: var(--ph);
-  --color-text-fade: var(--text-fade);
+  --color-text-faded: var(--text-faded);
   --color-sidebar-background: var(--sidebar-background);
   --color-primary-faded: var(--primary-faded);
   --radius-sm: calc(var(--radius) - 4px);
@@ -52,7 +52,7 @@
 :root {
   --primary-faded: oklch(0.704 0.1225 182.46 / 20%);
   --information: oklch(0.4704 0.2108 261.56);
-  --text-fade: oklch(0.5544 0.0407 257.42);
+  --text-faded: oklch(0.5544 0.0407 257.42);
   --ph: oklch(0.5831 0.1648 294.9);
   --temperature: oklch(0.6184 0.1897 26.85);
   --sidebar-background: oklch(0.9791 0 0);
@@ -72,7 +72,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.6251 0.2318 28.75);
-  --border: oklch(0.922 0 0);
+  --border: oklch(0.9292 0.0109 256.7);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);

@@ -32,3 +32,8 @@ export type TNavigationItem = {
     label: string,
     href: string,
 }
+export type TConnectionItem = {
+    icon: React.ReactNode,
+    label: string,
+    isConnected: boolean,
+}
