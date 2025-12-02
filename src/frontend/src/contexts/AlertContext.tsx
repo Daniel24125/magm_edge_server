@@ -35,6 +35,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
             message,
             timestamp: new Date().toISOString(),
             details,
+            read: false,
         };
 
         // 1. Update State (for a persistent "Notification Center" list if needed)
@@ -69,6 +70,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     const clearAlerts = useCallback(() => {
         setAlerts([]);
     }, []);
+
 
     return (
         <AlertContext.Provider value={{ alerts, addAlert, removeAlert, clearAlerts }}>

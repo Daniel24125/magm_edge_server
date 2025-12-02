@@ -208,7 +208,7 @@ const AccountElement = () => {
 
     return <div className='w-full flex items-center justify-between overflow-hidden h-12'>
         <div className='flex items-center gap-3 text-text-faded'>
-            <Avatar className="shrink-0">
+            <Avatar className="shrink-0 rounded-lg">
                 <AvatarImage src={picture} />
                 <AvatarFallback>JD</AvatarFallback>
             </Avatar>

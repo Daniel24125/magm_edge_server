@@ -5,6 +5,7 @@ export type TAlert = {
     message: string;
     timestamp: string;
     details?: any;
+    read?: boolean;
 };
 
 // --- Device Types ---
