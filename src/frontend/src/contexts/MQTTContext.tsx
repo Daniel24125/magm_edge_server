@@ -13,6 +13,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { mqtt, iot } from "aws-iot-device-sdk-v2";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { useAlert } from "./AlertContext";
 
 // --- Configuration Constants ---
 // TODO: Move these to a config file or environment variables
@@ -35,10 +36,9 @@ interface MQTTContextType {
 const MQTTContext = createContext<MQTTContextType | null>(null);
 
 export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
+    const { addAlert } = useAlert();
     const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-
-    // Dispatcher: Map<Topic, Set<Handler>>
     const messageHandlers = useRef<Map<string, Set<TMessageHandler>>>(new Map());
 
     // 1. Connection Logic
@@ -74,7 +74,7 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             });
 
             newConnection.on("disconnect", () => {
-                console.log("⚠️ Disconnected from AWS IoT Core");
+                addAlert("warning", "Disconnected from AWS IoT Core");
                 setIsConnected(false);
             });
 
@@ -87,9 +87,9 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
                     if (handlers) {
                         handlers.forEach(h => h(topic, parsed));
                     }
-                    // Also dispatch to wildcard handlers if we had them, but for now exact match
+                    // TODO: dispatch to wildcard handlers if we had them, but for now exact match
                 } catch (e) {
-                    console.error("Failed to parse MQTT message", e);
+                    addAlert("error", "Failed to parse MQTT message", e);
                 }
             });
 
@@ -111,7 +111,10 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
 
     // 2. Subscribe Logic
     const subscribe = useCallback(async (topic: string, handler?: TMessageHandler) => {
-        if (!connection) return;
+        if (!connection) {
+            addAlert("warning", "No MQTT connection");
+            return;
+        }
 
         // Register handler
         if (handler) {
@@ -140,7 +143,7 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     // 3. Publish Logic
     const publish = useCallback(async (topic: string, payload: any) => {
         if (!connection) {
-            console.warn("Cannot publish, no connection");
+            addAlert("warning", "No MQTT connection");
             return;
         }
         const json = JSON.stringify(payload);

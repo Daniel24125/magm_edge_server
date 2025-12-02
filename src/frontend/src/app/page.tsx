@@ -1,22 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { mqtt, iot } from "aws-iot-device-sdk-v2";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
-import Calibration, { TCalibrationStatus } from "./calibration";
+import Calibration from "./calibration";
+import { useMQTT } from "@/contexts/MQTTContext";
+import { TCalibrationStatus, TAlert } from "@/types";
 
-type TAlert = {
-  session_id: string;
-  device_id: string;
-  sensor_type: string;
-  value: number;
-  message: string;
-  timestamp: string;
-}
-
-const AWS_REGION = "eu-west-3";
-const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
-const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com";
 const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
 
 
@@ -35,10 +23,11 @@ const CAL_TOPICS = [
 ];
 
 export default function Page() {
+  const { isConnected, connection, publish } = useMQTT();
+
   const [messages, setMessages] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
-  const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+
   const [isRPIConnected, setIsRPIConnected] = useState(false);
   const [calibrationStatus, setCalibrationStatus] = useState<TCalibrationStatus>("READY");
   const [calibrationData, setCalibrationData] = useState<any | null>(null);
@@ -47,119 +36,9 @@ export default function Page() {
   const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
   const [alerts, setAlerts] = useState<TAlert[]>([]);
 
-  useEffect(() => {
-    async function connectAndSubscribe() {
-      try {
-        // 1️⃣ Get credentials from Cognito Identity Pool
-        const provider = fromCognitoIdentityPool({
-          clientConfig: { region: AWS_REGION },
-          identityPoolId: IDENTITY_POOL_ID,
-        });
-
-        const credentials = await provider();
-        console.log("Cognito credentials obtained");
-
-
-        // 2️⃣ Build AWS IoT MQTT connection over WebSocket
-        const client = new mqtt.MqttClient();
-
-        const configBuilder =
-          iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
-            .with_clean_session(true)
-            .with_client_id("webclient-" + Math.floor(Math.random() * 10000))
-            .with_endpoint(IOT_ENDPOINT)
-            .with_credentials(
-              AWS_REGION,
-              credentials.accessKeyId,
-              credentials.secretAccessKey,
-              credentials.sessionToken
-            )
-            .with_keep_alive_seconds(60);
-
-        const connection = client.new_connection(configBuilder.build());
-
-        // 3️⃣ Handle events
-        connection.on("connect", () => {
-          console.log("✅ Connected to AWS IoT Core")
-          setIsConnected(true)
-
-        });
-
-        connection.on("disconnect", () => {
-          console.log("⚠️ Disconnected from AWS IoT Core");
-          setIsConnected(false);
-        });
-
-        connection.on("message", (topic, payload) => {
-          const parsed_payload = JSON.parse(new TextDecoder().decode(payload));
-          console.log("📥 Message received on:", topic, parsed_payload);
-
-          if (topic === DATA_TOPIC) { setMessages((prev) => [parsed_payload, ...prev]); }
-          if (topic === CAL_LIVE_TOPIC) {
-            setLiveReading({
-              ph: parsed_payload.ph_value,
-              stability: parsed_payload.stability_index
-            });
-          }
-
-          if (topic === CAL_PROMPT_TOPIC) {
-            const { status, message, data } = parsed_payload.payload;
-            setCalibrationStatus(status);
-            setCalibrationData(data);
-            setWizardStep(status);
-            console.log("🧪 Calibration status:", status, message);
-          }
-          if (topic === SYSTEM_NOTIF_TOPIC) {
-            if (topic === SYSTEM_NOTIF_TOPIC) {
-              console.log("🔔 System Notification:", parsed_payload);
-              if (parsed_payload.event === "rpi_connected") {
-                setIsRPIConnected(true)
-              }
-              if (parsed_payload.event === "rpi_disconnected") {
-                setIsRPIConnected(false)
-                setOnlineDevices({})
-              }
-              if (parsed_payload.event === "device_connected") {
-                setOnlineDevices(parsed_payload.devices_online)
-                console.log(parsed_payload.message)
-              }
-              if (parsed_payload.event === "device_disconnected") {
-                console.log(parsed_payload.message)
-                setOnlineDevices(parsed_payload.devices_online)
-              }
-            }
-          }
-          if (topic === ALERT_TOPIC) {
-            setAlerts((prev) => [parsed_payload, ...prev]);
-          }
-        });
-
-        // 4️⃣ Connect & subscribe
-        await connection.connect();
-        for (const topic of CAL_TOPICS) {
-          console.log("Subscribing to topic:", topic);
-          await connection.subscribe(topic, mqtt.QoS.AtLeastOnce);
-        }
-        setConnection(connection);
-
-      } catch (err) {
-        console.error("❌ Connection error:", err);
-      }
-    }
-
-    connectAndSubscribe();
-
-    return () => {
-      // Graceful disconnect on unmount
-      if (connection) {
-        connection.disconnect();
-        console.log("🔌 Disconnected cleanly");
-      }
-    };
-  }, []);
 
   useEffect(() => {
-    console.log("isConnected: ", isConnected)
+
     if (isConnected && connection) {
       sendCommand("ping_device", { device_id: DEVICE_ID });
     }
@@ -179,9 +58,12 @@ export default function Page() {
     };
 
     const json_payload = JSON.stringify(payload);
-    connection.publish(topic, json_payload, mqtt.QoS.AtLeastOnce);
+    publish(topic, json_payload);
     console.log("📤 Sent command to:", topic);
-  }, [connection, isConnected]);
+  }, [connection, isConnected])
+
+
+
 
   return (
     <main className="p-6 space-y-6">
@@ -251,12 +133,12 @@ export default function Page() {
             {alerts.map((alert, i) => (
               <li key={i} className="border border-red-200 p-3 rounded bg-red-50 flex flex-col gap-1">
                 <div className="flex justify-between items-start">
-                  <span className="font-bold text-red-700">{alert.sensor_type} Anomaly</span>
+                  <span className="font-bold text-red-700">{alert.details.sensor_type} Anomaly</span>
                   <span className="text-xs text-gray-500">{new Date(alert.timestamp).toLocaleTimeString()}</span>
                 </div>
                 <p className="text-sm text-gray-800">{alert.message}</p>
                 <div className="text-xs text-gray-600">
-                  Value: <span className="font-mono">{alert.value}</span> | Device: <span className="font-mono">{alert.device_id}</span>
+                  Value: <span className="font-mono">{alert.details.value}</span> | Device: <span className="font-mono">{alert.details.device_id}</span>
                 </div>
               </li>
             ))}

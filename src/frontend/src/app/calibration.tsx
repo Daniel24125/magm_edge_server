@@ -1,17 +1,10 @@
 import { mqtt } from 'aws-iot-device-sdk-v2';
 import React from 'react'
+import { TCalibrationStatus } from "@/types";
 
-export type TCalibrationStatus =
-  | "READY"
-  | "START"
-  | "STABLE"
-  | "NEXT"
-  | "COMPLETE"
-  | "CONFIRM"
-  | "ERROR"
-  | "CANCELLED";
 
-type Props  = {
+
+type Props = {
     connection: mqtt.MqttClientConnection | null;
     calibrationStatus: TCalibrationStatus;
     calibrationData?: any;
@@ -30,13 +23,13 @@ const Calibration = ({
 }: Props) => {
     const publishCommand = (command: string, params: Record<string, any> = {}) => {
         if (!connection) {
-        alert("Not connected to AWS IoT yet");
-        return;
+            alert("Not connected to AWS IoT yet");
+            return;
         }
         const topic = `ui/commands/${command}`;
         const payload = JSON.stringify({
-        command,
-        params: { device_id: DEVICE_ID, sensor_id:SENSOR_ID,  ...params },
+            command,
+            params: { device_id: DEVICE_ID, sensor_id: SENSOR_ID, ...params },
         });
         connection.publish(topic, payload, mqtt.QoS.AtLeastOnce);
         console.log("📤 Sent command:", command, payload);
@@ -45,78 +38,78 @@ const Calibration = ({
     const start = () => publishCommand("start_calibration");
     const confirm = () => publishCommand("confirm_calibration");
     const cancel = () => publishCommand("cancel_calibration");
-    
-    
 
-    
+
+
+
 
     return (
         <div className="p-4 border rounded bg-gray-50 w-full max-w-md">
-        <h3 className="font-bold text-lg mb-2">pH Calibration</h3>
+            <h3 className="font-bold text-lg mb-2">pH Calibration</h3>
 
-        {calibrationStatus === "READY" && (
-            <button
-            onClick={start}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-            Start Calibration
-            </button>
-        )}
+            {calibrationStatus === "READY" && (
+                <button
+                    onClick={start}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                    Start Calibration
+                </button>
+            )}
 
-        {calibrationStatus !== "READY" && (
-            <div className="space-y-3">
-            <p className="text-sm">
-                <b>Status:</b> {calibrationStatus}
-            </p>
-            {liveReading && (
-                <div className="text-sm">
-                <p>
-                    pH:{" "}
-                    <span className="font-semibold">
-                    {liveReading.ph?.toFixed(2)}
-                    </span>
-                </p>
-                <p>
-                    Stability:{" "}
-                    <span className="font-semibold">
-                    {(liveReading.stability ?? 0) * 100}%
-                    </span>
-                </p>
+            {calibrationStatus !== "READY" && (
+                <div className="space-y-3">
+                    <p className="text-sm">
+                        <b>Status:</b> {calibrationStatus}
+                    </p>
+                    {liveReading && (
+                        <div className="text-sm">
+                            <p>
+                                pH:{" "}
+                                <span className="font-semibold">
+                                    {liveReading.ph?.toFixed(2)}
+                                </span>
+                            </p>
+                            <p>
+                                Stability:{" "}
+                                <span className="font-semibold">
+                                    {(liveReading.stability ?? 0) * 100}%
+                                </span>
+                            </p>
+                        </div>
+                    )}
+                    {calibrationData?.calibration_data && (
+                        <pre className="bg-gray-100 p-2 rounded text-xs">
+                            {JSON.stringify(calibrationData.calibration_data, null, 2)}
+                        </pre>
+                    )}
+
+                    {calibrationStatus === "COMPLETED" && (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={confirm}
+                                className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                                ✅ Confirm Calibration
+                            </button>
+                            <button
+                                onClick={cancel}
+                                className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                ❌ Cancel
+                            </button>
+                        </div>
+                    )}
+
+                    {calibrationStatus !== "COMPLETED" && (
+                        <button
+                            onClick={cancel}
+                            className="w-full px-3 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                        >
+                            Cancel
+                        </button>
+                    )}
                 </div>
             )}
-            {calibrationData?.calibration_data && (
-                <pre className="bg-gray-100 p-2 rounded text-xs">
-                {JSON.stringify(calibrationData.calibration_data, null, 2)}
-                </pre>
-            )}
-
-            {calibrationStatus === "COMPLETE" && (
-                <div className="flex gap-2">
-                <button
-                    onClick={confirm}
-                    className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                    ✅ Confirm Calibration
-                </button>
-                <button
-                    onClick={cancel}
-                    className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                    ❌ Cancel
-                </button>
-                </div>
-            )}
-
-            {calibrationStatus !== "COMPLETE" && (
-                <button
-                onClick={cancel}
-                className="w-full px-3 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
-                >
-                Cancel
-                </button>
-            )}
-            </div>
-        )}
         </div>
     );
 }

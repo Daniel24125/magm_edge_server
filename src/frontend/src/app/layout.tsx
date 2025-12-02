@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { MQTTProvider } from "@/contexts/MQTTContext";
+import { AlertProvider } from "@/contexts/AlertContext";
+import { DeviceManagerProvider } from "@/contexts/DeviceManagerContext";
+import { ApplicationProvider } from "@/contexts/ApplicationContext";
+import { Toaster } from "sonner";
+import Topbar from "@/components/template/Topbar";
+import Sidebar from "@/components/template/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +34,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AlertProvider>
+          <MQTTProvider>
+            <DeviceManagerProvider>
+              <ApplicationProvider>
+                <section className="flex w-screen h-screen">
+                  <Sidebar />
+                  <main className="w-full">
+                    <Topbar />
+                    {children}
+                  </main>
+                </section>
+                <Toaster position="bottom-center" richColors />
+              </ApplicationProvider>
+            </DeviceManagerProvider>
+          </MQTTProvider>
+        </AlertProvider>
       </body>
     </html>
   );
