@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.13.1",
     "@aws-sdk/credential-providers": "^3.915.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-separator": "^1.1.8",

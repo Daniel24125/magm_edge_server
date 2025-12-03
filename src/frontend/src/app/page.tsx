@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import Calibration from "./calibration";
 import { useMQTT } from "@/contexts/MQTTContext";
 import { TCalibrationStatus, TAlert } from "@/types";
+import { useUser } from "@auth0/nextjs-auth0";
+import { useRouter } from 'next/navigation'
 
 const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
 
@@ -24,6 +26,7 @@ const CAL_TOPICS = [
 
 export default function Page() {
   const { isConnected, connection, publish } = useMQTT();
+  const { user, error, isLoading } = useUser();
 
   const [messages, setMessages] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
@@ -36,7 +39,7 @@ export default function Page() {
   const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
   const [alerts, setAlerts] = useState<TAlert[]>([]);
 
-
+  const router = useRouter()
   useEffect(() => {
 
     if (isConnected && connection) {
@@ -62,7 +65,9 @@ export default function Page() {
     console.log("📤 Sent command to:", topic);
   }, [connection, isConnected])
 
-
+  if (isLoading) return <div>Loading...</div>;
+  if (!user) return router.push('/auth/login');
+  if (error) return <div>Error: {(error as Error).message}</div>;
 
 
   return (
@@ -97,6 +102,12 @@ export default function Page() {
         />
       </div>
       <section className="mt-4">
+        <a
+          href="/auth/login"
+          className="button login"
+        >
+          Log In
+        </a>
         <h2 className="font-semibold text-lg">Connected Devices</h2>
         <ul className="space-y-1 mt-2">
           {Object.entries(onlineDevices).map(([id, online]) => (

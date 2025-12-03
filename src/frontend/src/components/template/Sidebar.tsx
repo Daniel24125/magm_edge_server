@@ -13,6 +13,7 @@ import { Separator } from '../ui/separator';
 import { Avatar } from '../ui/avatar';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserContext } from '@/contexts/UserContext';
 
 const Sidebar = () => {
     const { isSidebarOpen } = useApplication();
@@ -203,13 +204,14 @@ const DeviceConnectionStatus = () => {
 
 
 const AccountElement = () => {
-    const { name, email, picture } = { name: "John Doe", email: "john.doe@example.com", picture: "https://github.com/shadcn.png" };
+    const { user, isLoading, error } = useUserContext();
     const { isSidebarOpen } = useApplication();
+    console.log(user, isLoading, error)
 
     return <div className='w-full flex items-center justify-between overflow-hidden h-12'>
         <div className='flex items-center gap-3 text-text-faded'>
             <Avatar className="shrink-0 rounded-lg">
-                <AvatarImage src={picture} />
+                <AvatarImage src={user!.picture} />
                 <AvatarFallback>JD</AvatarFallback>
             </Avatar>
             <AnimatePresence>
@@ -220,8 +222,8 @@ const AccountElement = () => {
                         exit={{ opacity: 0, width: 0 }}
                         className='flex flex-col whitespace-nowrap'
                     >
-                        <span className='text-sm font-bold'>{name}</span>
-                        <span className='text-xs text-text-faded'>{email}</span>
+                        <span className='text-sm font-bold'>{user!.name}</span>
+                        <span className='text-xs text-text-faded'>{user!.email}</span>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -233,9 +235,11 @@ const AccountElement = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
                 >
-                    <Button variant="ghost" className='text-text-faded shrink-0'>
-                        <LogOut />
-                    </Button>
+                    <Link href="/auth/logout">
+                        <Button variant="ghost" className='text-text-faded shrink-0'>
+                            <LogOut />
+                        </Button>
+                    </Link>
                 </motion.div>
             )}
         </AnimatePresence>

@@ -8,6 +8,7 @@ import { ApplicationProvider } from "@/contexts/ApplicationContext";
 import { Toaster } from "sonner";
 import Topbar from "@/components/template/Topbar";
 import Sidebar from "@/components/template/Sidebar";
+import { UserProvider } from "@/contexts/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,22 +35,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AlertProvider>
-          <MQTTProvider>
-            <DeviceManagerProvider>
-              <ApplicationProvider>
-                <section className="flex w-screen h-screen">
-                  <Sidebar />
-                  <main className="w-full">
-                    <Topbar />
-                    {children}
-                  </main>
-                </section>
-                <Toaster position="bottom-center" richColors />
-              </ApplicationProvider>
-            </DeviceManagerProvider>
-          </MQTTProvider>
-        </AlertProvider>
+        <UserProvider>
+          <AlertProvider>
+            <MQTTProvider>
+              <DeviceManagerProvider>
+                <ApplicationProvider>
+                  <section className="flex w-screen h-screen">
+                    <Sidebar />
+                    <main className="w-full">
+                      <Topbar />
+                      {children}
+                    </main>
+                  </section>
+                  <Toaster position="bottom-center" richColors />
+                </ApplicationProvider>
+              </DeviceManagerProvider>
+            </MQTTProvider>
+          </AlertProvider>
+        </UserProvider>
       </body>
     </html>
   );
