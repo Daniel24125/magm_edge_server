@@ -15,6 +15,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0";
 import { useRouter } from "next/navigation";
+import Loading from "@/components/ui/loading";
 
 interface UserContextType {
     user: any;
@@ -40,7 +41,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if (!user) router.push('/auth/login');
     }, [isLoading, user]);
 
-    if (isLoadingState || !user) return <div>Loading...</div>;
+    if (isLoadingState || !user) return <Loading isLoading={isLoadingState} />
     if (error) return <div>Error: {(error as Error).message}</div>;
     return (
         <UserContext.Provider value={{ user: userState, isLoading: isLoadingState, error }}>
