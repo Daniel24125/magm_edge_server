@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import Topbar from "@/components/template/Topbar";
 import Sidebar from "@/components/template/Sidebar";
 import { UserProvider } from "@/contexts/UserContext";
+import { ProjectsProvider } from "@/contexts/ProjectsContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,22 +37,24 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <UserProvider>
-          <AlertProvider>
-            <MQTTProvider>
-              <DeviceManagerProvider>
-                <ApplicationProvider>
-                  <section className="flex w-screen h-screen">
-                    <Sidebar />
-                    <main className="w-full">
-                      <Topbar />
-                      {children}
-                    </main>
-                  </section>
-                  <Toaster position="bottom-center" richColors />
-                </ApplicationProvider>
-              </DeviceManagerProvider>
-            </MQTTProvider>
-          </AlertProvider>
+          <ProjectsProvider>
+            <AlertProvider>
+              <MQTTProvider>
+                <DeviceManagerProvider>
+                  <ApplicationProvider>
+                    <section className="flex w-screen h-screen">
+                      <Sidebar />
+                      <main className="w-full">
+                        <Topbar />
+                        {children}
+                      </main>
+                    </section>
+                    <Toaster position="bottom-center" richColors />
+                  </ApplicationProvider>
+                </DeviceManagerProvider>
+              </MQTTProvider>
+            </AlertProvider>
+          </ProjectsProvider>
         </UserProvider>
       </body>
     </html>

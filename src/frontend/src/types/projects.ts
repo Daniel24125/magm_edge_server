@@ -1,0 +1,36 @@
+export type TProjectDetails = {
+    projectTitle: string;
+    description?: string;
+    projectType: "manual" | "timer" | "target"
+}
+
+export type TSessionDetails = {
+    sessionId?: string;
+    reactorName?: string;
+    sampleName?: string;
+    cultureMedium?: string;
+    co2Pressure?: number;
+}
+
+export type TSessionDefaultSettings = {
+    dataAcquisitionInterval: number;
+    temperatureSetPoint: number;
+    phSetPoint: number;
+}
+
+export type TAlertConfiguration = {
+    alertType: "temperature" | "ph" | "OD";
+    threshold: number;
+    delay?: number;
+    enabled: boolean;
+}
+
+export interface IProject {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    projectDetails: TProjectDetails;
+    sessionDetails: TSessionDetails;
+    sessionDefaultSettings: TSessionDefaultSettings;
+    alertConfiguration: TAlertConfiguration[];
+}

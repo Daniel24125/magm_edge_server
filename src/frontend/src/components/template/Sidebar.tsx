@@ -14,6 +14,7 @@ import { Avatar } from '../ui/avatar';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserContext } from '@/contexts/UserContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 
 const Sidebar = () => {
     const { isSidebarOpen } = useApplication();
@@ -66,8 +67,12 @@ const SidebarHeader = () => {
 
 const CreateProjectButton = () => {
     const { isSidebarOpen } = useApplication();
+    const { setOpen, setMode } = useProjects();
+
     return (
-        <Button variant="default" className={`${isSidebarOpen ? 'w-full' : 'w-12 h-12 px-3'} bg-primary overflow-hidden whitespace-nowrap`}>
+        <Button variant="default" className={`${isSidebarOpen ? 'w-full' : 'w-12 h-12 px-3'} bg-primary overflow-hidden whitespace-nowrap`}
+            onClick={() => { setOpen(true); setMode('create') }}
+        >
             <AnimatePresence mode="wait">
                 {isSidebarOpen ? (
                     <motion.span
@@ -206,7 +211,6 @@ const DeviceConnectionStatus = () => {
 const AccountElement = () => {
     const { user, isLoading, error } = useUserContext();
     const { isSidebarOpen } = useApplication();
-    console.log(user, isLoading, error)
 
     return <div className='w-full flex items-center justify-between overflow-hidden h-12'>
         <div className='flex items-center gap-3 text-text-faded'>

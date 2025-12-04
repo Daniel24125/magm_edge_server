@@ -62,7 +62,6 @@ export default function Page() {
 
     const json_payload = JSON.stringify(payload);
     publish(topic, json_payload);
-    console.log("📤 Sent command to:", topic);
   }, [connection, isConnected])
 
   if (isLoading) return <div>Loading...</div>;
@@ -102,12 +101,7 @@ export default function Page() {
         />
       </div>
       <section className="mt-4">
-        <a
-          href="/auth/login"
-          className="button login"
-        >
-          Log In
-        </a>
+
         <h2 className="font-semibold text-lg">Connected Devices</h2>
         <ul className="space-y-1 mt-2">
           {Object.entries(onlineDevices).map(([id, online]) => (

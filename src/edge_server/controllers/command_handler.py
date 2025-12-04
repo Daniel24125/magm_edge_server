@@ -19,7 +19,8 @@ class CommandHandler:
         self.device_controller = DeviceController(mqtt, aws)
 
     def handle_ui_command(self, payload: dict):
-
+        if type(payload) == str:
+            payload = json.loads(payload)
         try:
             cmd = CommandPayload(**payload)
         except Exception as e:

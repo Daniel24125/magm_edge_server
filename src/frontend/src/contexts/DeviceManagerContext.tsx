@@ -35,7 +35,7 @@ interface IDeviceManagerContext {
 const DeviceManagerContext = createContext<IDeviceManagerContext | null>(null);
 
 export const DeviceManagerProvider = ({ children }: { children: React.ReactNode }) => {
-    const { subscribe, publish, isConnected } = useMQTT();
+    const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
     const { addAlert } = useAlert();
 
     const [isRPIConnected, setIsRPIConnected] = useState(false);
@@ -54,7 +54,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
         if (!isConnected) return;
 
         // 1. System Notifications (Connection Status)
-        subscribe(SYSTEM_NOTIF_TOPIC, (topic, payload) => {
+        const handleSystemNotification = (topic: string, payload: any) => {
             console.log("🔔 System Notification:", payload);
 
             if (payload.event === "rpi_connected") {
@@ -74,10 +74,10 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
                 setOnlineDevices(payload.devices_online || {});
                 addAlert("warning", payload.message || "Device Disconnected");
             }
-        });
+        };
 
         // 2. Sensor Data
-        subscribe(DATA_TOPIC, (topic, payload) => {
+        const handleSensorData = (topic: string, payload: any) => {
             // Payload structure: { data: { ph: { value: 7.0 }, temp: { value: 25.0 } }, timestamp: "..." }
             if (payload.data) {
                 const timestamp = payload.timestamp || new Date().toISOString();
@@ -94,12 +94,19 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
 
                 setSensorData(prev => ({ ...prev, ...newReadings }));
             }
-        });
+        };
+
+        subscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
+        subscribe(DATA_TOPIC, handleSensorData);
 
         // Initial Ping
         pingDevice();
 
-    }, [isConnected, subscribe, pingDevice, addAlert]);
+        return () => {
+            unsubscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
+            unsubscribe(DATA_TOPIC, handleSensorData);
+        }
+    }, [isConnected, subscribe, unsubscribe, pingDevice, addAlert]);
 
     return (
         <DeviceManagerContext.Provider value={{ isRPIConnected, onlineDevices, sensorData, pingDevice }}>
