@@ -1,7 +1,11 @@
+export type TProjectType = "manual" | "timer" | "target"
+
 export type TProjectDetails = {
     projectTitle: string;
     description?: string;
-    projectType: "manual" | "timer" | "target"
+    projectType: "manual" | "timer" | "target";
+    timer?: number;
+    target?: number;
 }
 
 export type TSessionDetails = {
