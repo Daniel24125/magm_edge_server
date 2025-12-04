@@ -2,6 +2,7 @@ import { Biohazard, Gauge, Waves } from 'lucide-react';
 import { useProjectFormContext } from './ProjectForm';
 import { TSessionDefaultSettings, TSessionDetails } from '@/types/projects';
 import ProjectType from './ProjectType';
+import { formatDuration } from '@/lib/utils';
 
 type TSummaryElementProps = {
     title: string;
@@ -43,6 +44,8 @@ const ProjectFormHeader = () => {
     const projectTitle = getValues("projectDetails.projectTitle");
     const sampleName = getValues("sessionDetails.sampleName");
     const projectType = getValues("projectDetails.projectType");
+    const timerDuration = getValues("projectDetails.timer");
+    const targetValue = getValues("projectDetails.target");
 
     return <div className='w-full flex items-center justify-between mb-4'>
         <div className='flex flex-col'>
@@ -50,7 +53,7 @@ const ProjectFormHeader = () => {
             <p className='text-text-faded text-xs'>{sampleName}</p>
         </div>
         <div>
-            <ProjectType projectType={projectType} />
+            <ProjectType projectType={projectType} info={targetValue ? targetValue.toString() : timerDuration ? formatDuration(timerDuration) : ""} />
         </div>
     </div>
 }

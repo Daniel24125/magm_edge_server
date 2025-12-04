@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "../ui/scroll-area";
 import { ProjectFormSummary } from "./ProjectSummary";
+import { DurationPicker } from "../ui/duration-picker";
 
 interface ProjectFormProps extends React.HTMLAttributes<HTMLFormElement> {
     defaultValues?: Partial<IProject>;
@@ -60,21 +61,23 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, className, ...
     });
 
     const projectTitle = form.watch("projectDetails.projectTitle");
-    const sessionDetails = form.watch("sessionDetails");
+    const projectType = form.watch("projectDetails.projectType");
+    const timer = form.watch("projectDetails.timer");
+    const target = form.watch("projectDetails.target");
     const alertConfiguration = form.watch("alertConfiguration");
 
     const isStepValid = React.useMemo(() => {
         if (step === 0) {
-            return !!projectTitle;
-        }
-        if (step === 1) {
-            return !!sessionDetails?.reactorName && !!sessionDetails?.sampleName && !!sessionDetails?.cultureMedium && !!sessionDetails?.co2Pressure;
+            if (!projectTitle) return false;
+            if (projectType === "timer" && !timer) return false;
+            if (projectType === "target" && !target) return false;
+            return true;
         }
         if (step === 3) {
             return alertConfiguration.every(alert => !alert.enabled || (alert.enabled && alert.threshold !== undefined && alert.threshold !== null && alert.threshold.toString() !== ""));
         }
         return true;
-    }, [step, projectTitle, sessionDetails, alertConfiguration]);
+    }, [step, projectTitle, projectType, timer, target, alertConfiguration]);
 
     return (
         <ProjectFormContext.Provider value={{ ...form, step, setStep, isLoading, onSubmit, isStepValid }}>
@@ -157,7 +160,8 @@ const ProjectFormContent = ({ className, ...props }: React.HTMLAttributes<HTMLFo
 }
 
 const ProjectDetailsForm = () => {
-    const { register, control } = useProjectFormContext();
+    const { register, control, watch } = useProjectFormContext();
+    const projectType = watch("projectDetails.projectType");
 
     return <FieldSet>
         <FieldGroup>
@@ -185,6 +189,29 @@ const ProjectDetailsForm = () => {
                     )}
                 />
             </Field>
+            {projectType === "timer" && (
+                <Field>
+                    <FieldLabel htmlFor="timer">Timer (Duration)*</FieldLabel>
+                    <Controller
+                        control={control}
+                        name="projectDetails.timer"
+                        defaultValue={0}
+                        rules={{ required: true, min: 1 }}
+                        render={({ field }) => (
+                            <DurationPicker
+                                value={field.value}
+                                onChange={field.onChange}
+                            />
+                        )}
+                    />
+                </Field>
+            )}
+            {projectType === "target" && (
+                <Field>
+                    <FieldLabel htmlFor="target">Target Value*</FieldLabel>
+                    <Input {...register("projectDetails.target", { required: true })} placeholder="Enter target value" type="number" />
+                </Field>
+            )}
             <Field>
                 <Textarea className="resize-none" {...register("projectDetails.description")} placeholder="Description" />
             </Field>
@@ -299,4 +326,3 @@ const AlertItem = ({ index }: { index: number }) => {
         </div>
     )
 }
-

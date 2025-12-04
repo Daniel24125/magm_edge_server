@@ -10,9 +10,9 @@ const ProjectType = ({ projectType, info }: { projectType: TProjectType, info?: 
     }} className='flex items-center gap-2 justify-between rounded-full px-2 py-1'>
         <div className='flex items-center gap-2'>
             <projectTypeProperties.icon className="w-4 h-4" />
-            <p>{projectTypeProperties.title}</p>
+            <p className='text-sm'>{projectTypeProperties.title}</p>
         </div>
-        {info && <p className='text-text-faded text-xs'>{info}</p>}
+        {info && <p className='text-sm font-bold'>{info}</p>}
     </div>
     )
 }
