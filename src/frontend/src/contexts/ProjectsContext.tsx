@@ -43,6 +43,7 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
     const [mode, setMode] = useState<'create' | 'edit'>('create');
     const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
 
+
     const handleSubmit = async (data: IProject) => {
         setIsLoading(true);
         try {
