@@ -49,6 +49,7 @@ export function ProjectDialog({ open, setOpen, onSubmit, defaultValues, mode = "
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTitle className="hidden">{mode === "create" ? "Create Project" : "Edit Project"}</DialogTitle>
                 <DialogContent>
                     <ProjectForm onSubmit={handleSubmit} defaultValues={defaultValues} isLoading={isLoading} />
                 </DialogContent>

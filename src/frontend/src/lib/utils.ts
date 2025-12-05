@@ -1,19 +1,27 @@
 import { clsx, type ClassValue } from "clsx"
-import { Hand, Target, Timer } from "lucide-react";
+import { Hand, LucideProps, Target, Timer } from "lucide-react";
+import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const getProjectTypeProperties = (projectType: "manual" | "timer" | "target") => {
+export type TProjectTypeProperties = {
+  title: string;
+  color: string;
+  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
+  description: string;
+}
+
+export const getProjectTypeProperties = (projectType: "manual" | "timer" | "target"): TProjectTypeProperties => {
   switch (projectType) {
     case "manual":
       return {
         title: "Manual Project",
         color: "#8462D1",
         icon: Hand,
-        description: "Manual projects allow you to manually control the session time"
+        description: "Manual projects require you to manually stop the session"
       };
     case "timer":
       return {

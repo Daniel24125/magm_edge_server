@@ -208,8 +208,8 @@ const ProjectDetailsForm = () => {
             )}
             {projectType === "target" && (
                 <Field>
-                    <FieldLabel htmlFor="target">Target Value*</FieldLabel>
-                    <Input {...register("projectDetails.target", { required: true })} placeholder="Enter target value" type="number" />
+                    <FieldLabel htmlFor="target">OD Target Value*</FieldLabel>
+                    <Input {...register("projectDetails.target", { required: true })} placeholder="Enter the OD target value" type="number" />
                 </Field>
             )}
             <Field>
@@ -310,16 +310,22 @@ const AlertItem = ({ index }: { index: number }) => {
             <Collapsible open={enabled}>
                 <CollapsibleContent className="data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp overflow-hidden">
                     <div className="flex gap-2 pt-2">
-                        <Input
-                            {...register(`alertConfiguration.${index}.threshold`, { required: enabled })}
-                            placeholder="Threshold"
-                            className="w-full"
-                        />
-                        <Input
-                            {...register(`alertConfiguration.${index}.delay`)}
-                            placeholder="Delay (min)"
-                            className="w-full"
-                        />
+                        <Field>
+                            <FieldLabel>Threshold</FieldLabel>
+                            <Input
+                                {...register(`alertConfiguration.${index}.threshold`, { required: enabled })}
+                                placeholder="Threshold"
+                                className="w-full"
+                            />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Delay (min)</FieldLabel>
+                            <Input
+                                {...register(`alertConfiguration.${index}.delay`)}
+                                placeholder="Delay (min)"
+                                className="w-full"
+                            />
+                        </Field>
                     </div>
                 </CollapsibleContent>
             </Collapsible>

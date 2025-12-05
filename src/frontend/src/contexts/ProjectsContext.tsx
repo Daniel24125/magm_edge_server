@@ -47,8 +47,7 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
         setIsLoading(true);
         try {
             if (mode === 'create') {
-                // await createProject(data);
-                console.log(data);
+                await createProject(data);
             } else {
                 await updateProject(selectedProject!.id, data);
             }
