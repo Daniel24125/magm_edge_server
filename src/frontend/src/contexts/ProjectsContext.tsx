@@ -16,6 +16,7 @@ import { IProject } from "@/types/projects";
 import { getProjects, createProject, updateProject, deleteProject } from "@/app/actions/projects";
 import { toast } from "sonner";
 import { ProjectDialog } from "@/components/projects/ProjectDialog";
+import Loading from "@/components/ui/loading";
 
 interface ProjectsContextType {
     projects: IProject[];
@@ -48,17 +49,15 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
         setIsLoading(true);
         try {
             if (mode === 'create') {
-                await createProject(data);
+                await addProject(data);
             } else {
-                await updateProject(selectedProject!.id, data);
+                await editProject(selectedProject!.id, data);
             }
             setOpen(false);
             setSelectedProject(null);
             setMode('create');
-            toast.success(mode === 'create' ? 'Project created successfully' : 'Project updated successfully');
         } catch (error) {
             console.error(error);
-            toast.error(mode === 'create' ? 'Failed to create project' : 'Failed to update project');
         } finally {
             setIsLoading(false);
         }
@@ -151,6 +150,7 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
 
     return (
         <ProjectsContext.Provider value={{ projects, isLoading, error, addProject, editProject, removeProject, refreshProjects, open, setOpen, mode, setMode, selectedProject, setSelectedProject }}>
+            <Loading isLoading={isLoading} />
             {children}
             <ProjectDialog open={open} setOpen={setOpen} onSubmit={handleSubmit} />
         </ProjectsContext.Provider>

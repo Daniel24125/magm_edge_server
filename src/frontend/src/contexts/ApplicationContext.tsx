@@ -13,6 +13,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import useWindowSize from "@/hooks/useWindowSize";
+import { usePathname } from "next/navigation";
 
 interface IApplicationContext {
     // Window Size
@@ -37,6 +38,20 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
     const [pageTitle, setPageTitle] = useState("Dashboard");
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const isMobile = (windowSize.width || 0) < 768;
+    const pathname = usePathname();
+
+    const ROUTE_TITLES: Record<string, string> = {
+        "/": "Dashboard",
+        "/projects": "Projects",
+        "/devices": "Devices",
+        "/notifications": "Notifications",
+        "/settings": "Settings",
+    };
+
+    useEffect(() => {
+        const title = ROUTE_TITLES[pathname] || "Dashboard";
+        setPageTitle(title);
+    }, [pathname]);
 
 
 

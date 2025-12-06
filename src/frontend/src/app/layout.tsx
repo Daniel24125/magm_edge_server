@@ -42,9 +42,9 @@ export default function RootLayout({
               <MQTTProvider>
                 <DeviceManagerProvider>
                   <ApplicationProvider>
-                    <section className="flex w-screen h-screen">
+                    <section className="flex w-screen">
                       <Sidebar />
-                      <main className="w-full">
+                      <main className="w-full h-screen overflow-y-auto p-4">
                         <Topbar />
                         {children}
                       </main>
