@@ -15,7 +15,10 @@ export interface ISession {
     createdAt: string;
     updatedAt: string;
     status: 'running' | 'paused' | 'completed' | 'failed';
-    // Snapshot of configuration at the time of session start
+    notes?: string;
+    time?: number; // Duration in seconds
+    duration?: number; // Duration in seconds for the Timer Projects
+    target?: number; // Target value for the Target Projects
     sessionDetails: TSessionDetails;
     settings: TSessionDefaultSettings;
     alertConfiguration: TAlertConfiguration[];

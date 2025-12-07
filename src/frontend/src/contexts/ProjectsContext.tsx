@@ -13,7 +13,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { IProject } from "@/types/projects";
+import { ISession } from "@/types/sessions";
 import { getProjects, createProject, updateProject, deleteProject } from "@/app/actions/projects";
+import { getSessions } from "@/app/actions/sessions";
 import { toast } from "sonner";
 import { ProjectDialog } from "@/components/projects/ProjectDialog";
 import Loading from "@/components/ui/loading";
@@ -32,6 +34,7 @@ interface ProjectsContextType {
     setMode: (mode: 'create' | 'edit') => void;
     selectedProject: IProject | null;
     setSelectedProject: (project: IProject | null) => void;
+    getLastSession: () => Promise<ISession | null>;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | null>(null);
@@ -148,8 +151,23 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, [refreshProjects]);
 
+    const getLastSession = useCallback(async () => {
+        try {
+            const result = await getSessions();
+            if (result.success && result.data && result.data.length > 0) {
+                // Sort by createdAt descending
+                const sorted = result.data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                return sorted[0];
+            }
+            return null;
+        } catch (error) {
+            console.error("Failed to get last session", error);
+            return null;
+        }
+    }, []);
+
     return (
-        <ProjectsContext.Provider value={{ projects, isLoading, error, addProject, editProject, removeProject, refreshProjects, open, setOpen, mode, setMode, selectedProject, setSelectedProject }}>
+        <ProjectsContext.Provider value={{ projects, isLoading, error, addProject, editProject, removeProject, refreshProjects, open, setOpen, mode, setMode, selectedProject, setSelectedProject, getLastSession }}>
             <Loading isLoading={isLoading} />
             {children}
             <ProjectDialog open={open} setOpen={setOpen} onSubmit={handleSubmit} />

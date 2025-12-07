@@ -170,7 +170,7 @@ const ConnectionElement = ({ icon, label, isConnected }: TConnectionItem) => {
     const { isSidebarOpen } = useApplication();
     return <div className='w-full flex items-center justify-between h-8 overflow-hidden'>
         <div className='flex items-center gap-2 text-text-faded'>
-            <div className={`shrink-0 ${isSidebarOpen ? "" : `${isConnected ? 'text-green-500' : 'text-red-500'} pl-2`}`}>{icon}</div>
+            <div className={`shrink-0 ${isSidebarOpen ? "" : `${isConnected ? 'text-primary' : 'text-text-faded/30'} pl-2`}`}>{icon}</div>
             <AnimatePresence>
                 {isSidebarOpen && (
                     <motion.span
@@ -190,7 +190,7 @@ const ConnectionElement = ({ icon, label, isConnected }: TConnectionItem) => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className={`${isConnected ? 'bg-green-500' : 'bg-red-500'} h-3 w-3 rounded-full shrink-0`}
+                    className={`${isConnected ? 'bg-primary' : 'bg-text-faded/30'} h-3 w-3 rounded-full shrink-0`}
                 ></motion.div>
             )}
         </AnimatePresence>

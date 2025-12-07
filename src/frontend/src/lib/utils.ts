@@ -1,5 +1,6 @@
+import { TAlertType } from "@/types/projects";
 import { clsx, type ClassValue } from "clsx"
-import { Hand, LucideProps, Target, Timer } from "lucide-react";
+import { Drone, Hand, LucideProps, Target, TestTube, Thermometer, Timer } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { twMerge } from "tailwind-merge"
 
@@ -49,3 +50,141 @@ export const formatDuration = (seconds: number | undefined) => {
   const pad = (n: number) => n.toString().padStart(2, "0")
   return `${pad(days)}:${pad(hours)}:${pad(minutes)}`
 }
+
+export const getFormartedTimeWithLetters = (seconds: number | undefined) => {
+  if (!seconds) return "00d 00h 00m 00s"
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+
+  const pad = (n: number) => n.toString().padStart(2, "0")
+  return `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`
+}
+
+export const getAlertIcon = (alertType: TAlertType) => {
+  switch (alertType) {
+    case "temperature":
+      return {
+        icon: Thermometer,
+        color: "#F42E25",
+        label: "Temperature",
+        units: "°C"
+      };
+    case "ph":
+      return {
+        icon: TestTube,
+        color: "#8462D1",
+        label: "pH",
+        units: ""
+      };
+    case "OD":
+      return {
+        icon: Drone,
+        color: "#004CCE",
+        label: "OD",
+        units: ""
+      };
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// <h1 className="text-2xl font-bold mb-2">AWS IoT Live Data & Control Panel</h1>
+
+
+//       {/* Command Buttons */}
+//       <div className="flex gap-4 mt-4">
+//         <button
+//           onClick={() => sendCommand("start_session", {
+//             user: "auth|09875407429'20842",
+//             project_id: "WNDRIKGnwkerfnwe32324",
+//             notes: "This is a note"
+//           })}
+//           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+//         >
+//           ▶ Start Measurement
+//         </button>
+//         <button
+//           onClick={() => sendCommand("stop_session")}
+//           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+//         >
+//           ⏹ Shutdown
+//         </button>
+//         <Calibration
+//           connection={connection}
+//           calibrationStatus={calibrationStatus}
+//           calibrationData={calibrationData}
+//           liveReading={liveReading}
+//           setCalibrationStatus={setCalibrationStatus}
+//         />
+//       </div>
+//       <section className="mt-4">
+
+//         <h2 className="font-semibold text-lg">Connected Devices</h2>
+//         <ul className="space-y-1 mt-2">
+//           {Object.entries(onlineDevices).map(([id, online]) => (
+//             <li key={id} className="text-sm flex items-center gap-2">
+//               <span className={`h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-red-500"}`}></span>
+//               <span>{id}</span>
+//             </li>
+//           ))}
+//         </ul>
+//       </section>
+
+//       {/* Active Alerts */}
+//       <section>
+//         <h2 className="text-xl font-semibold mt-6 mb-2 text-red-600">⚠️ Active Alerts</h2>
+//         {alerts.length === 0 ? (
+//           <p className="text-gray-500 italic">No active alerts.</p>
+//         ) : (
+//           <ul className="space-y-2">
+//             {alerts.map((alert, i) => (
+//               <li key={i} className="border border-red-200 p-3 rounded bg-red-50 flex flex-col gap-1">
+//                 <div className="flex justify-between items-start">
+//                   <span className="font-bold text-red-700">{alert.details.sensor_type} Anomaly</span>
+//                   <span className="text-xs text-gray-500">{new Date(alert.timestamp).toLocaleTimeString()}</span>
+//                 </div>
+//                 <p className="text-sm text-gray-800">{alert.message}</p>
+//                 <div className="text-xs text-gray-600">
+//                   Value: <span className="font-mono">{alert.details.value}</span> | Device: <span className="font-mono">{alert.details.device_id}</span>
+//                 </div>
+//               </li>
+//             ))}
+//           </ul>
+//         )}
+//       </section>
+//       {/* Live Sensor Data */}
+//       <section>
+//         <h2 className="text-xl font-semibold mt-6 mb-2">📡 Incoming Sensor Data</h2>
+//         <ul className="space-y-2">
+//           {messages.map((m, i) => (
+//             <li key={i} className="border p-2 rounded bg-gray-50">
+//               <pre className="text-sm">{JSON.stringify(m, null, 2)}</pre>
+//             </li>
+//           ))}
+//         </ul>
+//       </section>
+
+//       {/* Device Responses */}
+//       <section>
+//         <h2 className="text-xl font-semibold mt-6 mb-2">🪄 Device Responses</h2>
+//         <ul className="space-y-2">
+//           {responses.map((r, i) => (
+//             <li key={i} className="border p-2 rounded bg-green-50">
+//               <pre className="text-sm">{JSON.stringify(r, null, 2)}</pre>
+//             </li>
+//           ))}
+//         </ul>
+//       </section>

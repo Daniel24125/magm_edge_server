@@ -10,6 +10,7 @@ import Topbar from "@/components/template/Topbar";
 import Sidebar from "@/components/template/Sidebar";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProjectsProvider } from "@/contexts/ProjectsContext";
+import { SessionProvider } from "@/contexts/SessionContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,18 +41,20 @@ export default function RootLayout({
           <ProjectsProvider>
             <AlertProvider>
               <MQTTProvider>
-                <DeviceManagerProvider>
-                  <ApplicationProvider>
-                    <section className="flex w-screen">
-                      <Sidebar />
-                      <main className="w-full h-screen overflow-y-auto p-4">
-                        <Topbar />
-                        {children}
-                      </main>
-                    </section>
-                    <Toaster position="bottom-center" richColors />
-                  </ApplicationProvider>
-                </DeviceManagerProvider>
+                <SessionProvider>
+                  <DeviceManagerProvider>
+                    <ApplicationProvider>
+                      <section className="flex w-screen">
+                        <Sidebar />
+                        <main className="w-full h-screen overflow-y-auto p-4">
+                          <Topbar />
+                          {children}
+                        </main>
+                      </section>
+                      <Toaster position="bottom-center" richColors />
+                    </ApplicationProvider>
+                  </DeviceManagerProvider>
+                </SessionProvider>
               </MQTTProvider>
             </AlertProvider>
           </ProjectsProvider>

@@ -1,3 +1,5 @@
+import { ISession } from "./sessions";
+
 export type TProjectType = "manual" | "timer" | "target"
 
 export type TProjectDetails = {
@@ -22,8 +24,10 @@ export type TSessionDefaultSettings = {
     phSetPoint: number;
 }
 
+export type TAlertType = "temperature" | "ph" | "OD";
+
 export type TAlertConfiguration = {
-    alertType: "temperature" | "ph" | "OD";
+    alertType: TAlertType;
     threshold: number;
     delay?: number;
     enabled: boolean;
@@ -37,4 +41,13 @@ export interface IProject {
     sessionDetails: TSessionDetails;
     sessionDefaultSettings: TSessionDefaultSettings;
     alertConfiguration: TAlertConfiguration[];
+    sessions: ISession[];
+}
+
+
+export type TSummaryElementProps = {
+    title: string;
+    value: string;
+    icon?: React.ReactNode;
+    color?: string;
 }

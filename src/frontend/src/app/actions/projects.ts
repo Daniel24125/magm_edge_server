@@ -35,6 +35,38 @@ export async function getProjects(): Promise<{ success: boolean; data?: IProject
     }
 }
 
+export async function getProject(id: string): Promise<{ success: boolean; data?: IProject; error?: string }> {
+    try {
+        const session = await auth0.getSession();
+        if (!session?.user) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const docRef = db.collection(COLLECTION_NAME).doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return { success: false, error: "Project not found" };
+        }
+
+        const data = doc.data();
+
+        if (data?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const project: IProject = {
+            id: doc.id,
+            ...data
+        } as IProject;
+
+        return { success: true, data: project };
+    } catch (error) {
+        console.error("Error fetching project:", error);
+        return { success: false, error: "Failed to fetch project" };
+    }
+}
+
 export async function createProject(projectData: Omit<IProject, "id" | "createdAt" | "updatedAt">): Promise<{ success: boolean; data?: IProject; error?: string }> {
     try {
         const session = await auth0.getSession();

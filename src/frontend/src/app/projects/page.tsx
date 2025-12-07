@@ -1,20 +1,18 @@
 "use client"
 import { NoProjectsIlustration } from '@/components/ilustrations'
 import ProjectType from '@/components/projects/ProjectType'
-import ActionMenu from '@/components/ui/action-menu'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useProjects } from '@/contexts/ProjectsContext'
 import { IProject } from '@/types/projects'
-import { Edit, Eye, Filter, Trash } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Filter } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import DeleteConfirmationDialog from '@/components/ui/delete-confirmation-dialog'
 import { getSessions } from '../actions/sessions'
 import { ISession } from '@/types/sessions'
 import NoSession from '@/components/projects/NoSession'
+import ProjectMenu from '@/components/projects/ProjectMenu'
 
 const ProjectsPage = () => {
     const { projects } = useProjects()
@@ -67,44 +65,7 @@ const NoProjects = () => {
     )
 }
 
-const ProjectMenu = ({ project }: { project: IProject }) => {
-    const { setOpen, setMode, setSelectedProject, removeProject } = useProjects()
-    const router = useRouter()
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    return <>
-        <ActionMenu items={[
-            {
-                label: "View",
-                icon: <Eye />,
-                onClick: () => {
-                    router.push(`/projects/${project.id}`)
-                }
-            },
-            {
-                label: "Edit",
-                icon: <Edit />,
-                onClick: () => {
-                    setSelectedProject(project)
-                    setMode('edit')
-                    setOpen(true)
-                }
-            },
-            {
-                label: "Delete",
-                icon: <Trash />,
-                variant: 'destructive',
-                onClick: () => setDeleteDialogOpen(true)
-            }
-        ]} />
-        <DeleteConfirmationDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            onConfirm={() => removeProject(project.id)}
-            title={`Delete Project "${project.projectDetails.projectTitle}"?`}
-            description="This action cannot be undone. This will permanently delete the project and all associated sessions."
-        />
-    </>
-}
+
 
 const ProjectCard = ({ project }: { project: IProject }) => {
 

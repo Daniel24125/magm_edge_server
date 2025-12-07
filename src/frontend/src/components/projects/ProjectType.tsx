@@ -10,7 +10,7 @@ const ProjectType = ({ projectType, info, showText = true }: { projectType: TPro
         <div style={{
             color: projectTypeProperties.color,
             backgroundColor: projectTypeProperties.color + "33"
-        }} className='flex items-center gap-2 justify-between rounded-full px-2 py-1 shrink-0'>
+        }} className='flex items-center gap-2 justify-between rounded-full px-2 py-1 shrink-0 cursor-default'>
             <div className='flex items-center gap-2'>
                 <projectTypeProperties.icon size={20} />
                 {showText && <p className='text-sm'>{projectTypeProperties.title}</p>}
