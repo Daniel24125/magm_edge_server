@@ -60,6 +60,38 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, className, ...
         }
     });
 
+    React.useEffect(() => {
+        if (defaultValues) {
+            form.reset(defaultValues);
+        } else {
+            form.reset({
+                projectDetails: {
+                    projectType: "manual",
+                    projectTitle: "",
+                    description: "",
+                    timer: 0,
+                    target: 0
+                },
+                sessionDetails: {
+                    reactorName: "",
+                    sampleName: "",
+                    cultureMedium: "",
+                    co2Pressure: undefined
+                },
+                sessionDefaultSettings: {
+                    dataAcquisitionInterval: 1,
+                    temperatureSetPoint: 25,
+                    phSetPoint: 7
+                },
+                alertConfiguration: [
+                    { alertType: "temperature", enabled: false, threshold: 0, delay: 0 },
+                    { alertType: "ph", enabled: false, threshold: 0, delay: 0 },
+                    { alertType: "OD", enabled: false, threshold: 0, delay: 0 }
+                ]
+            });
+        }
+    }, [defaultValues, form]);
+
     const projectTitle = form.watch("projectDetails.projectTitle");
     const projectType = form.watch("projectDetails.projectType");
     const timer = form.watch("projectDetails.timer");

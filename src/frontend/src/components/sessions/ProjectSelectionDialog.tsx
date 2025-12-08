@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import ProjectType from "../projects/ProjectType";
 
 interface ProjectSelectionDialogProps {
     open: boolean;
@@ -52,13 +53,16 @@ export function ProjectSelectionDialog({ open, onOpenChange, onSelect }: Project
                                 <Button
                                     key={project.id}
                                     variant="ghost"
-                                    className="justify-start h-auto py-3 px-4 flex flex-col items-start gap-1 hover:bg-accent"
+                                    className=" h-auto py-3 px-4 flex items-center justify-between hover:bg-accent"
                                     onClick={() => onSelect(project)}
                                 >
-                                    <span className="font-medium">{project.projectDetails.projectTitle}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        Type: {project.projectDetails.projectType}
-                                    </span>
+                                    <div className="flex flex-col gap-1 items-start">
+                                        <span className="font-medium">{project.projectDetails.projectTitle}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {project.id}
+                                        </span>
+                                    </div>
+                                    <ProjectType projectType={project.projectDetails.projectType} showText={false} />
                                 </Button>
                             ))
                         )}

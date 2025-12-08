@@ -170,7 +170,7 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
         <ProjectsContext.Provider value={{ projects, isLoading, error, addProject, editProject, removeProject, refreshProjects, open, setOpen, mode, setMode, selectedProject, setSelectedProject, getLastSession }}>
             <Loading isLoading={isLoading} />
             {children}
-            <ProjectDialog open={open} setOpen={setOpen} onSubmit={handleSubmit} />
+            <ProjectDialog open={open} setOpen={setOpen} onSubmit={handleSubmit} defaultValues={selectedProject || undefined} mode={mode} />
         </ProjectsContext.Provider>
     );
 };

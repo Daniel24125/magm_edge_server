@@ -53,7 +53,7 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+            <DialogContent className="max-w-2xl  flex flex-col max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Start Session</DialogTitle>
                     <DialogDescription>
@@ -61,7 +61,7 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                     </DialogDescription>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 pr-4">
+                <ScrollArea className="flex-1 w-full pr-4  ">
                     <form id="start-session-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 py-4">
 
                         {/* Notes Section */}

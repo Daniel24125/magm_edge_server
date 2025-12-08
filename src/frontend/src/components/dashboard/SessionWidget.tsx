@@ -12,7 +12,7 @@ const SessionWidget = () => {
     const { isRPIConnected } = useDeviceManager()
     const router = useRouter()
     return (
-        <Card className='w-64 h-64'>
+        <Card className='w-64 h-64 shrink-0'>
             <CardHeader className='flex items-start justify-between'>
                 <CardTitle className='text-sm'>Main Session</CardTitle>
                 <CardAction className='flex h-full items-center'>
@@ -32,7 +32,7 @@ const SessionWidget = () => {
                 <Button disabled={!isRPIConnected} onClick={() => {
                     if (!isRPIConnected) return
                     router.push("/dashboard/session")
-                }} variant={"link"} className='text-blue-800'>Open session</Button>
+                }} variant={"link"} className='text-blue-800 text-xs'>Open session</Button>
             </CardContent>
         </Card>
     )

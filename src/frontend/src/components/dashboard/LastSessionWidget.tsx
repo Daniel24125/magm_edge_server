@@ -12,7 +12,7 @@ const LastSessionWidget = () => {
         getLastSession().then(setLastSession)
     }, [getLastSession])
 
-    return <Card className='w-96 h-64'>
+    return <Card className='w-96 h-64 shrink-0'>
         <CardHeader>
             <CardTitle>
                 <p>Latest Session</p>

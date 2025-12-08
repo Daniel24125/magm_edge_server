@@ -8,6 +8,7 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { useRouter } from 'next/navigation'
 import SessionWidget from "@/components/dashboard/SessionWidget";
 import LastSessionWidget from "@/components/dashboard/LastSessionWidget";
+import ProjectDetailsWidget from "@/components/dashboard/ProjectDetailsWidget";
 
 const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de";
 
@@ -80,9 +81,10 @@ export default function Page() {
 
 const DashboardHeader = () => {
   return (
-    <div className="w-full justify-between flex items-center">
+    <div className="w-full justify-between flex items-center gap-4">
       <SessionWidget />
       <LastSessionWidget />
+      <ProjectDetailsWidget />
     </div>
   )
 }

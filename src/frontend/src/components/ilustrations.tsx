@@ -100,7 +100,7 @@ export const NoProjectsIlustration = ({ width, height }: TIlustrationsProps) => 
 
 export const NoSessionsIlustration = ({ width, height }: TIlustrationsProps) => {
     return <svg width={width} height={height} viewBox="0 0 109 85" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g clip-path="url(#clip0_323_2810)">
+        <g clipPath="url(#clip0_323_2810)">
             <path d="M17.8242 84.7827C17.8242 84.9026 17.8894 84.999 17.9706 84.999H90.9664C91.0482 84.999 91.1128 84.9028 91.1128 84.7827C91.1128 84.6627 91.0476 84.5664 90.9664 84.5664H17.9706C17.8894 84.5665 17.8242 84.6628 17.8242 84.7827Z" fill="#CCCCCC" />
             <path d="M44.2351 84.0703H41.6289V84.5339H44.2351V84.0703Z" fill="#B6B3C5" />
             <path d="M67.3074 84.1484H64.7012V84.612H67.3074V84.1484Z" fill="#B6B3C5" />

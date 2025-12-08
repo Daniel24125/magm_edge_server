@@ -1,4 +1,4 @@
-import React from 'react'
+"use client"
 import { NoSessionsIlustration } from '../ilustrations'
 import { Button } from '../ui/button'
 import { useSession } from '@/contexts/SessionContext'
