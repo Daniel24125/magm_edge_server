@@ -21,7 +21,8 @@ AWS_USER_SECRET_KEY = os.getenv('AWS_USER_SECRET_KEY')
 
 AWS_EDGE_SERVER_ROLE = os.getenv('AWS_EDGE_SERVER_ROLE')
 try:
-    AWS_PUBLISH_TOPIC_MAP = json.loads(os.getenv('AWS_PUBLISH_TOPIC', '{}'))
+    topic_map_str = os.getenv('AWS_PUBLISH_TOPIC', '{}').strip("'\"")
+    AWS_PUBLISH_TOPIC_MAP = json.loads(topic_map_str)
 except json.JSONDecodeError:
     AWS_PUBLISH_TOPIC_MAP = {}
     logger.error("Failed to parse AWS_PUBLISH_TOPIC env var")

@@ -28,44 +28,10 @@ const CAL_TOPICS = [
 ];
 
 export default function Page() {
-  const { isConnected, connection, publish } = useMQTT();
   const { user, error, isLoading } = useUser();
-
-  const [messages, setMessages] = useState<any[]>([]);
-  const [responses, setResponses] = useState<any[]>([]);
-
-  const [isRPIConnected, setIsRPIConnected] = useState(false);
-  const [calibrationStatus, setCalibrationStatus] = useState<TCalibrationStatus>("READY");
-  const [calibrationData, setCalibrationData] = useState<any | null>(null);
-  const [liveReading, setLiveReading] = useState<{ ph?: number, stability?: number } | null>(null);
-  const [wizardStep, setWizardStep] = useState<string>("IDLE");
-  const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
-  const [alerts, setAlerts] = useState<TAlert[]>([]);
-
   const router = useRouter()
-  useEffect(() => {
-
-    if (isConnected && connection) {
-      sendCommand("ping_device", { device_id: DEVICE_ID });
-    }
-  }, [isConnected, connection]);
 
 
-  // 5️⃣ Send command to device
-  const sendCommand = useCallback((command: string, params: Record<string, any> = {}) => {
-    if (!connection || !isConnected) {
-      console.warn("Cannot send command, not connected");
-      return;
-    }
-    const topic = `${COMMAND_TOPIC}/${command}`;
-    const payload = {
-      command,
-      params,
-    };
-
-    const json_payload = JSON.stringify(payload);
-    publish(topic, json_payload);
-  }, [connection, isConnected])
 
   if (isLoading) return <div>Loading...</div>;
   if (!user) return router.push('/auth/login');

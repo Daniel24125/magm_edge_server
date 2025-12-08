@@ -12,16 +12,17 @@
  */
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { ISession, TMeasurement } from "@/types/sessions";
 import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
-import { createSession, updateSession, getSessions } from "@/app/actions/sessions";
+import { createSession, updateSession } from "@/app/actions/sessions";
 import { useMQTT } from "./MQTTContext";
 import { useAlert } from "./AlertContext";
 import { StartSessionDialog, StartSessionFormData } from "@/components/sessions/StartSessionDialog";
 import { ProjectSelectionDialog } from "@/components/sessions/ProjectSelectionDialog";
 import { useProjects } from "./ProjectsContext";
 import { IProject } from "@/types/projects";
+import { useDeviceManager } from "./DeviceManagerContext";
 
 interface SessionContextType {
     activeSession: ISession | null;
@@ -32,18 +33,19 @@ interface SessionContextType {
     pauseSession: () => Promise<void>;
     resumeSession: () => Promise<void>;
     addMeasurement: (measurement: TMeasurement) => void;
+    isSessionVerified: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | null>(null);
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-    const { subscribe, unsubscribe } = useMQTT();
+    const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
     const { addAlert } = useAlert();
     const { projects } = useProjects();
+    const { lastSystemNotification, sendCommand } = useDeviceManager();
     const [activeSession, setActiveSession] = useState<ISession | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Dialog States
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSessionVerified, setIsSessionVerified] = useState(false);
     const [isProjectSelectionOpen, setIsProjectSelectionOpen] = useState(false);
     const [isStartSessionDialogOpen, setIsStartSessionDialogOpen] = useState(false);
 
@@ -54,51 +56,84 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         alertConfiguration: TAlertConfiguration[];
     } | null>(null);
 
-    // Load active session on mount
+    // Keep a ref to the latest active session to safely read it in callbacks/effects without causing re-renders/looping
+    const activeSessionRef = useRef(activeSession);
     useEffect(() => {
-        const loadActiveSession = async () => {
-            setIsLoading(true);
-            try {
-                const result = await getSessions();
-                if (result.success && result.data) {
-                    const running = result.data.find(s => s.status === 'running' || s.status === 'paused');
-                    if (running) {
-                        console.log("Active session found:", running);
-                        setActiveSession(running);
-                    }
+        activeSessionRef.current = activeSession;
+    }, [activeSession]);
+
+    // Verify Connection via Device Status (Received via DeviceManager)
+    useEffect(() => {
+        if (!lastSystemNotification) return;
+
+        if (lastSystemNotification.type === 'session') {
+            const payload = lastSystemNotification.payload;
+            console.log("Session Status Update (via DeviceManager):", payload);
+
+            if (payload.active) {
+                setActiveSession(payload);
+            } else {
+                // Device says session is INACTIVE
+                if (activeSession && activeSession.status === 'running') {
+                    console.warn("Conflict: Firebase says running, Device says idle. Trusting Device.");
+                    setActiveSession(null);
                 }
-            } catch (error) {
-                console.error("Failed to load active session", error);
-            } finally {
-                setIsLoading(false);
             }
-        };
-        loadActiveSession();
-    }, []);
+            setIsSessionVerified(true);
+        } else if (lastSystemNotification.type === 'session_tick') {
+            // Lightweight update (heartbeat)
+            const payload = lastSystemNotification.payload;
+            setActiveSession(prev => {
+                if (!prev || prev.status !== 'running') return prev;
+                return {
+                    ...prev,
+                    time: payload.time
+                }
+            })
+        }
+    }, [lastSystemNotification, activeSession]);
 
+    // Request status update
+    useEffect(() => {
+        if (isConnected) {
+            publish("ui/commands/get_session_status", { command: "get_session_status" });
+        }
+    }, [isConnected, publish]);
+
+    // Stable callback for handling measurements
     const handleMeasurement = useCallback((topic: string, payload: any) => {
-        if (!activeSession || activeSession.status !== 'running') return;
+        const currentSession = activeSessionRef.current;
+        if (!currentSession || currentSession.status !== 'running') return;
 
-        const measurement: TMeasurement = {
-            timestamp: new Date().toISOString(),
-            temperature: payload.temperature,
-            ph: payload.ph,
-            od: payload.od,
-            co2: payload.co2
-        };
+        console.log("Received measurement:", payload);
 
+        // Use functional update to avoid dependency on activeSession
         setActiveSession(prev => {
             if (!prev) return null;
+            // Un-comment logic to process measurement
+            /*
+            const measurement: TMeasurement = {
+               timestamp: new Date().toISOString(),
+               temperature: payload.temperature,
+               ph: payload.ph,
+               od: payload.od,
+               co2: payload.co2
+           };
             return {
                 ...prev,
                 measurements: [...prev.measurements, measurement]
             };
+            */
+            return prev;
         });
-    }, [activeSession]);
+    }, []);
 
+    // Subscription Effect - Only re-subscribes if CRITICAL ID/Status changes, not time/measurements
     useEffect(() => {
-        if (activeSession && activeSession.status === 'running') {
-            const topic = "magm/+/data";
+        const shouldSubscribe = activeSession?.status === 'running';
+        const topic = process.env.NEXT_PUBLIC_DATA_TOPIC || "";
+
+        if (shouldSubscribe && topic) {
             subscribe(topic, handleMeasurement);
 
             return () => {
@@ -138,7 +173,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const startSession = async (projectId: string, sessionDetails: TSessionDetails, settings: TSessionDefaultSettings, alertConfiguration: TAlertConfiguration[], notes?: string) => {
         setIsLoading(true);
         try {
-            const result = await createSession({
+            const payload: Omit<ISession, "id" | "userId" | "createdAt" | "updatedAt" | "measurements"> = {
                 projectId,
                 sessionDetails,
                 settings,
@@ -146,10 +181,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 status: 'running',
                 notes,
                 duration: 0
-            });
+            }
+            const result = await createSession(payload);
 
             if (result.success && result.data) {
                 setActiveSession(result.data);
+                console.log(result.data)
+                console.log("Sending start session command to device...")
+                sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/start_session`, {
+                    ...payload,
+                    id: result.data.id
+                });
                 addAlert("success", "Session started successfully");
             } else {
                 addAlert("error", result.error || "Failed to start session");
@@ -167,7 +209,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         setIsLoading(true);
         try {
-            const result = await createSession({
+            const payload: Omit<ISession, "id" | "userId" | "createdAt" | "updatedAt" | "measurements"> = {
                 projectId: pendingSessionStart.projectId,
                 sessionDetails: pendingSessionStart.sessionDetails,
                 settings: data.settings,
@@ -175,10 +217,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 status: 'running',
                 notes: data.notes,
                 duration: 0
-            });
+            }
+            const result = await createSession(payload);
 
             if (result.success && result.data) {
                 setActiveSession(result.data);
+                console.log("Sending start session command to device...")
+                sendCommand("start_session", {
+                    ...payload,
+                    id: result.data.id
+                });
                 addAlert("success", "Session started successfully");
                 setIsStartSessionDialogOpen(false);
                 setPendingSessionStart(null);
@@ -201,6 +249,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             if (result.success) {
                 setActiveSession(null);
                 addAlert("success", "Session stopped successfully");
+                sendCommand("stop_session", { "cmd": "stop_session" });
             } else {
                 addAlert("error", result.error || "Failed to stop session");
             }
@@ -257,7 +306,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     return (
-        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement }}>
+        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, isSessionVerified }}>
             {children}
             <ProjectSelectionDialog
                 open={isProjectSelectionOpen}

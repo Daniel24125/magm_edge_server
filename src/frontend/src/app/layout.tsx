@@ -41,8 +41,8 @@ export default function RootLayout({
           <ProjectsProvider>
             <AlertProvider>
               <MQTTProvider>
-                <SessionProvider>
-                  <DeviceManagerProvider>
+                <DeviceManagerProvider>
+                  <SessionProvider>
                     <ApplicationProvider>
                       <section className="flex w-screen">
                         <Sidebar />
@@ -53,8 +53,8 @@ export default function RootLayout({
                       </section>
                       <Toaster position="bottom-center" richColors />
                     </ApplicationProvider>
-                  </DeviceManagerProvider>
-                </SessionProvider>
+                  </SessionProvider>
+                </DeviceManagerProvider>
               </MQTTProvider>
             </AlertProvider>
           </ProjectsProvider>

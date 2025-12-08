@@ -3,14 +3,20 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 class SessionPayload(BaseModel):
-    session_id: str
-    project_id: str
-    start_time: str
-    user: str
+    id: str
+    projectId: str
+    userId: str
+    createdAt: str
+    updatedAt: Optional[str] = None
+    status: str = "running"
+    sessionDetails: Dict[str, Any]
+    settings: Dict[str, Any]
+    alertConfiguration: list[Dict[str, Any]]
     notes: Optional[str] = None
-    active: int = 1
-    end_time: Optional[str] = None
-
+    time: Optional[int] = None # Duration so far? Backend tracks this as time_elapsed?
+    duration: Optional[int] = None
+    target: Optional[float] = None
+    
 class SensorData(BaseModel):
     device_id: str
     timestamp: datetime = Field(default_factory=datetime.now(timezone.utc))

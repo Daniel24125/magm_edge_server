@@ -68,13 +68,18 @@ class DatabaseHelper:
             cur.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS sessions (
-                    session_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     project_id TEXT,
                     start_time TEXT NOT NULL,
                     end_time TEXT,
-                    active INTEGER NOT NULL DEFAULT 1,
-                    user TEXT,
-                    notes TEXT
+                    status TEXT NOT NULL DEFAULT 'running',
+                    session_details TEXT,
+                    settings TEXT,
+                    alert_configuration TEXT,
+                    user_id TEXT,
+                    notes TEXT,
+                    duration INTEGER,
+                    target REAL
                 );
 
                 CREATE TABLE IF NOT EXISTS ph_calibration (
@@ -99,14 +104,14 @@ class DatabaseHelper:
                     processed_value REAL,
                     calibration_id INTEGER,
                     status TEXT,                      -- 'OK','OUT_OF_RANGE','ERROR',...
-                    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
+                    FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE,
                     FOREIGN KEY(calibration_id) REFERENCES ph_calibration(id)
                         ON UPDATE CASCADE ON DELETE SET NULL
                 );
 
-                CREATE INDEX IF NOT EXISTS idx_sessions_active
-                    ON sessions(active);
+                CREATE INDEX IF NOT EXISTS idx_sessions_status
+                    ON sessions(status);
 
                 CREATE INDEX IF NOT EXISTS idx_meas_time_sensor
                     ON sensor_measurements(session_id, timestamp);
@@ -125,7 +130,7 @@ class DatabaseHelper:
                     value REAL NOT NULL,
                     message TEXT NOT NULL,
                     acknowledged INTEGER DEFAULT 0,
-                    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
+                    FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE
                 );
 
@@ -360,16 +365,29 @@ class SessionDAO:
         self.db = db
 
     def get_last_session_id(self, active_only: bool = True) -> Optional[str]:
-        q = "SELECT session_id FROM sessions"
+        q = "SELECT id FROM sessions"
         if active_only:
-            q += " WHERE active = 1"
+            q += " WHERE status = 'running'"
         q += " ORDER BY start_time DESC LIMIT 1"
         rows = self.db.fetch_records_raw(q)
         return rows[0][0] if rows else None
 
     def list_recent_sessions(self, limit: int = 10) -> List[Tuple]:
         return self.db.fetch_records_raw(
-            "SELECT session_id, start_time, end_time, active, user "
+            "SELECT id, start_time, end_time, status, user_id "
             "FROM sessions ORDER BY start_time DESC LIMIT ?",
             (limit,),
         )
+
+    def get_session(self, id: str, field: str) -> Any:
+        # Validate field to prevent SQL injection (basic check)
+        valid_fields = ["id", "project_id", "start_time", "end_time", "status", "user_id", "notes", "duration", "target"]
+        if field not in valid_fields:
+            logger.warning(f"Attempted to access invalid session field: {field}")
+            return None
+            
+        row = self.db.fetch_records_raw(
+            f"SELECT {field} FROM sessions WHERE id = ?",
+            (id,)
+        )
+        return row[0][0] if row else None

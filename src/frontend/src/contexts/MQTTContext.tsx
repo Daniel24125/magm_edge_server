@@ -156,7 +156,13 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
         // We always subscribe at least once. 
         // Optimization: check if already subscribed to this topic at MQTT level? 
         // For now, just sending subscribe is safe.
-        await connectionRef.current.subscribe(topic, mqtt.QoS.AtLeastOnce);
+
+        console.log("MQTTContext: Subscribing...", { topic, qos: mqtt.QoS.AtLeastOnce, connection: !!connectionRef.current });
+        try {
+            await connectionRef.current.subscribe(topic, mqtt.QoS.AtLeastOnce);
+        } catch (e) {
+            console.error("MQTT Subscribe Error:", e);
+        }
         console.log(`Subscribed to ${topic}`);
     }, []);
 

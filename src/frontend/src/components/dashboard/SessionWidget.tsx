@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDeviceManager } from '@/contexts/DeviceManagerContext'
@@ -10,18 +10,28 @@ import { useRouter } from 'next/navigation'
 
 const SessionWidget = () => {
     const { isRPIConnected } = useDeviceManager()
+    const { isSessionVerified } = useSession()
     const router = useRouter()
+
+    const canPerformSession = useMemo(() => isRPIConnected && isSessionVerified, [isRPIConnected, isSessionVerified])
+
+
     return (
         <Card className='w-64 h-64 shrink-0'>
             <CardHeader className='flex items-start justify-between'>
-                <CardTitle className='text-sm'>Main Session</CardTitle>
+                <div className='flex flex-col gap-1'>
+                    <CardTitle className='text-sm'>Main Session</CardTitle>
+                    {isRPIConnected && !isSessionVerified && (
+                        <span className="text-[10px] text-muted-foreground font-medium tracking-wider">VERIFYING...</span>
+                    )}
+                </div>
                 <CardAction className='flex h-full items-center'>
                     <AnimatePresence>
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             exit={{ scale: 0 }}
-                            className={`${isRPIConnected ? 'bg-primary' : 'bg-text-faded/30'} h-3 w-3 rounded-full shrink-0`}
+                            className={`${canPerformSession ? 'bg-primary' : 'bg-text-faded/30'} h-3 w-3 rounded-full shrink-0`}
                         ></motion.div>
                     </AnimatePresence>
                 </CardAction>
@@ -29,8 +39,8 @@ const SessionWidget = () => {
             <CardContent className='flex flex-col justify-between items-center '>
                 <SessionControls />
                 <SessionTimer />
-                <Button disabled={!isRPIConnected} onClick={() => {
-                    if (!isRPIConnected) return
+                <Button disabled={!canPerformSession} onClick={() => {
+                    if (!canPerformSession) return
                     router.push("/dashboard/session")
                 }} variant={"link"} className='text-blue-800 text-xs'>Open session</Button>
             </CardContent>
@@ -42,7 +52,6 @@ export const SessionControls = () => {
 
     const { activeSession, initiateSession, stopSession, pauseSession, resumeSession } = useSession()
     const { isRPIConnected } = useDeviceManager()
-
     return (
         <div className='flex gap-2'>
             {(!activeSession || activeSession.status === "paused") && <Button onClick={() => {
@@ -53,7 +62,7 @@ export const SessionControls = () => {
             {activeSession && activeSession.status === "running" && <Button disabled={!isRPIConnected} variant="ghost" className='text-orange-300 p-0 h-auto w-auto hover:bg-transparent'>
                 <Pause className='size-20' />
             </Button>}
-            {activeSession && <Button disabled={!isRPIConnected} variant="ghost" className=' p-0 h-auto w-auto hover:bg-transparent'>
+            {activeSession && <Button onClick={stopSession} disabled={!isRPIConnected} variant="ghost" className=' p-0 h-auto w-auto hover:bg-transparent'>
                 <Square className='size-10' />
             </Button>}
         </div>
@@ -62,6 +71,7 @@ export const SessionControls = () => {
 
 const SessionTimer = ({ showSubtitle = true }: { showSubtitle?: boolean }) => {
     const { activeSession } = useSession()
+
     return (
         <div className='flex gap-2 flex-col items-center'>
             <p className='text-xl font-bold'>{getFormartedTimeWithLetters(activeSession?.time)}</p>

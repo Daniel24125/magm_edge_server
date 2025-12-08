@@ -75,6 +75,7 @@ export async function updateSession(id: string, sessionData: Partial<ISession>):
             return { success: false, error: "Unauthorized" };
         }
 
+        console.log(id)
         const docRef = db.collection(COLLECTION_NAME).doc(id);
         const doc = await docRef.get();
 

@@ -97,7 +97,7 @@ class MQTTClient:
     def parse_session_commands(self, topic, payload):
         if topic.endswith("/measurement"):
             all_readings = self.sensor_manager.read_all_sensors()
-            self.publish_sensor_data(all_readings, session_id=payload.get("session_id", ""))
+            self.publish_sensor_data(all_readings, session_id=payload.get("id", ""))
 
     def parse_device_commands(self, topic, payload): 
         logger.info("\nParsing a device command:\n")
@@ -124,7 +124,7 @@ class MQTTClient:
         self.ph_calibration.start()
 
     def start_session(self, payload: str):
-        session_id = payload.get("session_id")
+        session_id = payload.get("id")
         logger.info(f"Starting session with ID: {session_id}")
         self.client.subscribe(f"/controller/session/{session_id}/#")
 
@@ -168,7 +168,7 @@ class MQTTClient:
         payload = {
             "source": "rpi",
             "device_id": self.device_id,
-            "session_id": session_id,
+            "id": session_id,
             "timestamp": time.time()*1000,
             "data": {name: {
                 "value" : r.value,

@@ -19,9 +19,10 @@ import { useAlert } from "./AlertContext";
 import { ISensorReading } from "@/types";
 
 // --- Constants ---
-const SYSTEM_NOTIF_TOPIC = "system/notifications";
-const DATA_TOPIC = "data_aquisition/sensor_data/rpi_data";
-const DEVICE_ID = "d09454f7-6a4a-44af-9e0d-eb0bea17e9de"; // TODO: Move to config
+const SYSTEM_NOTIF_TOPIC = process.env.NEXT_PUBLIC_SYSTEM_NOTIF_TOPIC || ""
+const DATA_TOPIC = process.env.NEXT_PUBLIC_DATA_TOPIC || ""
+const DEVICE_ID = process.env.NEXT_PUBLIC_DEVICE_ID || ""
+
 
 // --- Types ---
 
@@ -29,10 +30,13 @@ interface IDeviceManagerContext {
     isRPIConnected: boolean;
     onlineDevices: Record<string, boolean>;
     sensorData: Record<string, ISensorReading>;
+    lastSystemNotification: any;
     pingDevice: () => void;
+    sendCommand: (command: string, params: Record<string, any>) => void;
 }
 
 const DeviceManagerContext = createContext<IDeviceManagerContext | null>(null);
+const COMMAND_TOPIC = process.env.NEXT_PUBLIC_COMMAND_TOPIC || "";
 
 export const DeviceManagerProvider = ({ children }: { children: React.ReactNode }) => {
     const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
@@ -41,6 +45,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
     const [isRPIConnected, setIsRPIConnected] = useState(false);
     const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
     const [sensorData, setSensorData] = useState<Record<string, ISensorReading>>({});
+    const [lastSystemNotification, setLastSystemNotification] = useState<any>(null);
 
     // --- Actions ---
     const pingDevice = useCallback(() => {
@@ -56,6 +61,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
         // 1. System Notifications (Connection Status)
         const handleSystemNotification = (topic: string, payload: any) => {
             console.log("🔔 System Notification:", payload);
+            setLastSystemNotification(payload);
 
             if (payload.event === "rpi_connected") {
                 setIsRPIConnected(true);
@@ -108,8 +114,24 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
         }
     }, [isConnected, subscribe, unsubscribe, pingDevice, addAlert]);
 
+    // 5️⃣ Send command to device
+    const sendCommand = useCallback((command: string, params: Record<string, any> = {}) => {
+        console.log("Sending command to device...")
+        if (!isRPIConnected || !isConnected) {
+            console.warn("Cannot send command, not connected");
+            return;
+        }
+        const topic = `${COMMAND_TOPIC}/${command}`;
+        const payload = {
+            command,
+            params,
+        };
+
+        const json_payload = JSON.stringify(payload);
+        publish(topic, json_payload);
+    }, [isRPIConnected, isConnected])
     return (
-        <DeviceManagerContext.Provider value={{ isRPIConnected, onlineDevices, sensorData, pingDevice }}>
+        <DeviceManagerContext.Provider value={{ isRPIConnected, onlineDevices, sensorData, lastSystemNotification, pingDevice, sendCommand }}>
             {children}
         </DeviceManagerContext.Provider>
     );

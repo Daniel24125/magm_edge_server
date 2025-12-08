@@ -28,7 +28,7 @@ class SessionController:
         self.session_active = False
         self.session_lock = threading.Lock()
         self.time_elapsed = 0
-        self.session_id = None
+        self.id = None
         self.last_saved_map = {}
 
 
@@ -38,23 +38,52 @@ class SessionController:
             if self.session_active:
                 logger.warning("Session already active")
                 return
-            self.session_id = f"session_{uuid4()}"
+            
+            # Use provided ID or generate
+            self.id = payload.get("id") or f"session_{uuid4()}"
             self.session_active = True  
 
         sess_payload  = SessionPayload(
-            session_id=self.session_id,
-            project_id=payload.get("project_id", ""),
-            start_time=datetime.now(timezone.utc).isoformat(),
-            active=1,
-            user=payload.get("user", ""),
-            notes=payload.get("notes", None)
+            id=self.id,
+            projectId=payload.get("projectId", ""),
+            userId=payload.get("userId", ""),
+            createdAt=datetime.now(timezone.utc).isoformat(),
+            status="running",
+            sessionDetails=payload.get("sessionDetails", {}),
+            settings=payload.get("settings", {}),
+            alertConfiguration=payload.get("alertConfiguration", []),
+            notes=payload.get("notes", None),
+            duration=payload.get("duration"),
+            target=payload.get("target")
         )
-        self.mqtt.client.publish("/controller/commands/start", sess_payload.model_dump_json(), qos=1)
-        self.db.add_record("sessions", sess_payload.model_dump())
-        logger.info(f"Session {self.session_id} is now ACTIVE")
         
-        self.acquisition_thread = threading.Thread(target=self._acquisition_loop, daemon=True)
+        # Serialize complex objects for DB
+        # Map camelCase model fields to snake_case DB columns
+        db_record = {
+            "id": sess_payload.id,
+            "project_id": sess_payload.projectId,
+            "user_id": sess_payload.userId,
+            "start_time": sess_payload.createdAt,
+            "status": sess_payload.status,
+            "session_details": json.dumps(sess_payload.sessionDetails),
+            "settings": json.dumps(sess_payload.settings),
+            "alert_configuration": json.dumps(sess_payload.alertConfiguration),
+            "notes": sess_payload.notes,
+            "duration": sess_payload.duration,
+            "target": sess_payload.target
+        }
+        self.active_session = db_record
+
+        self.mqtt.client.publish("/controller/commands/start", sess_payload.model_dump_json(), qos=1)
+        self.db.add_record("sessions", db_record)
+        logger.info(f"Session {self.id} is now ACTIVE")
+        
+        # Apply Session Settings
+        settings = payload.get("settings", {})
+        # Start acquisition with settings
+        self.acquisition_thread = threading.Thread(target=self._acquisition_loop, args=(settings,), daemon=True)
         self.acquisition_thread.start()
+        self.publish_status()
 
 
     def stop_session(self):
@@ -64,28 +93,51 @@ class SessionController:
                 return
             self.db.update_record(
                 "sessions",
-                self.session_id,
-                {"active": 0, "end_time": datetime.now(timezone.utc).isoformat()},
-                id_column="session_id"
+                self.id,
+                {"status": "completed", "end_time": datetime.now(timezone.utc).isoformat()},
+                id_column="id"
             )
             self.session_active = False
-            self.session_id = None
+            self.id = None
             self.time_elapsed = 0
             self.last_saved_map = {}
+            
+            self.publish_status()
 
         if hasattr(self, "acquisition_thread") and self.acquisition_thread.is_alive():
             self.acquisition_thread.join(timeout=2)
             logger.info("Acquisition thread stopped successfully.")
 
-    def _acquisition_loop(self):
+    def _acquisition_loop(self, settings=None):
         try:
-            self.read_interval = self.config.get("sampling").get("sensor_interval", 30)
+            default_interval = self.config.get("sampling").get("sensor_interval", 30)
+            if settings and "dataAcquisitionInterval" in settings:
+                try:
+                    self.read_interval = int(settings["dataAcquisitionInterval"])
+                except (ValueError, TypeError):
+                    logger.warning("Invalid dataAcquisitionInterval in settings, using default")
+                    self.read_interval = default_interval
+            else:
+                self.read_interval = default_interval
+
             logger.info(f"Data aquisition loop started. Sending data every {self.read_interval} s")
             while self.session_active:
                 if self.time_elapsed % self.read_interval == 0:
+                    logger.info(f"\n\n\n Requesting measurements for session {self.id}\n\n\n")
                     self.request_measurements()
                 time.sleep(1)
                 self.time_elapsed += 1
+                
+                # Send heartbeat
+                self.aws.client.publish("system/notifications", json.dumps({
+                    "type": "session_tick",
+                    "payload": {
+                        "id": self.id,
+                        "time": self.time_elapsed,
+                        "status": "running"
+                    }, 
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }))
 
         except Exception as e:
             logger.error(f"Unexpected error in acquisition loop: {e}")
@@ -94,8 +146,8 @@ class SessionController:
 
     def request_measurements(self):
         self.mqtt.client.publish(
-            f"/controller/session/{self.session_id}/measurement",
-            json.dumps({"session_id": self.session_id}),
+            f"/controller/session/{self.id}/measurement",
+            json.dumps({"id": self.id}),
             qos=1
         )
 
@@ -115,7 +167,7 @@ class SessionController:
                         logger.warning(f"Anomaly detected: {alert_msg}")
                         # 1. Save to DB
                         self.db.insert_alert(
-                            session_id=payload.get("session_id"),
+                            session_id=payload.get("id"),
                             sensor_type=sensor_type,
                             value=value,
                             message=alert_msg,
@@ -123,7 +175,7 @@ class SessionController:
                         )
                         # 2. Notify User (AWS)
                         self.aws.publish_alert({
-                            "session_id": payload.get("session_id"),
+                            "id": payload.get("id"),
                             "device_id": device_id,
                             "sensor_type": sensor_type,
                             "value": value,
@@ -136,7 +188,7 @@ class SessionController:
         last_saved = self.last_saved_map.get(key, 0)
         if now - last_saved >= 60:
             self.db.insert_measurement(
-                session_id=payload.get("session_id"),
+                session_id=payload.get("id"),
                 source=source,
                 data=json.dumps(payload.get("data")),
                 timestamp_iso=payload.get("timestamp")
@@ -146,3 +198,42 @@ class SessionController:
         else:
             # Data skipped for storage (downsampling)
             pass
+
+    def publish_status(self):
+        """
+        Publishes the current session status to /devices/{device_id}/session/status
+        """
+        from sensor_client.config.config_manager import ConfigManager
+        device_id = ConfigManager().get_config().get("device_config").get("device_id")
+        topic = "system/notifications"
+        if self.session_active:
+             # Map snake_case DB columns (from active_session) to camelCase frontend fields
+            status_payload = {  
+                "id": self.id,
+                "projectId": self.active_session.get("project_id"),
+                "userId": self.active_session.get("user_id"),
+                "createdAt": self.active_session.get("start_time"),
+                "status": "running",
+                "sessionDetails": json.loads(self.active_session.get("session_details", "{}")),
+                "settings": json.loads(self.active_session.get("settings", "{}")),
+                "alertConfiguration": json.loads(self.active_session.get("alert_configuration", "[]")),
+                "notes": self.active_session.get("notes"),
+                "duration": self.active_session.get("duration"),
+                "target": self.active_session.get("target"),
+                "active": True # Compatibility
+            }
+        else:
+            status_payload = {
+                "id": self.id,
+                "active": False,
+                "status": "idle"
+            }
+        
+        payload = {
+            "type": "session",
+            "payload": status_payload,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        self.aws.client.publish(topic, json.dumps(payload))
+        logger.info(f"Published session status to {topic}: {payload}")

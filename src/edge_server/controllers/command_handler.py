@@ -32,14 +32,14 @@ class CommandHandler:
                 self.session_controller._handle_config_update(cmd.params)
             case "start_session":
                 self.session_controller.start_session(cmd.params)
-
             case "ping_device":
                 self.aws._notify_user("rpi_connected", f"")
-
             case "stop_session":
                 self.session_controller.stop_session()
             case "start_calibration":
                 self.device_controller.forward_device_command(cmd.params, cmd.command)
+            case "get_session_status":
+                self.session_controller.publish_status()
             case "confirm_calibration":
                 topic = f"/devices/{cmd.params.device_id}/cal/confirm"
                 self.mqtt.client.publish(topic, json.dumps(cmd.params))
