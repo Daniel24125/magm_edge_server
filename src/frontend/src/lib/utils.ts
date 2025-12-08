@@ -41,6 +41,17 @@ export const getProjectTypeProperties = (projectType: "manual" | "timer" | "targ
   }
 }
 
+export const formatDate = (date: Date | string | number) => {
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const year = d.getFullYear();
+  const hours = d.getHours().toString().padStart(2, "0");
+  const minutes = d.getMinutes().toString().padStart(2, "0");
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
 export const formatDuration = (seconds: number | undefined) => {
   if (!seconds) return "00:00:00"
   const days = Math.floor(seconds / 86400)

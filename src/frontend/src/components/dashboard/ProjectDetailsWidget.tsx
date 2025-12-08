@@ -10,6 +10,7 @@ import ProjectMenu from '../projects/ProjectMenu';
 import { Separator } from '../ui/separator';
 import DataDisplayCard from '../DataDisplayCard';
 import { TestTube, Thermometer } from 'lucide-react';
+import NoProjects from '../projects/NoProjects';
 
 const ProjectDetailsWidget = () => {
     const { projects } = useProjects()
@@ -73,7 +74,7 @@ const ProjectDetailsWidget = () => {
                 </CardAction>
             </CardHeader>
             <CardContent>
-                {isDisabled ? <NoProjectSelected /> : <div className='flex justify-between w-full items-center'>
+                {isDisabled ? <NoProjects size={150} showButton={false} /> : <div className='flex justify-between w-full items-center'>
                     <div className='w-1/2 min-w-64 flex flex-col gap-4 '>
                         <ProjectSummaryElements sessionDetails={selectedProject!.sessionDetails} sessionDefaultSettings={selectedProject!.sessionDefaultSettings} />
                     </div>
@@ -88,12 +89,7 @@ const ProjectDetailsWidget = () => {
     )
 }
 
-const NoProjectSelected = () => {
-    return <div className='w-full justify-center items-center h-full'>
 
-
-    </div>
-}
 
 interface ProjectIndicatorProps {
     isActive: boolean;

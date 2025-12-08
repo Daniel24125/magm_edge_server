@@ -63,6 +63,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 if (result.success && result.data) {
                     const running = result.data.find(s => s.status === 'running' || s.status === 'paused');
                     if (running) {
+                        console.log("Active session found:", running);
                         setActiveSession(running);
                     }
                 }

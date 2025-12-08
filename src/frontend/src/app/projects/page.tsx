@@ -13,10 +13,11 @@ import { getSessions } from '../actions/sessions'
 import { ISession } from '@/types/sessions'
 import NoSession from '@/components/projects/NoSession'
 import ProjectMenu from '@/components/projects/ProjectMenu'
+import NoProjects from '@/components/projects/NoProjects'
 
 const ProjectsPage = () => {
     const { projects } = useProjects()
-    if (projects.length === 0) return <NoProjects />
+    if (projects.length === 0) return <NoProjects className='pt-10' />
 
     return (
         <div className='flex flex-col gap-10 h-full w-full pt-10'>
@@ -54,16 +55,7 @@ const ProjectListCards = () => {
     )
 }
 
-const NoProjects = () => {
-    const { setOpen } = useProjects()
-    return (
-        <div className='flex flex-col gap-5 justify-center items-center w-full pt-10'>
-            <NoProjectsIlustration width={300} />
-            <h6>You have no projects yet</h6>
-            <Button onClick={() => setOpen(true)} >Create a project</Button>
-        </div>
-    )
-}
+
 
 
 

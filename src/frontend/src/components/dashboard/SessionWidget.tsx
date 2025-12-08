@@ -5,7 +5,7 @@ import { useDeviceManager } from '@/contexts/DeviceManagerContext'
 import { Button } from '../ui/button'
 import { Pause, Play, Square } from 'lucide-react'
 import { useSession } from '@/contexts/SessionContext'
-import { getFormartedTimeWithLetters } from '@/lib/utils'
+import { formatDate, getFormartedTimeWithLetters } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
 const SessionWidget = () => {
@@ -47,7 +47,7 @@ export const SessionControls = () => {
         <div className='flex gap-2'>
             {(!activeSession || activeSession.status === "paused") && <Button onClick={() => {
                 initiateSession()
-            }} disabled={isRPIConnected} variant="ghost" className='text-primary p-0 h-auto w-auto hover:bg-transparent'>
+            }} disabled={!isRPIConnected} variant="ghost" className='text-primary p-0 h-auto w-auto hover:bg-transparent'>
                 <Play className='size-20' />
             </Button>}
             {activeSession && activeSession.status === "running" && <Button disabled={!isRPIConnected} variant="ghost" className='text-orange-300 p-0 h-auto w-auto hover:bg-transparent'>
@@ -65,7 +65,7 @@ const SessionTimer = ({ showSubtitle = true }: { showSubtitle?: boolean }) => {
     return (
         <div className='flex gap-2 flex-col items-center'>
             <p className='text-xl font-bold'>{getFormartedTimeWithLetters(activeSession?.time)}</p>
-            {showSubtitle && <p className='text-xs text-text-faded text-center'>{activeSession ? `Started at ${activeSession.createdAt}` : "Waiting for the session to start"}</p>}
+            {showSubtitle && <p className='text-xs text-text-faded text-center'>{activeSession ? `Started at ${formatDate(activeSession.createdAt)}` : "Waiting for the session to start"}</p>}
         </div>
     )
 }
