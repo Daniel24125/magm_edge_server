@@ -63,42 +63,55 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }, [activeSession]);
 
     // Verify Connection via Device Status (Received via DeviceManager)
+    // Subscription Effect - Dedicated Session Topic
     useEffect(() => {
-        if (!lastSystemNotification) return;
+        if (!isConnected) return;
 
-        if (lastSystemNotification.type === 'session') {
-            const payload = lastSystemNotification.payload;
-            console.log("Session Status Update (via DeviceManager):", payload);
+        const topic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "session/status";
 
-            if (payload.active) {
-                setActiveSession(payload);
-            } else {
-                // Device says session is INACTIVE
-                if (activeSession && activeSession.status === 'running') {
-                    console.warn("Conflict: Firebase says running, Device says idle. Trusting Device.");
-                    setActiveSession(null);
+        const handleSessionMessage = (topic: string, message: any) => {
+            console.log("Session Update:", message);
+            // Handle both structure types (direct payload or wrapped in "payload")
+            // The python controller sends: { type: "session"|"session_tick", payload: {...}, timestamp: ... }
+
+            if (message.type === 'session') {
+                const payload = message.payload;
+                console.log("Session Status Update:", payload);
+
+                if (payload.active) {
+                    setActiveSession(payload);
+                    setIsSessionVerified(true);
+                } else {
+                    // Device says session is INACTIVE
+                    if (activeSessionRef.current && activeSessionRef.current.status === 'running') {
+                        console.warn("Conflict: Firebase says running, Device says idle. Trusting Device.");
+                        setActiveSession(null);
+                    }
+                    setIsSessionVerified(true);
                 }
+            } else if (message.type === 'session_tick') {
+                const payload = message.payload;
+                setActiveSession(prev => {
+                    if (!prev || prev.status !== 'running') return prev;
+                    return {
+                        ...prev,
+                        time: payload.time
+                    }
+                })
             }
-            setIsSessionVerified(true);
-        } else if (lastSystemNotification.type === 'session_tick') {
-            // Lightweight update (heartbeat)
-            const payload = lastSystemNotification.payload;
-            setActiveSession(prev => {
-                if (!prev || prev.status !== 'running') return prev;
-                return {
-                    ...prev,
-                    time: payload.time
-                }
-            })
-        }
-    }, [lastSystemNotification, activeSession]);
+        };
 
-    // Request status update
-    useEffect(() => {
-        if (isConnected) {
-            publish("ui/commands/get_session_status", { command: "get_session_status" });
+        subscribe(topic, handleSessionMessage);
+
+        // Also request status update on connect
+        publish("ui/commands/get_session_status", { command: "get_session_status" });
+
+        return () => {
+            unsubscribe(topic, handleSessionMessage);
         }
-    }, [isConnected, publish]);
+    }, [isConnected, subscribe, unsubscribe, publish]);
+
+
 
     // Stable callback for handling measurements
     const handleMeasurement = useCallback((topic: string, payload: any) => {

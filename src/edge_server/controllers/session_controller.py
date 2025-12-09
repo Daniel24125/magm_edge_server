@@ -129,7 +129,7 @@ class SessionController:
                 self.time_elapsed += 1
                 
                 # Send heartbeat
-                self.aws.client.publish("system/notifications", json.dumps({
+                self.aws.client.publish("session/status", json.dumps({
                     "type": "session_tick",
                     "payload": {
                         "id": self.id,
@@ -205,7 +205,7 @@ class SessionController:
         """
         from sensor_client.config.config_manager import ConfigManager
         device_id = ConfigManager().get_config().get("device_config").get("device_id")
-        topic = "system/notifications"
+        topic = "session/status"
         if self.session_active:
              # Map snake_case DB columns (from active_session) to camelCase frontend fields
             status_payload = {  
