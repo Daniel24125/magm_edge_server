@@ -56,7 +56,7 @@ class SensorManager:
         Returns:
             A dictionary mapping sensor names to their SensorReading objects.
         """
-        return {sensor.name: sensor.read() for sensor in self.sensors}
+        return {sensor.key: sensor.read() for sensor in self.sensors}
 
     def get_sensor(self, sensor_id: str) -> Union[PHSensor, TemperatureSensor]: 
         return list(filter(lambda s: s.sensor_id == sensor_id, self.sensors))[0]

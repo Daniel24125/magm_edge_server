@@ -18,20 +18,22 @@ class DeviceController:
         if device_id in self.online_devices: 
             logger.info(f"Device {device_id} is already registered")
             return 
+        device_name = payload.get("device_name", "")
         self.online_devices[device_id] = payload
         logger.info(f"Device {device_id} registered")
-        self._notify_user("device_connected", f"Device {device_id} connected to RPi.")
+        self._notify_user("device_connected", f"Device '{device_name}' connected to the edge server.")
 
     def _handle_device_disconnect(self, device_id, payload): 
         self.online_devices.pop(device_id, None)
         logger.info(f"Device {device_id} unregistered")
-        self._notify_user("device_disconnected", f"Device {device_id} disconnected from RPi.")
+        self._notify_user("device_disconnected", f"Device '{device_name}' disconnected from the edge server.")
 
     def _handle_device_status(self, device_id, payload): 
          self.online_devices[device_id] = True 
 
     def _handle_device_data(self, device_id, payload): 
-        logger.info(f"Data received from device {device_id}: {payload}") 
+        device_name = self.online_devices.get(device_id, {}).get("device_name", "")
+        logger.info(f"Data received from device '{device_name}': {payload}") 
         self.aws.publish_sensor_data(payload)
 
     def _notify_user(self, event, message):

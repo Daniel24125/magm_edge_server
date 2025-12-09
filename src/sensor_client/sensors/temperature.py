@@ -9,6 +9,7 @@ if SIMULATION_MODE:
 class TemperatureSensor(AbstractSensor):
     def __init__(self, name: str, unit: str, config: dict):
         super().__init__(name, unit, config)
+        self.key = "temperature"
 
         if SIMULATION_MODE:
             self.simulator_init(SimulatedTemperatureSensor, "Temperature")

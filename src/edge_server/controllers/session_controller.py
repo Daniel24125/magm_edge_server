@@ -4,6 +4,7 @@ from models.schemas import SessionPayload
 from datetime import datetime, timezone
 import threading
 from database.db_manager import  SessionDAO, DatabaseHelper
+from edge_server.services.aggregator import DataAggregator
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if PROJECT_ROOT not in sys.path:
@@ -18,13 +19,15 @@ ALERTS_CONFIG_PATH = os.path.join(CONFIG_DIR, "alerts.json")
 
 
 class SessionController: 
-    def __init__(self, mqtt, aws):
+    def __init__(self, mqtt, aws, device_controller=None):
         self.mqtt = mqtt
         self.aws = aws
+        self.device_controller = device_controller
         self.config = load_config(DEFAULT_CONFIG_PATH)
         self.detector = AnomalyDetector(ALERTS_CONFIG_PATH)
         self.db = DatabaseHelper("src/edge_server/database/models/sessions.db")
         self.sessions = SessionDAO(self.db)
+        self.aggregator = DataAggregator(self.db, timeout=15, on_complete_callback=self.publish_measurement)
         self.session_active = False
         self.session_lock = threading.Lock()
         self.time_elapsed = 0
@@ -124,6 +127,16 @@ class SessionController:
             while self.session_active:
                 if self.time_elapsed % self.read_interval == 0:
                     logger.info(f"\n\n\n Requesting measurements for session {self.id}\n\n\n")
+                    
+                    # Dynamically determine expected sources
+                    expected_sources = set()
+                    if self.device_controller:
+                        expected_sources = set(self.device_controller.online_devices.keys())
+                    
+                    # Ensure 'rpi' is always expected as it's the primary data source
+                    expected_sources.add("rpi")
+                    
+                    self.aggregator.start_collection(self.id, datetime.now(timezone.utc).isoformat(), expected_sources)
                     self.request_measurements()
                 time.sleep(1)
                 self.time_elapsed += 1
@@ -185,19 +198,35 @@ class SessionController:
         except Exception as e:
             logger.error(f"Error in anomaly detection: {e}")
         
-        last_saved = self.last_saved_map.get(key, 0)
-        if now - last_saved >= 60:
-            self.db.insert_measurement(
-                session_id=payload.get("id"),
-                source=source,
-                data=json.dumps(payload.get("data")),
-                timestamp_iso=payload.get("timestamp")
-            )
-            self.last_saved_map[key] = now
-            logger.info(f"Stored measurement for {key}")
-        else:
-            # Data skipped for storage (downsampling)
-            pass
+        except Exception as e:
+            logger.error(f"Error in anomaly detection: {e}")
+        
+        # Add to aggregator
+        # Data from sensors usually comes as { "ph": { "value": 7.0, ... } }
+        # Aggregator expects this or flattened. It handles it.
+        self.aggregator.add_reading(source, payload.get("data", {}))
+
+    def publish_measurement(self, payload):
+        """
+        Callback from Aggregator to publish the unified measurement.
+        """
+        topic = "session/measurement"
+        self.aws.client.publish(topic, json.dumps(payload))
+        logger.info(f"Published unified measurement to {topic}: {payload}")
+
+    def publish_history(self, session_id: str):
+        """
+        Fetches and publishes the full measurement history for a session.
+        """
+        history = self.db.get_unified_measurements(session_id)
+        topic = "session/history"
+        payload = {
+            "session_id": session_id,
+            "history": history,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        self.aws.client.publish(topic, json.dumps(payload))
+        logger.info(f"Published session history for {session_id} to {topic} ({len(history)} records)")
 
     def publish_status(self):
         """

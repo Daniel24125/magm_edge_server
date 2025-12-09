@@ -15,8 +15,8 @@ class CommandHandler:
     def __init__(self, mqtt, aws):
         self.aws = aws
         self.mqtt = mqtt
-        self.session_controller = SessionController(mqtt, aws)
         self.device_controller = DeviceController(mqtt, aws)
+        self.session_controller = SessionController(mqtt, aws, device_controller=self.device_controller)
 
     def handle_ui_command(self, payload: dict):
         if type(payload) == str:
@@ -40,6 +40,12 @@ class CommandHandler:
                 self.device_controller.forward_device_command(cmd.params, cmd.command)
             case "get_session_status":
                 self.session_controller.publish_status()
+            case "get_session_history":
+                session_id = cmd.params.get("id") or self.session_controller.id
+                if session_id:
+                    self.session_controller.publish_history(session_id)
+                else:
+                    logger.warning("Received get_session_history with no ID and no active session.")
             case "confirm_calibration":
                 topic = f"/devices/{cmd.params.device_id}/cal/confirm"
                 self.mqtt.client.publish(topic, json.dumps(cmd.params))

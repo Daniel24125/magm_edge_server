@@ -110,6 +110,19 @@ class DatabaseHelper:
                         ON UPDATE CASCADE ON DELETE SET NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS unified_measurements (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    ph REAL,
+                    temp REAL,
+                    od REAL,
+                    co2 REAL,
+                    status TEXT,
+                    FOREIGN KEY(session_id) REFERENCES sessions(id)
+                        ON UPDATE CASCADE ON DELETE CASCADE
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_sessions_status
                     ON sessions(status);
 
@@ -289,7 +302,68 @@ class DatabaseHelper:
             )
             rid = cur.lastrowid
             self._conn.commit()
+            self._retrying_execute(
+                cur,
+                """INSERT INTO alerts
+                   (timestamp, session_id, sensor_type, value, message)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (timestamp_iso, session_id, sensor_type, value, message),
+            )
+            rid = cur.lastrowid
+            self._conn.commit()
             return rid
+
+    def insert_unified_measurement(
+        self,
+        session_id: str,
+        ph: Optional[float] = None,
+        temp: Optional[float] = None,
+        od: Optional[float] = None,
+        co2: Optional[float] = None,
+        status: Optional[str] = "OK",
+        timestamp_iso: Optional[str] = None
+    ) -> int:
+        """
+        Inserts a unified measurement row.
+        """
+        timestamp_iso = timestamp_iso or utcnow_iso()
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            self._retrying_execute(
+                cur,
+                """INSERT INTO unified_measurements
+                   (session_id, timestamp, ph, temp, od, co2, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (session_id, timestamp_iso, ph, temp, od, co2, status),
+            )
+            rid = cur.lastrowid
+            self._conn.commit()
+            return rid
+
+    def get_unified_measurements(self, session_id: str) -> List[Dict[str, Any]]:
+        """
+        Retrieves all unified measurements for a session, ordered by timestamp.
+        """
+        query = """
+            SELECT timestamp, ph, temp, od, co2, status 
+            FROM unified_measurements 
+            WHERE session_id = ? 
+            ORDER BY timestamp ASC
+        """
+        rows = self.fetch_records_raw(query, (session_id,))
+        
+        results = []
+        for r in rows:
+            # Map tuple to dict (order depends on SELECT)
+            results.append({
+                "timestamp": r[0],
+                "ph": r[1],
+                "temp": r[2],
+                "od": r[3],
+                "co2": r[4],
+                "status": r[5]
+            })
+        return results
 
     # ---------------- Generic CRUD ----------------
 

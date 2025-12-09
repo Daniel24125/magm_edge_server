@@ -27,6 +27,7 @@ class MQTTClient:
     def init_variables(self, broker_config): 
         self.device_config = config_manager.get_config().get("device_config", {})
         self.device_id = self.device_config.get("device_id", "")
+        self.device_name = self.device_config.get("device_name", "")
         self.broker = broker_config.get("mqtt", {}).get("broker", "localhost")
         self.port = broker_config.get("mqtt", {}).get("port", 1883)
         self.keepalive = broker_config.get("mqtt", {}).get("keepalive", 60)
@@ -110,7 +111,6 @@ class MQTTClient:
                 self.ph_calibration.register_measurement_value(payload.get("measurement_type"))
         elif topic.endswith("cal/cancel"):
             if getattr(self, "ph_calibration"):
-                print("CANCEL CALIBRATION")
                 self.ph_calibration.reset_calibration()
                 self.ph_calibration = None
         elif topic.endswith("cal/confirm"):
@@ -133,6 +133,7 @@ class MQTTClient:
             "topic": self.device_registration_topic,
             "payload": {
                 "device_id": self.device_id,
+                "device_name": self.device_name,
                 "status": "ONLINE"
             }
         }

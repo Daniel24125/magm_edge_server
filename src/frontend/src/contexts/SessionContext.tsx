@@ -42,7 +42,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
     const { addAlert } = useAlert();
     const { projects } = useProjects();
-    const { lastSystemNotification, sendCommand } = useDeviceManager();
+    const { sendCommand } = useDeviceManager();
     const [activeSession, setActiveSession] = useState<ISession | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionVerified, setIsSessionVerified] = useState(false);
@@ -67,77 +67,93 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     useEffect(() => {
         if (!isConnected) return;
 
-        const topic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "session/status";
+        const sessionTopic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "";
+        const historyTopic = "session/history";
 
         const handleSessionMessage = (topic: string, message: any) => {
-            console.log("Session Update:", message);
-            // Handle both structure types (direct payload or wrapped in "payload")
-            // The python controller sends: { type: "session"|"session_tick", payload: {...}, timestamp: ... }
+            console.log("Session Message:", topic, message);
 
-            if (message.type === 'session') {
-                const payload = message.payload;
-                console.log("Session Status Update:", payload);
-
-                if (payload.active) {
-                    setActiveSession(payload);
-                    setIsSessionVerified(true);
-                } else {
-                    // Device says session is INACTIVE
-                    if (activeSessionRef.current && activeSessionRef.current.status === 'running') {
-                        console.warn("Conflict: Firebase says running, Device says idle. Trusting Device.");
-                        setActiveSession(null);
+            if (topic === sessionTopic) {
+                // ... (existing logic)
+                if (message.type === 'session') {
+                    const payload = message.payload;
+                    if (payload.active) {
+                        setActiveSession(payload);
+                        setIsSessionVerified(true);
+                        // Once we know session is active, request history
+                        publish("ui/commands/get_session_history", { command: "get_session_history", params: { id: payload.id } });
+                    } else {
+                        if (activeSessionRef.current && activeSessionRef.current.status === 'running') {
+                            setActiveSession(null);
+                        }
+                        setIsSessionVerified(true);
                     }
-                    setIsSessionVerified(true);
+                } else if (message.type === 'session_tick') {
+                    const payload = message.payload;
+                    setActiveSession(prev => {
+                        if (!prev || prev.status !== 'running') return prev;
+                        return { ...prev, time: payload.time }
+                    })
                 }
-            } else if (message.type === 'session_tick') {
-                const payload = message.payload;
+            } else if (topic === historyTopic) {
+                // Handle History
+                const history = message.history || [];
+                console.log("Received Session History:", history.length, "records");
+
                 setActiveSession(prev => {
-                    if (!prev || prev.status !== 'running') return prev;
+                    if (!prev) return null; // Should we set it if null? Maybe not.
+                    // Map history to TMeasurement
+                    const historicalMeasurements: TMeasurement[] = history.map((r: any) => ({
+                        timestamp: r.timestamp,
+                        temperature: r.temp,
+                        ph: r.ph,
+                        od: r.od,
+                        co2: r.co2
+                    }));
+
                     return {
                         ...prev,
-                        time: payload.time
-                    }
-                })
+                        measurements: historicalMeasurements
+                    };
+                });
             }
         };
 
-        subscribe(topic, handleSessionMessage);
+        subscribe(sessionTopic, handleSessionMessage);
+        subscribe(historyTopic, handleSessionMessage);
 
-        // Also request status update on connect
+        // Request status
         publish("ui/commands/get_session_status", { command: "get_session_status" });
 
         return () => {
-            unsubscribe(topic, handleSessionMessage);
+            unsubscribe(sessionTopic, handleSessionMessage);
+            unsubscribe(historyTopic, handleSessionMessage);
         }
     }, [isConnected, subscribe, unsubscribe, publish]);
-
-
-
     // Stable callback for handling measurements
     const handleMeasurement = useCallback((topic: string, payload: any) => {
         const currentSession = activeSessionRef.current;
         if (!currentSession || currentSession.status !== 'running') return;
 
         console.log("Received measurement:", payload);
+        const data = payload.data || {};
 
         // Use functional update to avoid dependency on activeSession
         setActiveSession(prev => {
             if (!prev) return null;
-            // Un-comment logic to process measurement
-            /*
+
             const measurement: TMeasurement = {
-               timestamp: new Date().toISOString(),
-               temperature: payload.temperature,
-               ph: payload.ph,
-               od: payload.od,
-               co2: payload.co2
-           };
+                timestamp: payload.timestamp || new Date().toISOString(),
+                temperature: data.temp,
+                ph: data.ph,
+                od: data.od,
+                co2: data.co2
+            };
+
             return {
                 ...prev,
                 measurements: [...prev.measurements, measurement]
             };
-            */
-            return prev;
         });
     }, []);
 

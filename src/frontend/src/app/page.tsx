@@ -27,6 +27,8 @@ const CAL_TOPICS = [
   ALERT_TOPIC
 ];
 
+import LiveMeasurementsWidget from "@/components/dashboard/LiveMeasurementsWidget";
+
 export default function Page() {
   const { user, error, isLoading } = useUser();
   const router = useRouter()
@@ -41,13 +43,14 @@ export default function Page() {
   return (
     <main className="pt-10 space-y-6">
       <DashboardHeader />
+      <LiveMeasurementsWidget />
     </main>
   );
 }
 
 const DashboardHeader = () => {
   return (
-    <div className="w-full justify-between flex items-center gap-4">
+    <div className="w-full justify-between flex items-center gap-4 overflow-x-auto pb-2">
       <SessionWidget />
       <LastSessionWidget />
       <ProjectDetailsWidget />

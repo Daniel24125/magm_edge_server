@@ -36,6 +36,7 @@ class PHSensor(AbstractSensor):
 
     def __init__(self, name: str, unit: str, config: dict, sensor_id: str):
         super().__init__(name, unit, config, sensor_id)
+        self.key = "ph"
         self.config = config
         self.init_read_settings()
         if SIMULATION_MODE:
