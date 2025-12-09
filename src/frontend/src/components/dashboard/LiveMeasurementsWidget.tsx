@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { useSession } from '@/contexts/SessionContext'
 import { Activity, Thermometer, Droplets, Wind, Microscope } from 'lucide-react'
