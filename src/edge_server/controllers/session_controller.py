@@ -164,55 +164,84 @@ class SessionController:
             qos=1
         )
 
-    def _handle_session_data(self,  device_id, payload):
+    def _handle_session_data(self, device_id, payload):
         source = payload.get("source")
-        key = f"{device_id}_{source}"
-        now = time.time()
+        data = payload.get("data", {})
+        
         # Anomaly Detection
         try:
-            data = payload.get("data", {})
             if isinstance(data, dict):
                 for sensor_type, reading in data.items():
-
-                    value = float(reading.get("value"))
-                    alert_msg = self.detector.check_reading(reading.get("sensor_type"), value)
-                    if alert_msg:
-                        logger.warning(f"Anomaly detected: {alert_msg}")
-                        # 1. Save to DB
-                        self.db.insert_alert(
-                            session_id=payload.get("id"),
-                            sensor_type=sensor_type,
-                            value=value,
-                            message=alert_msg,
-                            timestamp_iso=payload.get("timestamp")
-                        )
-                        # 2. Notify User (AWS)
-                        self.aws.publish_alert({
-                            "id": payload.get("id"),
-                            "device_id": device_id,
-                            "sensor_type": sensor_type,
-                            "value": value,
-                            "message": alert_msg,
-                            "timestamp": payload.get("timestamp")
-                        })
-        except Exception as e:
-            logger.error(f"Error in anomaly detection: {e}")
-        
+                    # Check if reading has 'value' (standard format)
+                    if isinstance(reading, dict) and "value" in reading:
+                        value = float(reading.get("value"))
+                        alert_msg = self.detector.check_reading(reading.get("sensor_type"), value)
+                        if alert_msg:
+                            logger.warning(f"Anomaly detected: {alert_msg}")
+                            # 1. Save to DB
+                            self.db.insert_alert(
+                                session_id=payload.get("id"),
+                                sensor_type=sensor_type,
+                                value=value,
+                                message=alert_msg,
+                                timestamp_iso=payload.get("timestamp")
+                            )
+                            # 2. Notify User (AWS)
+                            self.aws.publish_alert({
+                                "id": payload.get("id"),
+                                "device_id": device_id,
+                                "sensor_type": sensor_type,
+                                "value": value,
+                                "message": alert_msg,
+                                "timestamp": payload.get("timestamp")
+                            })
         except Exception as e:
             logger.error(f"Error in anomaly detection: {e}")
         
         # Add to aggregator
-        # Data from sensors usually comes as { "ph": { "value": 7.0, ... } }
-        # Aggregator expects this or flattened. It handles it.
-        self.aggregator.add_reading(source, payload.get("data", {}))
+        self.aggregator.add_reading(source, data)
+
+        # Publish Live Preview (Immediate)
+        try:
+            flat_data = self.aggregator._flatten_reading(data)
+            live_payload = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "data": flat_data,
+                "source": source
+            }
+            self.aws.client.publish("session/live", json.dumps(live_payload))
+        except Exception as e:
+            logger.error(f"Error publishing live data: {e}")
 
     def publish_measurement(self, payload):
         """
-        Callback from Aggregator to publish the unified measurement.
+        Callback from aggregator when a unified measurement is ready.
+        Publishes to session/measurement for history recording.
         """
-        topic = "session/measurement"
-        self.aws.client.publish(topic, json.dumps(payload))
-        logger.info(f"Published unified measurement to {topic}: {payload}")
+        try:
+            # We assume aggregator sends a dict with session_id, timestamp, data, status
+            # We want to publish this to 'session/measurement' (or 'history' if we want to append)
+            # The frontend listens to 'session/history' (array) or we can make it listen to 'session/measurement' (single)
+            # Based on previous context, frontend listens to 'session/history'.
+            # Ideally we should publish to a topic that just sends the ONE new measurement.
+            # But let's check what FE expects. FE 'session/history' expects { history: [...] }
+            # So if we use 'session/history', we must send the WHOLE history? Or just one?
+            # FE code: const history = message.history || []; ... maps it.
+            # If we send { history: [new_measurement] }, it might REPLACE or APPEND?
+            # FE: setActiveSession(prev => { ... measurements: historicalMeasurements }) -> REPLACES everything if we send full history.
+            
+            # Use 'session/measurement' for incremental updates if FE supports it?
+            # FE doesn't seem to support 'session/measurement' in the viewed code.
+            # Wait, I added 'session/live'.
+            
+            # Let's send to 'session/history' BUT with the full history from DB?
+            # That's expensive but safe. Or we can just call publish_history(session_id)
+            
+            # OPTION 1: Publish FULL history (Safer for now, existing FE logic)
+            self.publish_history(payload.get("session_id"))
+            
+        except Exception as e:
+            logger.error(f"Error publishing measurement: {e}")
 
     def publish_history(self, session_id: str):
         """

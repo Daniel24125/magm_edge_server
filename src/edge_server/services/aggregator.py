@@ -20,12 +20,14 @@ class DataAggregator:
         self.pending_timestamp: Optional[str] = None
         self.expected_sources: set = set()
         self.received_sources: set = set()
+        self.save_to_db: bool = True
     
-    def start_collection(self, session_id: str, timestamp_iso: str, expected_sources: set):
+    def start_collection(self, session_id: str, timestamp_iso: str, expected_sources: set, save_to_db: bool = True):
         """
         Starts a new data collection window. 
         If a previous window is active, it force-closes it.
         expected_sources: Set of device IDs (sources) to wait for.
+        save_to_db: Whether to save the result to the database (True) or just publish (False).
         """
         with self.collection_lock:
             # If there's an active collection, finalize it immediately (it's incomplete)
@@ -40,11 +42,12 @@ class DataAggregator:
             self.current_collection = {} # Reset collection
             self.expected_sources = expected_sources
             self.received_sources = set()
+            self.save_to_db = save_to_db
             
             # Start timeout timer
             self.timer = threading.Timer(self.timeout, self._on_timeout)
             self.timer.start()
-            logger.info(f"Started data aggregation for session {session_id} at {timestamp_iso} with sources {expected_sources} and timeout {self.timeout}s")
+            logger.info(f"Started data aggregation for session {session_id} at {timestamp_iso} with sources {expected_sources} (save_to_db={save_to_db})")
 
     def add_reading(self, source: str, data: Dict[str, Any]):
         """
@@ -113,27 +116,31 @@ class DataAggregator:
         """
         Saves the current collection to the DB and clears state.
         """
-        if not self.session_id or not self.current_collection:
+        if not self.session_id or self.current_collection is None:
             return
 
         try:
-            self.db.insert_unified_measurement(
-                session_id=self.session_id,
-                timestamp_iso=self.pending_timestamp,
-                ph=self.current_collection.get('ph'),
-                temp=self.current_collection.get('temp'),
-                od=self.current_collection.get('od'),
-                co2=self.current_collection.get('co2'),
-                status=status
-            )
-            logger.info(f"Saved unified measurement. Status: {status}")
+            if self.save_to_db:
+                self.db.insert_unified_measurement(
+                    session_id=self.session_id,
+                    timestamp_iso=self.pending_timestamp,
+                    ph=self.current_collection.get('ph'),
+                    temp=self.current_collection.get('temp'),
+                    od=self.current_collection.get('od'),
+                    co2=self.current_collection.get('co2'),
+                    status=status
+                )
+                logger.info(f"Saved unified measurement. Status: {status}")
+            else:
+                logger.info(f"Live measurement complete (not saved). Status: {status}")
             
             if self.on_complete_callback:
                 self.on_complete_callback({
                     "session_id": self.session_id,
                     "timestamp": self.pending_timestamp,
                     "data": self.current_collection,
-                    "status": status
+                    "status": status,
+                    "is_recorded": self.save_to_db
                 })
 
         except Exception as e:

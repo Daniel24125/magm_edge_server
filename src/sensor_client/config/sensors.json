@@ -15,7 +15,7 @@
       "name": "Temperature Sensor 1",
       "sensor_id": "e6cc7497-d0aa-4cd9-9e56-65sdf1g6s5d1vwes",
       "unit": "Celsius",
-      "enabled": false,
+      "enabled": true,
       "pin": 4,
       "calibration_offset": 0.2,
       "simulator_params": {

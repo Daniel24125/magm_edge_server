@@ -34,6 +34,7 @@ interface SessionContextType {
     resumeSession: () => Promise<void>;
     addMeasurement: (measurement: TMeasurement) => void;
     isSessionVerified: boolean;
+    latestLiveMeasurement: TMeasurement | null;
 }
 
 const SessionContext = createContext<SessionContextType | null>(null);
@@ -44,6 +45,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { projects } = useProjects();
     const { sendCommand } = useDeviceManager();
     const [activeSession, setActiveSession] = useState<ISession | null>(null);
+    const [latestLiveMeasurement, setLatestLiveMeasurement] = useState<TMeasurement | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionVerified, setIsSessionVerified] = useState(false);
     const [isProjectSelectionOpen, setIsProjectSelectionOpen] = useState(false);
@@ -67,11 +69,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     useEffect(() => {
         if (!isConnected) return;
 
-        const sessionTopic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "";
+        const sessionTopic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "session/status";
         const historyTopic = "session/history";
+        const liveTopic = "session/live";
 
         const handleSessionMessage = (topic: string, message: any) => {
-            console.log("Session Message:", topic, message);
+            // console.log("Session Message:", topic, message);
 
             if (topic === sessionTopic) {
                 // ... (existing logic)
@@ -87,6 +90,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                             setActiveSession(null);
                         }
                         setIsSessionVerified(true);
+                        setLatestLiveMeasurement(null);
                     }
                 } else if (message.type === 'session_tick') {
                     const payload = message.payload;
@@ -116,11 +120,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                         measurements: historicalMeasurements
                     };
                 });
+            } else if (topic === liveTopic) {
+                // Handle Live Data (Partial or Full)
+                const data = message.data || {};
+                setLatestLiveMeasurement(prev => ({
+                    ...prev,
+                    ...data, // Merge new data
+                    timestamp: message.timestamp // Update timestamp
+                } as TMeasurement));
             }
         };
 
         subscribe(sessionTopic, handleSessionMessage);
         subscribe(historyTopic, handleSessionMessage);
+        subscribe(liveTopic, handleSessionMessage);
 
         // Request status
         publish("ui/commands/get_session_status", { command: "get_session_status" });
@@ -128,6 +141,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return () => {
             unsubscribe(sessionTopic, handleSessionMessage);
             unsubscribe(historyTopic, handleSessionMessage);
+            unsubscribe(liveTopic, handleSessionMessage);
         }
     }, [isConnected, subscribe, unsubscribe, publish]);
     // Stable callback for handling measurements
@@ -334,8 +348,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
     }
 
+
+
     return (
-        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, isSessionVerified }}>
+        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, isSessionVerified, latestLiveMeasurement }}>
             {children}
             <ProjectSelectionDialog
                 open={isProjectSelectionOpen}

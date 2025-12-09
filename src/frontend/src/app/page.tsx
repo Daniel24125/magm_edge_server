@@ -28,6 +28,7 @@ const CAL_TOPICS = [
 ];
 
 import LiveMeasurementsWidget from "@/components/dashboard/LiveMeasurementsWidget";
+import { SessionChartWidget } from "@/components/dashboard/SessionChartWidget";
 
 export default function Page() {
   const { user, error, isLoading } = useUser();
@@ -43,6 +44,7 @@ export default function Page() {
   return (
     <main className="pt-10 space-y-6">
       <DashboardHeader />
+      <SessionChartWidget />
       <LiveMeasurementsWidget />
     </main>
   );

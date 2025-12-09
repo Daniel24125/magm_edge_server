@@ -67,9 +67,10 @@ export const getFormartedTimeWithLetters = (seconds: number | undefined) => {
   const days = Math.floor(seconds / 86400)
   const hours = Math.floor((seconds % 86400) / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
 
   const pad = (n: number) => n.toString().padStart(2, "0")
-  return `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`
+  return `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m ${pad(remainingSeconds)}s`
 }
 
 export const getAlertIcon = (alertType: TAlertType) => {

@@ -4,12 +4,13 @@ import { useSession } from '@/contexts/SessionContext'
 import { Activity, Thermometer, Droplets, Wind, Microscope } from 'lucide-react'
 
 const LiveMeasurementsWidget = () => {
-    const { activeSession } = useSession()
+    const { activeSession, latestLiveMeasurement } = useSession()
 
     const latestMeasurement = useMemo(() => {
+        if (latestLiveMeasurement) return latestLiveMeasurement;
         if (!activeSession?.measurements || activeSession.measurements.length === 0) return null
         return activeSession.measurements[activeSession.measurements.length - 1]
-    }, [activeSession?.measurements])
+    }, [activeSession?.measurements, latestLiveMeasurement])
 
     const metrics = [
         {
