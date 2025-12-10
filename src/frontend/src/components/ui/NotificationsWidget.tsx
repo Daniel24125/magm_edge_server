@@ -10,9 +10,11 @@ import { Bell, Check, Trash2, Info, AlertTriangle, AlertCircle, CheckCircle } fr
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { TAlert } from '@/types';
+import { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function NotificationsWidget() {
-    const { alerts, markAllAsRead, clearAlerts, removeAlert } = useAlert() as any;
+    const { alerts, markAllAsRead, removeAlert, markAsRead, clearAlerts } = useAlert()
     const unreadCount = alerts.filter((a: TAlert) => !a.read).length;
 
     const AlertItem = ({ alert }: { alert: TAlert }) => {
@@ -24,7 +26,21 @@ export default function NotificationsWidget() {
         };
 
         return (
-            <div className={cn("flex flex-col gap-1 p-3 border-b text-sm transition-colors", alert.read ? "bg-background opacity-70" : "bg-muted/30")}>
+            <motion.div
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.2 }}
+                className={cn("flex flex-col gap-1 p-3 border-b text-sm transition-colors duration-300",
+                    alert.read ? "bg-background opacity-70" : "bg-muted/30 hover:bg-muted/50"
+                )}
+                onMouseEnter={() => {
+                    if (!alert.read && markAsRead) {
+                        markAsRead(alert.id);
+                    }
+                }}
+            >
                 <div className="flex items-start gap-2">
                     <div className="mt-0.5">{icons[alert.type]}</div>
                     <div className="flex-1">
@@ -37,23 +53,60 @@ export default function NotificationsWidget() {
                         <Trash2 className="h-3 w-3" />
                     </button>
                 </div>
-            </div>
+            </motion.div>
         );
     };
 
     const AlertList = ({ category }: { category?: 'session' | 'app' | 'all' }) => {
-        const filtered = category === 'all' ? alerts : alerts.filter((a: TAlert) => a.category === category);
-
-        if (filtered.length === 0) {
-            return <div className="p-8 text-center text-muted-foreground text-sm">No notifications</div>
-        }
+        const filtered = useMemo(() => {
+            if (category === 'all') {
+                return alerts;
+            } else {
+                return alerts.filter((a: TAlert) => a.category === category);
+            }
+        }, [alerts, category]);
 
         return (
-            <ScrollArea className="h-[300px]">
-                {filtered.map((alert: TAlert) => (
-                    <AlertItem key={alert.id} alert={alert} />
-                ))}
-            </ScrollArea>
+            <>
+                <ScrollArea className="h-[300px]">
+                    <AnimatePresence mode='popLayout' initial={false}>
+                        {filtered.length > 0 ? (
+                            filtered.map((alert: TAlert) => (
+                                <AlertItem key={alert.id} alert={alert} />
+                            ))
+                        ) : (
+                            <motion.div
+                                key="empty"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.2 }}
+                                className="p-8 text-center text-muted-foreground text-sm flex flex-col items-center gap-4 h-full justify-center"
+                            >
+                                <span className="text-7xl">📭</span>
+                                <span>No notifications</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </ScrollArea>
+                <AnimatePresence>
+                    {filtered.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="w-full flex justify-end p-3 border-t"
+                        >
+                            <span
+                                className="text-xs cursor-pointer underline hover:text-foreground transition-colors"
+                                onClick={() => clearAlerts(category === 'all' ? undefined : category)}
+                            >
+                                Clear all
+                            </span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </>
         )
     };
 
@@ -70,14 +123,8 @@ export default function NotificationsWidget() {
             <PopoverContent className="w-80 p-0" align="end">
                 <div className="flex items-center justify-between p-3 border-b">
                     <h4 className="font-semibold text-sm">Notifications {unreadCount > 0 && `(${unreadCount})`}</h4>
-                    <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => markAllAsRead()} title="Mark all read">
-                            <Check className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => clearAlerts()} title="Clear all">
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                    </div>
+                    <span className='text-xs  cursor-pointer underline' onClick={() => markAllAsRead()}>Mark all as read</span>
+
                 </div>
 
                 <Tabs defaultValue="all" className="w-full">

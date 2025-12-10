@@ -43,9 +43,6 @@ class DeviceController:
         if self.alert_manager:
             self.alert_manager.send_system_alert(event, message, severity=severity, extra_data=extra)
         else:
-            # Fallback if no alert manager
-            # We add severity to extra_data for fallback aws call if needed, or update aws._notify_user similarly
-            # For now, just pass extra
             extra['severity'] = severity
             self.aws._notify_user(event, message, extra_data=extra)
 

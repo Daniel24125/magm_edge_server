@@ -42,6 +42,7 @@ class SessionController:
         
         # State
         self.session_active = False
+        self.paused = False
         self.session_lock = threading.Lock()
         self.time_elapsed = 0
         self.id: Optional[str] = None
@@ -60,6 +61,7 @@ class SessionController:
             # Initialize Session ID
             self.id = payload.get("id") or f"session_{uuid4()}"
             self.session_active = True
+            self.paused = False
 
         # Create Session Objects
         sess_payload = self._create_session_payload(payload)
@@ -101,6 +103,20 @@ class SessionController:
         if self.acquisition_thread and self.acquisition_thread.is_alive():
             self.acquisition_thread.join(timeout=2)
             logger.info("Acquisition thread stopped successfully.")
+
+    def pause_session(self):
+        with self.session_lock:
+            if self.session_active:
+                self.paused = True
+                logger.info(f"Session {self.id} paused")
+                self.publish_status()
+
+    def resume_session(self):
+        with self.session_lock:
+            if self.session_active:
+                self.paused = False
+                logger.info(f"Session {self.id} resumed")
+                self.publish_status()
 
     def request_measurements(self):
         if not self.id:
@@ -174,8 +190,9 @@ class SessionController:
                 if save_to_db:
                     logger.info(f"Requests measurements for session {self.id} (Saving to DB)")
                 
-                # Always request measurements for live view
-                self.request_measurements()
+                # Always request measurements for live view, unless paused
+                if not self.paused:
+                    self.request_measurements()
 
                 time.sleep(1)
                 self.time_elapsed += 1

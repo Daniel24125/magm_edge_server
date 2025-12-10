@@ -310,7 +310,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         try {
             const result = await updateSession(activeSession.id, { status: 'paused' });
-            if (!result.success) {
+            if (result.success) {
+                sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/pause_session`, {
+                    command: "pause_session",
+                    params: { id: activeSession.id }
+                });
+            } else {
                 setActiveSession(prevSession);
                 addAlert("error", result.error || "Failed to pause session");
             }
@@ -327,7 +332,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         try {
             const result = await updateSession(activeSession.id, { status: 'running' });
-            if (!result.success) {
+            if (result.success) {
+                sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/resume_session`, {
+                    command: "resume_session",
+                    params: { id: activeSession.id }
+                });
+            } else {
                 setActiveSession(prevSession);
                 addAlert("error", result.error || "Failed to resume session");
             }

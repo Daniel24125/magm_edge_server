@@ -65,20 +65,16 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
 
             if (payload.event === "rpi_connected") {
                 setIsRPIConnected(true);
-                addAlert("success", "RPi Connected");
             }
             if (payload.event === "rpi_disconnected") {
                 setIsRPIConnected(false);
                 setOnlineDevices({});
-                addAlert("warning", "RPi Disconnected");
             }
             if (payload.event === "device_connected") {
                 setOnlineDevices(payload.devices_online || {});
-                addAlert("info", payload.message || "Device Connected");
             }
             if (payload.event === "device_disconnected") {
                 setOnlineDevices(payload.devices_online || {});
-                addAlert("warning", payload.message || "Device Disconnected");
             }
         };
 

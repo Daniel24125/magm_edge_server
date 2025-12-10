@@ -33,7 +33,7 @@ class CommandHandler:
             case "start_session":
                 self.session_controller.start_session(cmd.params)
             case "ping_device":
-                self.aws._notify_user("rpi_connected", f"")
+                self.aws._notify_user("rpi_connected", f"The edge server is connected")
             case "stop_session":
                 self.session_controller.stop_session()
             case "start_calibration":
@@ -46,6 +46,10 @@ class CommandHandler:
                     self.session_controller.publish_history(session_id)
                 else:
                     logger.warning("Received get_session_history with no ID and no active session.")
+            case "pause_session":
+                self.session_controller.pause_session()
+            case "resume_session":
+                self.session_controller.resume_session()
             case "confirm_calibration":
                 topic = f"/devices/{cmd.params.device_id}/cal/confirm"
                 self.mqtt.client.publish(topic, json.dumps(cmd.params))

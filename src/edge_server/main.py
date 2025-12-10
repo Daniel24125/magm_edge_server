@@ -22,7 +22,7 @@ def main():
         print("🧹 Cleaning up resources...")
         mqtt.join(timeout=5)
         manager.join(timeout=5)
-        aws._notify_user("rpi_disconnected", "")
+        aws._notify_user("rpi_disconnected", "The edge server is disconnected")
         aws.join(timeout=5)
 
         print("✅ Edge Server shut down cleanly.")
