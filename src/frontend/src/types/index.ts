@@ -2,6 +2,7 @@
 export type TAlert = {
     id: string;
     type: "info" | "success" | "warning" | "error";
+    category: "session" | "app";
     message: string;
     timestamp: string;
     details?: any;

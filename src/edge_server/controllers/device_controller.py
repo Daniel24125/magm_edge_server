@@ -8,9 +8,10 @@ from shared.utils.logger import logger
 
 class DeviceController:
 
-    def __init__(self, mqtt, aws):
+    def __init__(self, mqtt, aws, alert_manager=None):
         self.mqtt = mqtt
         self.aws = aws
+        self.alert_manager = alert_manager
         self.online_devices = {}
 
     # -------------------- Device Handling --------------------
@@ -21,13 +22,13 @@ class DeviceController:
         device_name = payload.get("device_name", "")
         self.online_devices[device_id] = payload
         logger.info(f"Device {device_id} registered")
-        self._notify_user("device_connected", f"Device '{device_name}' connected to the edge server.")
+        self._notify_user("device_connected", f"Device '{device_name}' connected to the edge server.", severity="success")
 
     def _handle_device_disconnect(self, device_id, payload): 
         device_name = payload.get("device_name", "")
         self.online_devices.pop(device_id, None)
         logger.info(f"Device {device_id} unregistered")
-        self._notify_user("device_disconnected", f"Device '{device_name}' disconnected from the edge server.")
+        self._notify_user("device_disconnected", f"Device '{device_name}' disconnected from the edge server.", severity="error")
 
     def _handle_device_status(self, device_id, payload): 
          self.online_devices[device_id] = True 
@@ -37,21 +38,17 @@ class DeviceController:
         logger.info(f"Data received from device '{device_name}': {payload}") 
         self.aws.publish_sensor_data(payload)
 
-    def _notify_user(self, event, message):
-        topic = "system/notifications"
-        payload = {
-            "type": "connection",
-            "source": "edge",
-            "event": event,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "message": message,
-            "devices_online": list(self.online_devices.keys()),
-        }
-        try:
-            self.aws.client.publish(topic, json.dumps(payload))
-            logger.info(f"[NOTIFY] {event}: {message}")
-        except Exception as e:
-            logger.error(f"Failed to publish notification: {e}")
+    def _notify_user(self, event, message, severity="info"):
+        extra = {"devices_online": list(self.online_devices.keys())}
+        if self.alert_manager:
+            self.alert_manager.send_system_alert(event, message, severity=severity, extra_data=extra)
+        else:
+            # Fallback if no alert manager
+            # We add severity to extra_data for fallback aws call if needed, or update aws._notify_user similarly
+            # For now, just pass extra
+            extra['severity'] = severity
+            self.aws._notify_user(event, message, extra_data=extra)
+
    
     def forward_device_command(self , payload, cmd): 
         

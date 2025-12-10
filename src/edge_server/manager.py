@@ -20,7 +20,14 @@ class ManagerController(threading.Thread):
         super().__init__(daemon=True)
         self.mqtt = mqtt
         self.aws = aws
-        self.command_handler = CommandHandler(mqtt, aws)
+
+        # Initialize shared services
+        from database.db_manager import DatabaseHelper
+        from services.alert_service import AlertManager
+        self.db_helper = DatabaseHelper("src/edge_server/database/models/sessions.db")
+        self.alert_manager = AlertManager(self.db_helper, self.aws)
+
+        self.command_handler = CommandHandler(mqtt, aws, self.alert_manager)
         self._stop_event = threading.Event()
 
         self.in_queue = getattr(self.mqtt, "data_queue", None)

@@ -142,6 +142,7 @@ class DatabaseHelper:
                     sensor_type TEXT NOT NULL,
                     value REAL NOT NULL,
                     message TEXT NOT NULL,
+                    severity TEXT DEFAULT 'info',
                     acknowledged INTEGER DEFAULT 0,
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE
@@ -149,22 +150,15 @@ class DatabaseHelper:
 
                 CREATE INDEX IF NOT EXISTS idx_alerts_session
                     ON alerts(session_id);
-
-                CREATE TABLE IF NOT EXISTS projects (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    sessions TEXT NOT NULL,
-                    reactor_name TEXT NOT NULL,
-                    project_type TEXT NOT NULL, -- e.g., 'manual', 'timer', 'target' ...
-                    project_name TEXT NOT NULL,
-                    timestamp TEXT NOT NULL,
-                    session_parameters TEXT NOT NULL, -- 'co2_pressure','medium_composition','data_aquisition_frequency', 'temperature_setpoint', 'ph_setpoint', ... 
-                    user TEXT NOT NULL
-                );
-
-                CREATE INDEX IF NOT EXISTS idx_projects
-                    ON projects(project_name, user, id);
                 """
             )
+            
+            # Migration for existing tables
+            try:
+                cur.execute("ALTER TABLE alerts ADD COLUMN severity TEXT DEFAULT 'info'")
+            except Exception:
+                pass # Column likely exists
+
         # Major op: table creation/ensure
         logger.info("Database initialized and tables ensured")
 
@@ -285,6 +279,7 @@ class DatabaseHelper:
         sensor_type: str,
         value: float,
         message: str,
+        severity: str = "info",
         timestamp_iso: Optional[str] = None,
     ) -> int:
         """
@@ -296,18 +291,9 @@ class DatabaseHelper:
             self._retrying_execute(
                 cur,
                 """INSERT INTO alerts
-                   (timestamp, session_id, sensor_type, value, message)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (timestamp_iso, session_id, sensor_type, value, message),
-            )
-            rid = cur.lastrowid
-            self._conn.commit()
-            self._retrying_execute(
-                cur,
-                """INSERT INTO alerts
-                   (timestamp, session_id, sensor_type, value, message)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (timestamp_iso, session_id, sensor_type, value, message),
+                   (timestamp, session_id, sensor_type, value, message, severity)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (timestamp_iso, session_id, sensor_type, value, message, severity),
             )
             rid = cur.lastrowid
             self._conn.commit()

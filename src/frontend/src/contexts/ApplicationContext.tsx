@@ -12,6 +12,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useMQTT } from "./MQTTContext";
+import { useAlert } from "./AlertContext";
 import useWindowSize from "@/hooks/useWindowSize";
 import { usePathname } from "next/navigation";
 
@@ -36,6 +38,8 @@ const ApplicationContext = createContext<IApplicationContext | null>(null);
 export const ApplicationProvider = ({ children }: { children: React.ReactNode }) => {
     const windowSize = useWindowSize();
     const [pageTitle, setPageTitle] = useState("Dashboard");
+    const { subscribe, unsubscribe, isConnected } = useMQTT();
+    const { addAlert } = useAlert();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const isMobile = (windowSize.width || 0) < 768;
     const pathname = usePathname();
@@ -52,6 +56,35 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
         const title = ROUTE_TITLES[pathname] || "Dashboard";
         setPageTitle(title);
     }, [pathname]);
+
+    useEffect(() => {
+        if (!isConnected) return;
+
+        const handleAlert = (topic: string, payload: any) => {
+            const msg = payload.message || JSON.stringify(payload);
+            const category = payload.source === 'edge' ? 'app' : 'session';
+
+            // Use explicit severity if available, else fallback to inference
+            let alertType: "info" | "warning" | "error" | "success" = payload.severity as any;
+
+            if (!alertType) {
+                alertType = "info";
+                if (payload.sensor_type) alertType = "warning";
+                if (payload.event === "rpi_disconnected") alertType = "error";
+                if (payload.event === "rpi_connected") alertType = "success";
+            }
+
+            addAlert(alertType, msg, category, payload);
+        };
+
+        subscribe("ui/alerts", handleAlert);
+        subscribe("system/notifications", handleAlert);
+
+        return () => {
+            unsubscribe("ui/alerts", handleAlert);
+            unsubscribe("system/notifications", handleAlert);
+        };
+    }, [isConnected, subscribe, unsubscribe, addAlert]);
 
 
 

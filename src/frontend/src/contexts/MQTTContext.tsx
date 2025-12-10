@@ -82,8 +82,6 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             newConnection.on("disconnect", () => {
                 addAlert("warning", "Disconnected from AWS IoT Core");
                 setIsConnected(false);
-                // Don't clear connectionRef here immediately if we want to allow auto-reconnect logic from the SDK
-                // But for manual disconnects, we handle it in disconnect()
             });
 
             newConnection.on("interrupt", (error) => {

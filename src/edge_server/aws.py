@@ -123,15 +123,17 @@ class AWSIoTClient(threading.Thread):
         except Exception as err:
             logger.error(f"Failed to publish alert: {err}")
 
-    def _notify_user(self, event, message):
+    def _notify_user(self, event, message, extra_data=None):
         topic = "system/notifications"
         payload = {
-            "type": "connection",
+            "type": "app",
             "source": "edge",
             "event": event,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "message": message,
         }
+        if extra_data:
+            payload.update(extra_data)
         try:
             self.client.publish(topic, json.dumps(payload))
         except Exception as e:

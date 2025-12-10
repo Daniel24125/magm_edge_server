@@ -1,30 +1,15 @@
 "use client"
 
-import React from 'react'
 import { useApplication } from '@/contexts/ApplicationContext';
-import { Button } from '../ui/button';
-import { Bell } from 'lucide-react';
-import { useAlert } from '@/contexts/AlertContext';
+import NotificationsWidget from '../ui/NotificationsWidget';
 
 const Topbar = () => {
     const { pageTitle } = useApplication();
     return (
         <header className='h-12 flex items-center justify-between '>
             <h3 className='text-text-faded font-semibold'>{pageTitle}</h3>
-            <NotificationBell />
+            <NotificationsWidget />
         </header>
-    )
-}
-
-const NotificationBell = () => {
-    const { alerts } = useAlert();
-    const hasUnreadAlerts = alerts.some(alert => !alert.read);
-    return (<div className='relative'>
-        <Button variant="ghost" >
-            <Bell size={30} />
-        </Button>
-        {hasUnreadAlerts && <div className='absolute bottom-0 right-2 w-2 h-2 bg-primary rounded-full'></div>}
-    </div>
     )
 }
 

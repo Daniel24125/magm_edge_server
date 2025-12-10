@@ -12,10 +12,10 @@ from edge_server.models.schemas import CommandPayload
 class CommandHandler:
     """Responsible for parsing commands and dispatching them to the controller."""
 
-    def __init__(self, mqtt, aws):
+    def __init__(self, mqtt, aws, alert_manager=None):
         self.aws = aws
         self.mqtt = mqtt
-        self.device_controller = DeviceController(mqtt, aws)
+        self.device_controller = DeviceController(mqtt, aws, alert_manager)
         self.session_controller = SessionController(mqtt, aws, device_controller=self.device_controller)
 
     def handle_ui_command(self, payload: dict):

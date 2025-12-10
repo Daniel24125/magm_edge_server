@@ -15,6 +15,7 @@ if PROJECT_ROOT not in sys.path:
 from shared.utils.logger import logger
 from shared.utils.config_loader import load_config
 from edge_server.services.anomaly_detector import AnomalyDetector
+from edge_server.services.alert_service import AlertManager
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../", "config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
@@ -37,6 +38,7 @@ class SessionController:
         self.db = DatabaseHelper("src/edge_server/database/models/sessions.db")
         self.sessions = SessionDAO(self.db)
         self.aggregator = DataAggregator(self.db, timeout=15, on_complete_callback=self.publish_measurement)
+        self.alert_manager = AlertManager(self.db, self.aws)
         
         # State
         self.session_active = False
@@ -170,8 +172,10 @@ class SessionController:
                 )
 
                 if save_to_db:
-                    logger.info(f"Requests measurements for session {self.id}")
-                    self.request_measurements()
+                    logger.info(f"Requests measurements for session {self.id} (Saving to DB)")
+                
+                # Always request measurements for live view
+                self.request_measurements()
 
                 time.sleep(1)
                 self.time_elapsed += 1
@@ -238,40 +242,21 @@ class SessionController:
             logger.error(f"Error in anomaly detection: {e}")
 
     def _handle_anomaly(self, session_id: str, device_id: str, sensor_type: str, value: float, message: str, timestamp: str):
-        logger.warning(f"Anomaly detected: {message}")
-        
-        # Save to DB
-        self.db.insert_alert(
+        self.alert_manager.send_session_alert(
             session_id=session_id,
+            device_id=device_id,
             sensor_type=sensor_type,
             value=value,
             message=message,
-            timestamp_iso=timestamp
+            severity="warning",
+            timestamp=timestamp
         )
-        
-        # Notify User via AWS
-        self.aws.publish_alert({
-            "id": session_id,
-            "device_id": device_id,
-            "sensor_type": sensor_type,
-            "value": value,
-            "message": message,
-            "timestamp": timestamp
-        })
-
-    def _publish_live_preview(self, source: str, data: Any):
-        # Deprecated: Aggregator sends unified live preview
-        pass
 
     def publish_measurement(self, payload: Dict[str, Any]):
         """
         Callback from aggregator when a unified measurement is ready.
         """
         try:
-            # 1. Always publish Live Measurement (Unified)
-            # Ensure it matches frontend expectations for 'session/live'
-            # FE expects: { timestamp, data (flat), source? }
-            # Aggregator data is flat.
             live_payload = {
                 "timestamp": payload.get("timestamp"),
                 "data": payload.get("data"),

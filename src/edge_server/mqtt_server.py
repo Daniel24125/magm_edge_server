@@ -78,17 +78,6 @@ class MqttSubscriber(threading.Thread):
         except Exception as e:
             logger.error(f"An error occurred while processing message: {e}")
 
-    def display_payload(self, payload, msg):
-        # Format and print the received data
-        data = payload.get("data", {})
-        for name, reading in data.items():
-            print("-" * 50)
-            print(f"[{time.strftime('%H:%M:%S', time.localtime(payload.get('timestamp')))}] NEW READING FROM {payload.get('source')}")
-            print(f"  Topic: {msg.topic}")
-            print(f"  Sensor: {name}")
-            print(f"  Value: {reading}")
-            print("-" * 50)
-
     def run(self):
         """Starts the MQTT client loop."""
         try:

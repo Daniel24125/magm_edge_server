@@ -12,15 +12,18 @@
  */
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { TAlert } from "@/types";
+import { useMQTT } from "./MQTTContext";
 
 interface AlertContextType {
     alerts: TAlert[];
-    addAlert: (type: TAlert["type"], message: string, details?: any) => void;
+    addAlert: (type: TAlert["type"], message: string, category?: TAlert["category"], details?: any) => void;
     removeAlert: (id: string) => void;
-    clearAlerts: () => void;
+    markAsRead: (id: string) => void;
+    markAllAsRead: () => void;
+    clearAlerts: (category?: TAlert["category"]) => void;
 }
 
 const AlertContext = createContext<AlertContextType | null>(null);
@@ -28,52 +31,70 @@ const AlertContext = createContext<AlertContextType | null>(null);
 export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     const [alerts, setAlerts] = useState<TAlert[]>([]);
 
-    const addAlert = useCallback((type: TAlert["type"], message: string, details?: any) => {
+
+    const requestNotificationPermission = useCallback(async () => {
+        if (!("Notification" in window)) return false;
+        if (Notification.permission === "granted") return true;
+        if (Notification.permission !== "denied") {
+            const permission = await Notification.requestPermission();
+            return permission === "granted";
+        }
+        return false;
+    }, []);
+
+    const sendBrowserNotification = useCallback(async (title: string, body: string) => {
+        const hasPermission = await requestNotificationPermission();
+        if (hasPermission) {
+            new Notification(title, { body, icon: "/icon.png" }); // Ensure icon exists or remove
+        }
+    }, [requestNotificationPermission]);
+
+    const addAlert = useCallback((type: TAlert["type"], message: string, category: TAlert["category"] = "app", details?: any) => {
         const newAlert: TAlert = {
             id: crypto.randomUUID(),
             type,
+            category,
             message,
             timestamp: new Date().toISOString(),
             details,
             read: false,
         };
 
-        // 1. Update State (for a persistent "Notification Center" list if needed)
         setAlerts((prev) => [newAlert, ...prev]);
 
-        // 2. Trigger Toast (for immediate feedback)
-        switch (type) {
-            case "success":
-                toast.success(message);
-                console.log(message)
-                break;
-            case "error":
-                toast.error(message);
-                console.error(message)
-                break;
-            case "warning":
-                toast.warning(message);
-                console.warn(message)
-                break;
-            case "info":
-            default:
-                toast.info(message);
-                console.info(message)
-                break;
+        // Browser Notification for important alerts
+        if (type === "error" || type === "warning") {
+            sendBrowserNotification(`MAGM Alert: ${type.toUpperCase()}`, message);
         }
-    }, []);
+
+        // Toast
+        switch (type) {
+            case "success": toast.success(message); break;
+            case "error": toast.error(message); break;
+            case "warning": toast.warning(message); break;
+            case "info":
+            default: toast.info(message); break;
+        }
+    }, [sendBrowserNotification]);
 
     const removeAlert = useCallback((id: string) => {
         setAlerts((prev) => prev.filter((a) => a.id !== id));
     }, []);
 
-    const clearAlerts = useCallback(() => {
-        setAlerts([]);
+    const markAsRead = useCallback((id: string) => {
+        setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
     }, []);
 
+    const markAllAsRead = useCallback(() => {
+        setAlerts(prev => prev.map(a => ({ ...a, read: true })));
+    }, []);
+
+    const clearAlerts = useCallback((category?: TAlert["category"]) => {
+        setAlerts(prev => category ? prev.filter(a => a.category !== category) : []);
+    }, []);
 
     return (
-        <AlertContext.Provider value={{ alerts, addAlert, removeAlert, clearAlerts }}>
+        <AlertContext.Provider value={{ alerts, addAlert, removeAlert, clearAlerts, markAsRead, markAllAsRead }}>
             {children}
         </AlertContext.Provider>
     );
