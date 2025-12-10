@@ -121,12 +121,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                     };
                 });
             } else if (topic === liveTopic) {
-                // Handle Live Data (Partial or Full)
                 const data = message.data || {};
                 setLatestLiveMeasurement(prev => ({
                     ...prev,
-                    ...data, // Merge new data
-                    timestamp: message.timestamp // Update timestamp
+                    ...data,
+                    timestamp: message.timestamp
                 } as TMeasurement));
             }
         };

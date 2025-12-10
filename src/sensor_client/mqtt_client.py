@@ -145,6 +145,7 @@ class MQTTClient:
             "topic": self.device_unregistration_topic,
             "payload": {
                 "device_id": self.device_id,
+                "device_name": self.device_name,
                 "status": "OFFLINE"
             }
         }

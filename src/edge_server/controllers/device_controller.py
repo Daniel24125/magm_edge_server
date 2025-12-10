@@ -24,6 +24,7 @@ class DeviceController:
         self._notify_user("device_connected", f"Device '{device_name}' connected to the edge server.")
 
     def _handle_device_disconnect(self, device_id, payload): 
+        device_name = payload.get("device_name", "")
         self.online_devices.pop(device_id, None)
         logger.info(f"Device {device_id} unregistered")
         self._notify_user("device_disconnected", f"Device '{device_name}' disconnected from the edge server.")

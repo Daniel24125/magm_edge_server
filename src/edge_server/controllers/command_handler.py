@@ -67,7 +67,7 @@ class CommandHandler:
             logger.error(f"Missing device_id in payload: {payload}")
             return
         device_id = payload["device_id"]
-
+        
         if topic.endswith("/status"):
             self.device_controller._handle_device_status(device_id, payload)
         elif topic.endswith("/data"):
