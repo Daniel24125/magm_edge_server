@@ -26,9 +26,16 @@ const DEVICE_ID = process.env.NEXT_PUBLIC_DEVICE_ID || ""
 
 // --- Types ---
 
+interface IDeviceDetails {
+    device_name: string;
+    sensors?: any[];
+    status: string;
+    [key: string]: any;
+}
+
 interface IDeviceManagerContext {
     isRPIConnected: boolean;
-    onlineDevices: Record<string, boolean>;
+    onlineDevices: Record<string, IDeviceDetails>;
     sensorData: Record<string, ISensorReading>;
     lastSystemNotification: any;
     pingDevice: () => void;
@@ -43,7 +50,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
     const { addAlert } = useAlert();
 
     const [isRPIConnected, setIsRPIConnected] = useState(false);
-    const [onlineDevices, setOnlineDevices] = useState<Record<string, boolean>>({});
+    const [onlineDevices, setOnlineDevices] = useState<Record<string, IDeviceDetails>>({});
     const [sensorData, setSensorData] = useState<Record<string, ISensorReading>>({});
     const [lastSystemNotification, setLastSystemNotification] = useState<any>(null);
 
@@ -59,6 +66,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
         if (!isConnected) return;
 
         // 1. System Notifications (Connection Status)
+        // 1. System Notifications (Connection Status - RPi Only)
         const handleSystemNotification = (topic: string, payload: any) => {
             console.log("🔔 System Notification:", payload);
             setLastSystemNotification(payload);
@@ -68,13 +76,25 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
             }
             if (payload.event === "rpi_disconnected") {
                 setIsRPIConnected(false);
-                setOnlineDevices({});
             }
-            if (payload.event === "device_connected") {
-                setOnlineDevices(payload.devices_online || {});
-            }
-            if (payload.event === "device_disconnected") {
-                setOnlineDevices(payload.devices_online || {});
+        };
+
+        // 2. Device Updates (External Sensors)
+        const handleDeviceUpdate = (topic: string, payload: any) => {
+            console.log("📱 Device Update:", payload);
+            // Payload: { type: 'device_update', device_id: ..., status: 'connected', details: {...} }
+
+            if (payload.status === "connected") {
+                setOnlineDevices(prev => ({
+                    ...prev,
+                    [payload.device_id]: payload.details
+                }));
+            } else if (payload.status === "disconnected") {
+                setOnlineDevices(prev => {
+                    const next = { ...prev };
+                    delete next[payload.device_id];
+                    return next;
+                });
             }
         };
 
@@ -99,6 +119,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
         };
 
         subscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
+        subscribe("ui/devices/update", handleDeviceUpdate);
         subscribe(DATA_TOPIC, handleSensorData);
 
         // Initial Ping
@@ -106,6 +127,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
 
         return () => {
             unsubscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
+            unsubscribe("ui/devices/update", handleDeviceUpdate);
             unsubscribe(DATA_TOPIC, handleSensorData);
         }
     }, [isConnected, subscribe, unsubscribe, pingDevice, addAlert]);

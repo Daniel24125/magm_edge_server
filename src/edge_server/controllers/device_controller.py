@@ -22,12 +22,19 @@ class DeviceController:
         device_name = payload.get("device_name", "")
         self.online_devices[device_id] = payload
         logger.info(f"Device {device_id} registered")
+        
+        # 1. Send dedicated update to UI (replacing the data payload previously in notify_user)
+        self._broadcast_device_update(device_id, "connected", payload)
+
+        # 2. Send simple Toast notification
         self._notify_user("device_connected", f"Device '{device_name}' connected to the edge server.", severity="success")
 
     def _handle_device_disconnect(self, device_id, payload): 
         device_name = payload.get("device_name", "")
         self.online_devices.pop(device_id, None)
         logger.info(f"Device {device_id} unregistered")
+        
+        self._broadcast_device_update(device_id, "disconnected", {})
         self._notify_user("device_disconnected", f"Device '{device_name}' disconnected from the edge server.", severity="error")
 
     def _handle_device_status(self, device_id, payload): 
@@ -39,12 +46,27 @@ class DeviceController:
         self.aws.publish_sensor_data(payload)
 
     def _notify_user(self, event, message, severity="info"):
-        extra = {"devices_online": list(self.online_devices.keys())}
+        # We no longer inject 'devices_online' here, as the UI should subscribe to 'ui/devices/update'
         if self.alert_manager:
-            self.alert_manager.send_system_alert(event, message, severity=severity, extra_data=extra)
+            self.alert_manager.send_system_alert(event, message, severity=severity)
         else:
-            extra['severity'] = severity
-            self.aws._notify_user(event, message, extra_data=extra)
+            self.aws._notify_user(event, message)
+
+    def _broadcast_device_update(self, device_id, status, details):
+        """
+        Publishes device updates to a dedicated UI topic.
+        Topic: ui/devices/update
+        Payload: { type: 'device_update', device_id: ..., status: 'connected'|'disconnected', details: {...} }
+        """
+        payload = {
+            "type": "device_update",
+            "device_id": device_id,
+            "status": status,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "details": details 
+        }
+        topic = "ui/devices/update"
+        self.aws.client.publish(topic, json.dumps(payload))
 
    
     def forward_device_command(self , payload, cmd): 

@@ -61,6 +61,10 @@ class SensorManager:
     def get_sensor(self, sensor_id: str) -> Union[PHSensor, TemperatureSensor]: 
         return list(filter(lambda s: s.sensor_id == sensor_id, self.sensors))[0]
 
+    def get_sensor_config(self) -> List[Dict[str, Any]]:
+        """Returns the list of configured sensors with their static details."""
+        return self.config.get("sensors", [])
+
 if __name__ == "__main__": 
     from shared.utils.config_loader import load_config
     config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/config/sensors.json"))

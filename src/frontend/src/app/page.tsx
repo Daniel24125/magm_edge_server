@@ -6,6 +6,7 @@ import SessionWidget from "@/components/dashboard/SessionWidget";
 import LastSessionWidget from "@/components/dashboard/LastSessionWidget";
 import ProjectDetailsWidget from "@/components/dashboard/ProjectDetailsWidget";
 import LiveMeasurementsWidget from "@/components/dashboard/LiveMeasurementsWidget";
+import ConnectedDevicesWidget from "@/components/dashboard/ConnectedDevicesWidget";
 import { SessionChartWidget } from "@/components/dashboard/SessionChartWidget";
 
 export default function Page() {
@@ -21,6 +22,7 @@ export default function Page() {
   return (
     <main className="pt-10 space-y-6">
       <DashboardHeader />
+      <ConnectedDevicesWidget />
       <SessionChartWidget />
       <LiveMeasurementsWidget />
     </main>

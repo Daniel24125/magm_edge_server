@@ -134,7 +134,8 @@ class MQTTClient:
             "payload": {
                 "device_id": self.device_id,
                 "device_name": self.device_name,
-                "status": "ONLINE"
+                "status": "ONLINE",
+                "sensors": self.sensor_manager.get_sensor_config()
             }
         }
         self.client.publish(self.device_registration_topic, json.dumps(payload), qos=1)
