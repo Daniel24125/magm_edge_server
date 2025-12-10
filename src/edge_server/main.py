@@ -11,8 +11,8 @@ def main():
     aws = AWSIoTClient(t.data_queue)
     manager = ManagerController(mqtt, aws)
 
-    mqtt.start()
     aws.start()
+    mqtt.start()
     manager.start()
 
     try:

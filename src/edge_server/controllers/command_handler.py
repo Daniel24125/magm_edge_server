@@ -34,6 +34,7 @@ class CommandHandler:
                 self.session_controller.start_session(cmd.params)
             case "ping_device":
                 self.aws._notify_user("rpi_connected", f"The edge server is connected")
+                self.device_controller.broadcast_all_devices()
             case "stop_session":
                 self.session_controller.stop_session()
             case "start_calibration":

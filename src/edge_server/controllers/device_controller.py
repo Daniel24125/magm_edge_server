@@ -1,4 +1,4 @@
-import sys, os, json
+import sys, os, json, time
 from datetime import datetime, timezone
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -66,9 +66,29 @@ class DeviceController:
             "details": details 
         }
         topic = "ui/devices/update"
-        self.aws.client.publish(topic, json.dumps(payload))
+        start_time = time.time()
+        timeout = 10 # 10 seconds timeout for startup race conditions
+        
+        while time.time() - start_time < timeout:
+            try:
+                self.aws.client.publish(topic, json.dumps(payload))
+                return
+            except Exception as e:
+                logger.warning(f"Device update broadcast failed (AWS offline?). Retrying in 1s... ({int(timeout - (time.time() - start_time))}s left)")
+                time.sleep(1)
+        
+        logger.error(f"Failed to broadcast device update for {device_id} after {timeout}s. Update might not reach UI.")
 
    
+    def broadcast_all_devices(self):
+        """Re-broadcasts the status of all currently connected devices."""
+        logger.info(f"Broadcasting status for {len(self.online_devices)} devices.")
+        for device_id, payload in self.online_devices.items():
+            # If payload is just True (legacy/simple status), we might skip or handle differently.
+            # But recent changes ensure payload is the registration dict.
+            if isinstance(payload, dict):
+               self._broadcast_device_update(device_id, "connected", payload)
+
     def forward_device_command(self , payload, cmd): 
         
         device_id = payload.get("device_id", "")

@@ -22,7 +22,6 @@ export default function Page() {
   return (
     <main className="pt-10 space-y-6">
       <DashboardHeader />
-      <ConnectedDevicesWidget />
       <SessionChartWidget />
       <LiveMeasurementsWidget />
     </main>
@@ -33,8 +32,9 @@ const DashboardHeader = () => {
   return (
     <div className="w-full justify-between flex items-center gap-4 overflow-x-auto pb-2">
       <SessionWidget />
-      <LastSessionWidget />
+      {/* <LastSessionWidget /> */}
       <ProjectDetailsWidget />
+      <ConnectedDevicesWidget />
     </div>
   )
 }
