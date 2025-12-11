@@ -1,19 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { useSession } from "@/contexts/SessionContext"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-    ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-    ChartLegend,
-    ChartLegendContent
-} from "@/components/ui/chart"
+
 import { format } from "date-fns"
 import LineChartComponent from "../LineChartComponent"
+import { configEnv, configGrowth } from "@/lib/utils"
 
 export function SessionChartWidget() {
     const { activeSession } = useSession()
@@ -47,31 +39,6 @@ export function SessionChartWidget() {
 
         return { chartData: data, totalDuration: maxTime }
     }, [activeSession?.measurements, activeSession?.createdAt])
-
-
-
-    const configEnv = {
-        ph: {
-            label: "pH",
-            color: "#8462D1",
-        },
-        temperature: {
-            label: "Temp (°C)",
-            color: "#E14942",
-        },
-    } satisfies ChartConfig
-
-    const configGrowth = {
-        od: {
-            label: "OD",
-            color: "#004CCE",
-        },
-        co2: {
-            label: "CO2 (%)",
-            color: "#E1A325",
-        },
-    } satisfies ChartConfig
-
 
 
     return (

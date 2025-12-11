@@ -1,19 +1,15 @@
 import { getProject } from '@/app/actions/projects'
 import DataDisplayCard from '@/components/DataDisplayCard'
-import NoSession from '@/components/projects/NoSession'
 import ProjectMenu from '@/components/projects/ProjectMenu'
+import ProjectSessionList from '@/components/projects/ProjectSessions'
 import { ProjectSummaryElements } from '@/components/projects/ProjectSummary'
 import ProjectType from '@/components/projects/ProjectType'
-import { Button } from '@/components/ui/button'
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useProjects } from '@/contexts/ProjectsContext'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAlertIcon } from '@/lib/utils'
-import { IProject, TAlertConfiguration, TSessionDetails } from '@/types/projects'
-import { ISession } from '@/types/sessions'
-import { ArrowLeft, Bolt, CircleAlert, TestTube, Thermometer } from 'lucide-react'
-import Link from 'next/link'
+import { IProject, TAlertConfiguration } from '@/types/projects'
+import { Bolt, CircleAlert, TestTube, Thermometer } from 'lucide-react'
 import { notFound } from 'next/navigation'
-import React, { useMemo } from 'react'
+import React from 'react'
 
 interface ProjectDetailsPageProps {
     params: Promise<{
@@ -36,7 +32,7 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
         <div className="flex flex-col gap-6 p-6 w-full">
             <ProjectDetaildHeader project={project} />
             <ProjectDetailsBody project={project} />
-            <ProjectSessionList sessions={project.sessions} />
+            <ProjectSessionList projectID={project.id} />
         </div>
     )
 }
@@ -108,20 +104,3 @@ const AlertElement = ({ alert }: { alert: TAlertConfiguration }) => {
 }
 
 
-const ProjectSessionList = ({ sessions }: { sessions: ISession[] }) => {
-    const hasSessions = useMemo(() => !!sessions && sessions.length > 0, [sessions])
-
-    return <div className=' w-full pt-10'>
-        {hasSessions ? <SessionList sessions={sessions} /> : <NoSession size={300} />}
-    </div>
-}
-
-const SessionList = ({ sessions }: { sessions: ISession[] }) => {
-    return <div>
-        {sessions.map((session, index) => {
-            return <p>
-                {session.id}
-            </p>
-        })}
-    </div>
-}

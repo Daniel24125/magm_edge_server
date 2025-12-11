@@ -24,8 +24,14 @@ class ManagerController(threading.Thread):
         # Initialize shared services
         from database.db_manager import DatabaseHelper
         from services.alert_service import AlertManager
+        from services.firebase_sync import FirebaseSyncService
+        
         self.db_helper = DatabaseHelper("src/edge_server/database/models/sessions.db")
         self.alert_manager = AlertManager(self.db_helper, self.aws)
+        
+        # Start Firebase Sync (Daemon)
+        self.firebase_sync = FirebaseSyncService(self.db_helper)
+        self.firebase_sync.start()
 
         self.command_handler = CommandHandler(mqtt, aws, self.alert_manager)
         self._stop_event = threading.Event()
@@ -59,4 +65,6 @@ class ManagerController(threading.Thread):
     
     def stop(self):
         self._stop_event.set()
+        if hasattr(self, 'firebase_sync'):
+            self.firebase_sync.stop()
 

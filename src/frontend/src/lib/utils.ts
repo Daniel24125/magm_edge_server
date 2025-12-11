@@ -1,3 +1,4 @@
+import { ChartConfig } from "@/components/ui/chart";
 import { TAlertType } from "@/types/projects";
 import { clsx, type ClassValue } from "clsx"
 import { Drone, Hand, LucideProps, Target, TestTube, Thermometer, Timer } from "lucide-react";
@@ -99,7 +100,27 @@ export const getAlertIcon = (alertType: TAlertType) => {
   }
 }
 
+export const configEnv = {
+  ph: {
+    label: "pH",
+    color: "#8462D1",
+  },
+  temperature: {
+    label: "Temp (°C)",
+    color: "#E14942",
+  },
+} satisfies ChartConfig
 
+export const configGrowth = {
+  od: {
+    label: "OD",
+    color: "#004CCE",
+  },
+  co2: {
+    label: "CO2 (%)",
+    color: "#E1A325",
+  },
+} satisfies ChartConfig
 
 
 

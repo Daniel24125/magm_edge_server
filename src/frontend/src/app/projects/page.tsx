@@ -1,5 +1,4 @@
 "use client"
-import { NoProjectsIlustration } from '@/components/ilustrations'
 import ProjectType from '@/components/projects/ProjectType'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

@@ -79,7 +79,8 @@ class DatabaseHelper:
                     user_id TEXT,
                     notes TEXT,
                     duration INTEGER,
-                    target REAL
+                    target REAL,
+                    synced INTEGER DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS ph_calibration (
@@ -104,6 +105,7 @@ class DatabaseHelper:
                     processed_value REAL,
                     calibration_id INTEGER,
                     status TEXT,                      -- 'OK','OUT_OF_RANGE','ERROR',...
+                    synced INTEGER DEFAULT 0,
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE,
                     FOREIGN KEY(calibration_id) REFERENCES ph_calibration(id)
@@ -158,6 +160,17 @@ class DatabaseHelper:
                 cur.execute("ALTER TABLE alerts ADD COLUMN severity TEXT DEFAULT 'info'")
             except Exception:
                 pass # Column likely exists
+
+            # Migrations for 'synced' column
+            try:
+                cur.execute("ALTER TABLE sessions ADD COLUMN synced INTEGER DEFAULT 0")
+            except Exception:
+                pass
+
+            try:
+                cur.execute("ALTER TABLE sensor_measurements ADD COLUMN synced INTEGER DEFAULT 0")
+            except Exception:
+                pass
 
         # Major op: table creation/ensure
         logger.info("Database initialized and tables ensured")
@@ -265,8 +278,8 @@ class DatabaseHelper:
             self._retrying_execute(
                 cur,
                 """INSERT INTO sensor_measurements
-                   (timestamp, session_id, source, data, processed_value, calibration_id, status)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (timestamp, session_id, source, data, processed_value, calibration_id, status, synced)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 0)""",
                 (timestamp_iso, session_id, source, data, processed_value, calibration_id, status),
             )
             rid = cur.lastrowid
@@ -403,6 +416,61 @@ class DatabaseHelper:
             rows = self._retrying_execute(cur, query, params).fetchall()
             return rows
 
+    # ---------------- Sync Helpers ----------------
+
+    def get_unsynced_sessions(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieves sessions that haven't been synced to Firebase yet.
+        """
+        rows = self.fetch_records_raw(
+            "SELECT id, project_id, start_time, end_time, status, session_details, settings, alert_configuration, user_id, notes, duration, target "
+            "FROM sessions WHERE synced = 0 LIMIT ?",
+            (limit,)
+        )
+        results = []
+        for r in rows:
+            results.append({
+                "id": r[0], "project_id": r[1], "start_time": r[2], "end_time": r[3],
+                "status": r[4], "session_details": r[5], "settings": r[6],
+                "alert_configuration": r[7], "user_id": r[8], "notes": r[9],
+                "duration": r[10], "target": r[11]
+            })
+        return results
+
+    def get_unsynced_measurements(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        Retrieves measurements that haven't been synced yet.
+        """
+        rows = self.fetch_records_raw(
+            "SELECT id, timestamp, session_id, source, data, processed_value, calibration_id, status "
+            "FROM sensor_measurements WHERE synced = 0 LIMIT ?",
+            (limit,)
+        )
+        results = []
+        for r in rows:
+            results.append({
+                "id": r[0], "timestamp": r[1], "session_id": r[2], "source": r[3],
+                "data": r[4], "processed_value": r[5], "calibration_id": r[6], "status": r[7]
+            })
+        return results
+
+    def mark_session_synced(self, session_id: str) -> None:
+        self.update_record("sessions", session_id, {"synced": 1}, id_column="id")
+
+    def mark_measurements_synced(self, ids: List[int]) -> None:
+        if not ids:
+            return
+        if self._conn is None:
+            self.connect()
+            
+        placeholders = ",".join("?" for _ in ids)
+        sql = f"UPDATE sensor_measurements SET synced = 1 WHERE id IN ({placeholders})"
+        
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            self._retrying_execute(cur, sql, ids)
+            self._conn.commit()
+
     # ---------------- Cleanup ----------------
 
     def close(self) -> None:
@@ -451,3 +519,5 @@ class SessionDAO:
             (id,)
         )
         return row[0][0] if row else None
+
+

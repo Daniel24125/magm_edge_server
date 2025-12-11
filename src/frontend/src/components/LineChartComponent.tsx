@@ -19,9 +19,10 @@ interface LineChartComponentProps {
     totalDuration: number;
     chartData: IData[];
     chartConfig: ChartConfig;
+    showNoSessionOverlay?: boolean;
 }
 
-const LineChartComponent = ({ title, totalDuration, chartData, chartConfig }: LineChartComponentProps) => {
+const LineChartComponent = ({ title, totalDuration, chartData, chartConfig, showNoSessionOverlay = true }: LineChartComponentProps) => {
     const { activeSession } = useSession();
     const [open, setOpen] = useState(false);
 
@@ -30,7 +31,7 @@ const LineChartComponent = ({ title, totalDuration, chartData, chartConfig }: Li
             totalDuration={totalDuration}
             chartData={chartData}
             chartConfig={chartConfig}
-            showNoSessionOverlay={!activeSession}
+            showNoSessionOverlay={showNoSessionOverlay}
         />
     );
 

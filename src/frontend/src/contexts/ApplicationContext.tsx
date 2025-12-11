@@ -50,6 +50,7 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
         "/devices": "Devices",
         "/notifications": "Notifications",
         "/settings": "Settings",
+        "/session": "Session Details",
     };
 
     useEffect(() => {
