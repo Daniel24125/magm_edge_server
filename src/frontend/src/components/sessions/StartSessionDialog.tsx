@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from "../ui/responsive-dialog";
 
 interface StartSessionDialogProps {
     open: boolean;
@@ -52,17 +53,17 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl  flex flex-col max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Start Session</DialogTitle>
-                    <DialogDescription>
+        <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+            <ResponsiveDialogContent className="flex flex-col max-h-[85vh] px-0">
+                <ResponsiveDialogHeader className="px-4">
+                    <ResponsiveDialogTitle>Start Session</ResponsiveDialogTitle>
+                    <ResponsiveDialogDescription>
                         Review and modify session settings before starting.
-                    </DialogDescription>
-                </DialogHeader>
+                    </ResponsiveDialogDescription>
+                </ResponsiveDialogHeader>
 
-                <ScrollArea className="flex-1 w-full pr-4  ">
-                    <form id="start-session-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 py-4">
+                <ScrollArea className="w-full h-[50vh]">
+                    <form id="start-session-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4">
 
                         {/* Notes Section */}
                         <div className="space-y-2">
@@ -120,16 +121,16 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                     </form>
                 </ScrollArea>
 
-                <DialogFooter>
+                <ResponsiveDialogFooter className="px-4 pb-0">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
                         Cancel
                     </Button>
                     <Button type="submit" form="start-session-form" disabled={isLoading}>
                         {isLoading ? "Starting..." : "Start Session"}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </ResponsiveDialogFooter>
+            </ResponsiveDialogContent>
+        </ResponsiveDialog>
     );
 }
 
@@ -151,7 +152,7 @@ const AlertConfigurationList = ({ control, register, watch }: any) => {
 const AlertItem = ({ index, control, register, watch }: any) => {
     const enabled = watch(`alertConfiguration.${index}.enabled`);
     const alertType = watch(`alertConfiguration.${index}.alertType`);
-    const label = alertType === "temperature" ? "Temperature Alert" : alertType === "ph" ? "pH Alert" : "OD Alert";
+    const label = alertType === "temperature" ? "Temperature Lower Limit Alert" : alertType === "ph" ? "pH Lower Limit Alert" : "OD Lower Limit Alert";
 
     return (
         <div className="border rounded-lg p-3 space-y-3">

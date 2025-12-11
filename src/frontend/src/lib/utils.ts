@@ -29,7 +29,7 @@ export const getProjectTypeProperties = (projectType: "manual" | "timer" | "targ
         title: "Timer Project",
         color: "#004CCE",
         icon: Timer,
-        description: "Timer projects allow you to define the stoppng time of the experiment."
+        description: "Timer projects allow you to define the stopping time of the experiment."
       };
     case "target":
       return {

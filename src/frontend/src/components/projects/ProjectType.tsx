@@ -33,12 +33,12 @@ const ProjectTypeHoverCard = ({ children, projectTypeProperties }: { children: R
                     <div style={{
                         backgroundColor: projectTypeProperties.color + "33",
                         color: projectTypeProperties.color
-                    }} className='rounded-lg p-2'>
-                        <projectTypeProperties.icon size={20} />
+                    }} className='rounded-sm p-2'>
+                        <projectTypeProperties.icon size={17} />
                     </div>
                     <div className="space-y-1">
-                        <h4 className="text-sm font-semibold">{projectTypeProperties.title}</h4>
-                        <p className="text-sm">
+                        <h4 className="text-xs font-semibold">{projectTypeProperties.title}</h4>
+                        <p className="text-xs">
                             {projectTypeProperties.description}
                         </p>
                     </div>

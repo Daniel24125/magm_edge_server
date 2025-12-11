@@ -23,7 +23,7 @@ export default function Page() {
     <main className="pt-10 space-y-6">
       <DashboardHeader />
       <SessionChartWidget />
-      <LiveMeasurementsWidget />
+      {/* <LiveMeasurementsWidget /> */}
     </main>
   );
 }

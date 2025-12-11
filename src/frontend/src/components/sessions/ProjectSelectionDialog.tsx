@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+    ResponsiveDialog,
+    ResponsiveDialogContent,
+    ResponsiveDialogHeader,
+    ResponsiveDialogTitle,
+    ResponsiveDialogDescription
+} from "@/components/ui/responsive-dialog";
 import { useProjects } from "@/contexts/ProjectsContext";
 import { IProject } from "@/types/projects";
 import { Input } from "@/components/ui/input";
@@ -25,14 +31,14 @@ export function ProjectSelectionDialog({ open, onOpenChange, onSelect }: Project
     );
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Select Project</DialogTitle>
-                    <DialogDescription>
+        <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+            <ResponsiveDialogContent >
+                <ResponsiveDialogHeader>
+                    <ResponsiveDialogTitle>Select Project</ResponsiveDialogTitle>
+                    <ResponsiveDialogDescription>
                         Choose a project to start a session for.
-                    </DialogDescription>
-                </DialogHeader>
+                    </ResponsiveDialogDescription>
+                </ResponsiveDialogHeader>
 
                 <div className="relative mb-4">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -68,7 +74,7 @@ export function ProjectSelectionDialog({ open, onOpenChange, onSelect }: Project
                         )}
                     </div>
                 </ScrollArea>
-            </DialogContent>
-        </Dialog>
+            </ResponsiveDialogContent>
+        </ResponsiveDialog>
     );
 }
