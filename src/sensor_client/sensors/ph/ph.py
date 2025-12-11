@@ -53,7 +53,6 @@ class PHSensor(AbstractSensor):
         self.last_stable = False
 
     def init_gpio(self):  
-        print("Setting GPIO mode.")
         self.acidic_pin = self.config.get("pin").get("acidic")
         self.alkaline_pin = self.config.get("pin").get("alkaline")
         lgpio.gpio_claim_output(chip, self.acidic_pin, level=1)

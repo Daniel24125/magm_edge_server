@@ -2,14 +2,13 @@
 import { ISession } from "@/types/sessions"
 import { useEffect, useMemo, useState } from "react"
 import NoSession from "./NoSession"
-import { getSessions } from "@/app/actions/sessions"
+import { getSessions, getSessionMeasurements } from "@/app/actions/sessions"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Bell, Download } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartConfig } from "@/components/ui/chart"
-import { configEnv, configGrowth, formatDate, formatDuration, getFormartedTimeWithLetters } from "@/lib/utils"
+import { configEnv, configGrowth, formatDate, getFormartedTimeWithLetters } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 import { useSession } from "@/contexts/SessionContext"
 import { useParams } from "next/navigation"
@@ -36,25 +35,6 @@ const ProjectSessionList = ({ projectID }: { projectID: string }) => {
 
 
 
-const sessionChartConfig = {
-    od: {
-        label: "OD",
-        color: "#2563eb",
-    },
-    co2: {
-        label: "Dissolved CO2 (mol/L)",
-        color: "#ca8a04",
-    },
-    ph: {
-        label: "pH",
-        color: "#9333ea",
-    },
-    temperature: {
-        label: "Temperature",
-        color: "#dc2626",
-    },
-} satisfies ChartConfig
-
 const SessionList = ({ sessions }: { sessions: ISession[] }) => {
     // Sort sessions by createdAt
     const sortedSessions = useMemo(() => {
@@ -72,7 +52,6 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
         }
     }, [sortedSessions, selectedSessionId])
 
-    console.log(sortedSessions)
     return (
         <div className="w-full space-y-6">
             <div className="flex items-center justification-between w-full">
@@ -89,7 +68,7 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
                                     </div>
                                     <div className="text-center my-4 md:my-0">
                                         <div className="text-2xl font-bold text-gray-900 font-mono">
-                                            {getFormartedTimeWithLetters(session.duration || 0)}
+                                            {getFormartedTimeWithLetters(session.time || 0)}
                                         </div>
                                         <div className="text-sm text-text-faded">
                                             Started at {formatDate(session.createdAt)}
@@ -121,11 +100,29 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
 
 
 const SessionChart = ({ session }: { session: ISession }) => {
+    const [measurements, setMeasurements] = useState(session.measurements || [])
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        const fetchMeasurements = async () => {
+            if (measurements.length > 0) return
+
+            setLoading(true)
+            const result = await getSessionMeasurements(session.id)
+            if (result.success && result.data) {
+                setMeasurements(result.data)
+            }
+            setLoading(false)
+        }
+
+        fetchMeasurements()
+    }, [session.id])
+
 
     const { chartData, totalDuration } = useMemo(() => {
-        if (!session.measurements || session.measurements.length === 0) return { chartData: [], totalDuration: 0 }
+        if (!measurements || measurements.length === 0) return { chartData: [], totalDuration: 0 }
 
-        const sortedMeasurements = [...session.measurements].sort((a, b) =>
+        const sortedMeasurements = [...measurements].sort((a, b) =>
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
@@ -135,10 +132,11 @@ const SessionChart = ({ session }: { session: ISession }) => {
 
         const data = sortedMeasurements.map(m => {
             const time = new Date(m.timestamp).getTime();
+
             return {
                 timestamp: m.timestamp,
                 formattedTime: formatDate(m.timestamp),
-                relativeTime: time - startTime, // ms from start
+                relativeTime: (time - startTime), // milliseconds
                 ph: m.ph,
                 temperature: m.temperature,
                 od: m.od,
@@ -150,7 +148,7 @@ const SessionChart = ({ session }: { session: ISession }) => {
         const maxTime = Math.max(...strings);
 
         return { chartData: data, totalDuration: maxTime }
-    }, [session?.measurements, session?.createdAt])
+    }, [measurements, session?.createdAt])
 
     return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <LineChartComponent showNoSessionOverlay={false} title="Sensor Measurements" totalDuration={totalDuration} chartData={chartData} chartConfig={configEnv} />

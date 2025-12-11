@@ -2,7 +2,7 @@
 
 import { auth0 } from "@/lib/auth0";
 import { db } from "@/services/firebase";
-import { ISession } from "@/types/sessions";
+import { ISession, TMeasurement } from "@/types/sessions";
 import { revalidatePath } from "next/cache";
 
 const COLLECTION_NAME = "sessions";
@@ -124,5 +124,52 @@ export async function deleteSession(id: string): Promise<{ success: boolean; err
     } catch (error) {
         console.error("Error deleting session:", error);
         return { success: false, error: "Failed to delete session" };
+    }
+}
+
+export async function getSessionMeasurements(sessionId: string): Promise<{ success: boolean; data?: TMeasurement[]; error?: string }> {
+    try {
+        const session = await auth0.getSession();
+        if (!session?.user) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const sessionDocRef = db.collection(COLLECTION_NAME).doc(sessionId);
+        const sessionDoc = await sessionDocRef.get();
+
+        if (!sessionDoc.exists) {
+            return { success: false, error: "Session not found" };
+        }
+
+        if (sessionDoc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const measurementsSnapshot = await sessionDocRef.collection("measurements").orderBy("timestamp", "desc").get();
+
+        const measurements: TMeasurement[] = measurementsSnapshot.docs.map(doc => {
+            const docData = doc.data();
+            let finalData: any = { ...docData };
+
+            // Consolidate data if nested
+            if (docData.data && typeof docData.data === 'object') {
+                finalData = {
+                    ...finalData,
+                    ...docData.data // flattened
+                };
+            }
+
+            // Standardize Keys: 'temp' -> 'temperature'
+            if (finalData.temp !== undefined && finalData.temperature === undefined) {
+                finalData.temperature = finalData.temp;
+            }
+
+            return finalData as TMeasurement;
+        });
+
+        return { success: true, data: measurements };
+    } catch (error) {
+        console.error("Error fetching measurements:", error);
+        return { success: false, error: "Failed to fetch measurements" };
     }
 }

@@ -40,7 +40,6 @@ class DataAggregator:
             self._reset_state(session_id, timestamp_iso, expected_sources, save_to_db)
             self._start_timer()
             
-            logger.info(f"Started aggregation for {session_id} @ {timestamp_iso} sources={expected_sources}")
 
     def add_reading(self, source: str, data: Dict[str, Any]):
         """
@@ -112,7 +111,6 @@ class DataAggregator:
 
     def _check_complete(self):
         if self.expected_sources.issubset(self.received_sources):
-            logger.info("All sources received. Finalizing.")
             self._finalize_collection()
             self._stop_timer()
 

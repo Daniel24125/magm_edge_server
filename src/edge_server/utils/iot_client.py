@@ -82,7 +82,7 @@ class _BaseIoTClient:
         if self._c is None:
             raise RuntimeError("Client not configured. Call connect() first.")
         msg = payload if isinstance(payload, str) else json.dumps(payload)
-        logger.info(f"Publishing to '{topic}': {msg}")
+        logger.info(f"Publishing to '{topic}'")
         self._c.publish(topic, msg, qos)
 
     def disconnect(self):

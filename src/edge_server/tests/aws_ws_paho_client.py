@@ -37,10 +37,10 @@ mqtt_connection = mqtt_connection_builder.websockets_with_default_aws_signing(
     keep_alive_secs=30,
 )
 
-print("Connecting to AWS IoT Core...")
+logger.info("Connecting to AWS IoT Core...")
 connect_future = mqtt_connection.connect()
 connect_future.result()  # blocks until connected
-print("✅ Connected!")
+logger.info("✅ Connected!")
 
 # Test publish
 mqtt_connection.publish(
@@ -50,8 +50,7 @@ mqtt_connection.publish(
 )
 
 def on_message_received(topic, payload, dup, qos, retain, **kwargs):
-    print(f"\n📩 Message received on topic '{topic}':")
-    print(payload.decode("utf-8"))
+    logger.info(f"\n📩 Message received on topic '{topic}':")
 
 topic = "ui/commands/#"
    
@@ -61,7 +60,7 @@ subscribe_future, packet_id = mqtt_connection.subscribe(
     callback=on_message_received
 )
 subscribe_result = subscribe_future.result()
-print(f"✅ Subscribed to topic: {topic}")
+logger.info(f"✅ Subscribed to topic: {topic}")
 try:
         
     while True:

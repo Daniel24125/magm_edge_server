@@ -42,7 +42,7 @@ class DeviceController:
 
     def _handle_device_data(self, device_id, payload): 
         device_name = self.online_devices.get(device_id, {}).get("device_name", "")
-        logger.info(f"Data received from device '{device_name}': {payload}") 
+        logger.info(f"Data received from device '{device_name}'") 
         self.aws.publish_sensor_data(payload)
 
     def _notify_user(self, event, message, severity="info"):

@@ -15,7 +15,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ISession, TMeasurement } from "@/types/sessions";
 import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
-import { createSession, updateSession } from "@/app/actions/sessions";
+import { updateSession } from "@/app/actions/sessions";
 import { useMQTT } from "./MQTTContext";
 import { useAlert } from "./AlertContext";
 import { StartSessionDialog, StartSessionFormData } from "@/components/sessions/StartSessionDialog";
@@ -23,6 +23,7 @@ import { ProjectSelectionDialog } from "@/components/sessions/ProjectSelectionDi
 import { useProjects } from "./ProjectsContext";
 import { IProject } from "@/types/projects";
 import { useDeviceManager } from "./DeviceManagerContext";
+import { useUser } from "@auth0/nextjs-auth0";
 
 interface SessionContextType {
     activeSession: ISession | null;
@@ -41,6 +42,7 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | null>(null);
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
+    const { user } = useUser()
     const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
     const { addAlert } = useAlert();
     const { projects } = useProjects();
@@ -222,32 +224,37 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const startSession = async (projectId: string, sessionDetails: TSessionDetails, settings: TSessionDefaultSettings, alertConfiguration: TAlertConfiguration[], notes?: string) => {
         setIsLoading(true);
         try {
-            const payload: Omit<ISession, "id" | "userId" | "createdAt" | "updatedAt" | "measurements"> = {
+            const now = new Date().toISOString();
+            // Generate ID locally (Offline-First)
+            const sessionId = crypto.randomUUID();
+
+            // Construct payload WITHOUT hitting Firebase
+            const newSession: ISession = {
+                id: sessionId,
                 projectId,
+                userId: user?.sub || "local-user", // Placeholder, will be overwritten by backend or ignored
+                createdAt: now,
+                updatedAt: now,
                 sessionDetails,
                 settings,
                 alertConfiguration,
                 status: 'running',
                 notes,
-                duration: 0
-            }
-            const result = await createSession(payload);
+                duration: 0,
+                measurements: []
+            };
 
-            if (result.success && result.data) {
-                setActiveSession(result.data);
-                console.log(result.data)
-                console.log("Sending start session command to device...")
-                sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/start_session`, {
-                    ...payload,
-                    id: result.data.id
-                });
-                addAlert("success", "Session started successfully");
-            } else {
-                addAlert("error", result.error || "Failed to start session");
-            }
+            // Optimistic Update
+            setActiveSession(newSession);
+
+            console.log("Sending start session command to device (Offline-First)...");
+            sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/start_session`, newSession);
+
+            addAlert("success", "Session command sent");
         } catch (error) {
             console.error(error);
             addAlert("error", "An unexpected error occurred starting the session");
+            setActiveSession(null);
         } finally {
             setIsLoading(false);
         }
@@ -258,33 +265,37 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         setIsLoading(true);
         try {
-            const payload: Omit<ISession, "id" | "userId" | "createdAt" | "updatedAt" | "measurements"> = {
+            const now = new Date().toISOString();
+            const sessionId = crypto.randomUUID();
+
+            const newSession: ISession = {
+                id: sessionId,
                 projectId: pendingSessionStart.projectId,
+                userId: user?.sub || "local-user",
+                createdAt: now,
+                updatedAt: now,
                 sessionDetails: pendingSessionStart.sessionDetails,
                 settings: data.settings,
                 alertConfiguration: data.alertConfiguration,
                 status: 'running',
                 notes: data.notes,
-                duration: 0
-            }
-            const result = await createSession(payload);
+                duration: 0,
+                measurements: []
+            };
 
-            if (result.success && result.data) {
-                setActiveSession(result.data);
-                console.log("Sending start session command to device...")
-                sendCommand("start_session", {
-                    ...payload,
-                    id: result.data.id
-                });
-                addAlert("success", "Session started successfully");
-                setIsStartSessionDialogOpen(false);
-                setPendingSessionStart(null);
-            } else {
-                addAlert("error", result.error || "Failed to start session");
-            }
+            setActiveSession(newSession);
+
+            console.log("Sending start session command to device (Offline-First)...");
+            sendCommand("start_session", newSession);
+
+            addAlert("success", "Session command sent");
+            setIsStartSessionDialogOpen(false);
+            setPendingSessionStart(null);
+
         } catch (error) {
             console.error(error);
             addAlert("error", "An unexpected error occurred starting the session");
+            setActiveSession(null);
         } finally {
             setIsLoading(false);
         }
@@ -294,14 +305,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if (!activeSession) return;
         setIsLoading(true);
         try {
-            const result = await updateSession(activeSession.id, { status: 'completed' });
-            if (result.success) {
-                setActiveSession(null);
-                addAlert("success", "Session stopped successfully");
-                sendCommand("stop_session", { "cmd": "stop_session" });
-            } else {
-                addAlert("error", result.error || "Failed to stop session");
-            }
+            // Optimistic Update
+            setActiveSession(null);
+            sendCommand("stop_session", { "cmd": "stop_session" });
+            addAlert("success", "Session stop command sent");
         } catch (error) {
             console.error(error);
             addAlert("error", "An unexpected error occurred stopping the session");
@@ -312,45 +319,38 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     const pauseSession = async () => {
         if (!activeSession) return;
-        const prevSession = activeSession;
+
+        // Optimistic Update
         setActiveSession({ ...activeSession, status: 'paused' });
 
         try {
-            const result = await updateSession(activeSession.id, { status: 'paused' });
-            if (result.success) {
-                sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/pause_session`, {
-                    command: "pause_session",
-                    params: { id: activeSession.id }
-                });
-            } else {
-                setActiveSession(prevSession);
-                addAlert("error", result.error || "Failed to pause session");
-            }
+            console.log("Sending pause session command to device (Offline-First)...");
+            sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/pause_session`, {
+                command: "pause_session",
+                params: { id: activeSession.id }
+            });
         } catch (error) {
-            setActiveSession(prevSession);
-            addAlert("error", "Failed to pause session");
+            console.error(error);
+            addAlert("error", "Failed to send pause command");
+            // Revert on serious error if needed, but for fire-and-forget MQTT, usually we assume success or let the heartbeat correct it
         }
     };
 
     const resumeSession = async () => {
         if (!activeSession) return;
-        const prevSession = activeSession;
+
+        // Optimistic Update
         setActiveSession({ ...activeSession, status: 'running' });
 
         try {
-            const result = await updateSession(activeSession.id, { status: 'running' });
-            if (result.success) {
-                sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/resume_session`, {
-                    command: "resume_session",
-                    params: { id: activeSession.id }
-                });
-            } else {
-                setActiveSession(prevSession);
-                addAlert("error", result.error || "Failed to resume session");
-            }
+            console.log("Sending resume session command to device (Offline-First)...");
+            sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/resume_session`, {
+                command: "resume_session",
+                params: { id: activeSession.id }
+            });
         } catch (error) {
-            setActiveSession(prevSession);
-            addAlert("error", "Failed to resume session");
+            console.error(error);
+            addAlert("error", "Failed to send resume command");
         }
     };
 

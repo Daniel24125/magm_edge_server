@@ -53,7 +53,6 @@ class AlertManager:
                 severity=severity,
                 timestamp_iso=timestamp
             )
-            logger.info(f"Persisted session alert for {session_id}: {message} ({severity})")
         except Exception as e:
             logger.error(f"Failed to insert session alert into DB: {e}")
 

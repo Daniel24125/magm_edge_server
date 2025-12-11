@@ -87,7 +87,11 @@ class SessionController:
             self.db.update_record(
                 "sessions",
                 self.id,
-                {"status": "completed", "end_time": datetime.now(timezone.utc).isoformat()},
+                {
+                    "status": "completed", 
+                    "end_time": datetime.now(timezone.utc).isoformat(),
+                    "synced": 0
+                },
                 id_column="id"
             )
             
@@ -108,6 +112,7 @@ class SessionController:
         with self.session_lock:
             if self.session_active:
                 self.paused = True
+                self.db.update_record("sessions", self.id, {"status": "paused", "synced": 0}, id_column="id")
                 logger.info(f"Session {self.id} paused")
                 self.publish_status()
 
@@ -115,6 +120,7 @@ class SessionController:
         with self.session_lock:
             if self.session_active:
                 self.paused = False
+                self.db.update_record("sessions", self.id, {"status": "running", "synced": 0}, id_column="id")
                 logger.info(f"Session {self.id} resumed")
                 self.publish_status()
 

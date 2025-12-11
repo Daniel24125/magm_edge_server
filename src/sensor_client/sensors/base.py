@@ -19,7 +19,7 @@ try:
     import lgpio
     chip = lgpio.gpiochip_open(0)
 except ModuleNotFoundError:
-    print("GPIO module not found. Simulation mode activated!")
+    logger.warning("GPIO module not found. Simulation mode activated!")
     from utils.RPi_sim import MockLGPIO
     lgpio = MockLGPIO()
     chip = lgpio.gpiochip_open(0)

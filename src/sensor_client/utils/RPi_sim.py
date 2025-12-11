@@ -35,7 +35,6 @@ class MockLGPIO:
         self._pin_modes = {}  # Store pin modes
         self._alerts = {}  # Store alert callbacks
         self._chip_count = 0  # Counter for chip handles
-        print("Mock LGPIO Initialized")
     
     # Chip handling functions
     def gpiochip_open(self, gpiochip=0):
@@ -46,14 +45,12 @@ class MockLGPIO:
             'chip': gpiochip,
             'pins': {}
         }
-        print(f"Opened GPIO chip {gpiochip}, handle: {handle}")
         return handle
     
     def gpiochip_close(self, handle):
         """Close a GPIO chip."""
         if handle in self._handles:
             self._handles.pop(handle)
-            print(f"Closed GPIO chip handle: {handle}")
             return 0
         return -1
     
@@ -69,7 +66,6 @@ class MockLGPIO:
         }
         self._pin_modes[(handle, gpio)] = self.OUTPUT
         self._pin_states[(handle, gpio)] = level
-        print(f"Claimed GPIO {gpio} for output, initial level: {level}")
         return 0
     
     def gpio_claim_input(self, handle, gpio):
@@ -83,7 +79,6 @@ class MockLGPIO:
         }
         self._pin_modes[(handle, gpio)] = self.INPUT
         self._pin_states[(handle, gpio)] = 0
-        print(f"Claimed GPIO {gpio} for input")
         return 0
     
     def gpio_free(self, handle, gpio):
@@ -93,7 +88,6 @@ class MockLGPIO:
             self._pin_modes.pop((handle, gpio), None)
             self._pin_states.pop((handle, gpio), None)
             self._alerts.pop((handle, gpio), None)
-            print(f"Freed GPIO {gpio}")
             return 0
         return -1
     
@@ -104,13 +98,9 @@ class MockLGPIO:
             return -1
         
         if self._pin_modes.get((handle, gpio)) != self.OUTPUT:
-            print(f"Error: GPIO {gpio} not configured as output")
             return -1
         
-        self._pin_states[(handle, gpio)] = level
-        print(f"Wrote level {level} to GPIO {gpio}")
-        
-        # Trigger alert callbacks if any
+        self._pin_states[(handle, gpio)] = level        
         self._check_alerts(handle, gpio)
         return 0
     
@@ -136,7 +126,6 @@ class MockLGPIO:
             elif pud == self.SET_PULL_DOWN:
                 self._pin_states[(handle, gpio)] = 0
                 
-        print(f"Set pull up/down {pud} for GPIO {gpio}")
         return 0
     
     # Edge detection and alerts
@@ -149,7 +138,6 @@ class MockLGPIO:
             'edge': edge,
             'callback': func
         }
-        print(f"Set {self._edge_to_str(edge)} alert for GPIO {gpio}")
         return 0
     
     def _edge_to_str(self, edge):
@@ -195,7 +183,6 @@ class MockLGPIO:
             level = levels[i] if i < len(levels) else 0
             self.gpio_claim_output(handle, gpio, level)
         
-        print(f"Claimed group of {len(gpio_list)} GPIOs for output")
         return 0
     
     def group_write(self, handle, gpio_list, levels):
@@ -204,7 +191,6 @@ class MockLGPIO:
             if i < len(levels):
                 self.gpio_write(handle, gpio, levels[i])
         
-        print(f"Wrote to group of {len(gpio_list)} GPIOs")
         return 0
     
     # Cleanup
@@ -215,4 +201,3 @@ class MockLGPIO:
         self._pin_modes.clear()
         self._alerts.clear()
         self._chip_count = 0
-        print("Cleaned up all LGPIO resources")

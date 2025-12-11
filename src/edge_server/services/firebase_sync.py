@@ -4,6 +4,7 @@ import threading
 import time
 import os
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -92,22 +93,52 @@ class FirebaseSyncService(threading.Thread):
         for session in sessions:
             doc_ref = self.db_ref.collection('sessions').document(session['id'])
             
-            # Convert JSON strings back to objects for Firestore if needed, or store as is.
-            # Usually Firestore wants dicts.
+            # Map SQLite columns (snake_case) to ISession (camelCase)
+            firebase_payload = {
+                "id": session['id'],
+                "projectId": session['project_id'],
+                "userId": session['user_id'],
+                "createdAt": session['start_time'],
+                "updatedAt": session['end_time'] if session['end_time'] else session['start_time'],
+                "endTime": session['end_time'],
+                "status": session['status'],
+                "notes": session['notes'],
+                "duration": session['duration'], 
+                "target": session['target']
+            }
+
+            if session['start_time'] and session['end_time']:
+                try:
+                    start = datetime.fromisoformat(session['start_time'].replace('Z', '+00:00'))
+                    end = datetime.fromisoformat(session['end_time'].replace('Z', '+00:00'))
+                    firebase_payload['time'] = int((end - start).total_seconds())
+                except Exception:
+                    logger.warning(f"Could not calculate duration for session {session['id']}")
+                    firebase_payload['time'] = 0
+            else:
+                 firebase_payload['time'] = 0
+
+            # Parse JSON fields
             try:
                 if session.get('session_details'):
-                    session['session_details'] = json.loads(session['session_details'])
-                if session.get('settings'):
-                    session['settings'] = json.loads(session['settings'])
-                if session.get('alert_configuration'):
-                    session['alert_configuration'] = json.loads(session['alert_configuration'])
-            except json.JSONDecodeError:
-                pass # Keep as string if parsing fails
-            
-            # Add implicit timestamps for Firestore if desired, but we have our own start_time
-            # session['uploadedAt'] = firestore.SERVER_TIMESTAMP
+                    firebase_payload['sessionDetails'] = json.loads(session['session_details'])
+                else:
+                    firebase_payload['sessionDetails'] = {}
 
-            batch.set(doc_ref, session, merge=True)
+                if session.get('settings'):
+                    firebase_payload['settings'] = json.loads(session['settings'])
+                else:
+                    firebase_payload['settings'] = {}
+
+                if session.get('alert_configuration'):
+                    firebase_payload['alertConfiguration'] = json.loads(session['alert_configuration'])
+                else:
+                    firebase_payload['alertConfiguration'] = []
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON decode error for session {session['id']}: {e}")
+                
+            batch.set(doc_ref, firebase_payload, merge=True)
             synced_ids.append(session['id'])
 
         batch.commit()
@@ -134,15 +165,12 @@ class FirebaseSyncService(threading.Thread):
             # Given the volume, subcollection is best.
             
             doc_ref = self.db_ref.collection('sessions').document(m['session_id'])\
-                          .collection('measurements').document(str(m['id'])) # Using local ID as doc ID or use auto-id
+                          .collection('measurements').document() 
 
             # Clean up data for upload
             payload = {
                 'timestamp': m['timestamp'],
-                'source': m['source'],
-                'data': m['data'], # JSON string from sensor
-                'processed_value': m['processed_value'],
-                'calibration_id': m['calibration_id'],
+                'data': m['data'], 
                 'status': m['status']
             }
             

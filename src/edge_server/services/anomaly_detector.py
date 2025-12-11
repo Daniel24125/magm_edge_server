@@ -27,9 +27,6 @@ class AnomalyDetector:
         Returns an alert message if an anomaly is detected, otherwise None.
         """
         rule = self.rules.get(sensor_type)
-        print("Sensor Type: ", sensor_type)
-        print("VALUE: ", value)
-        print("RULE: ", rule)
         if not rule:
             return None
 

@@ -13,7 +13,7 @@ try:
     from edge_server.database.db_manager import DatabaseHelper
 
 except ImportError as e:
-    print(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
+    logger.error(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
     sys.exit(1)
 
 class AnalogCommunication:
@@ -49,7 +49,7 @@ class AnalogCommunication:
                 analog_values[i] = an_read
 
             except Exception as err:
-                print("Error while retrieving analog signal: ",err)
+                logger.error("Error while retrieving analog signal: ",err)
                 pass
 
         mask = np.ma.masked_equal(analog_values,0).compressed()

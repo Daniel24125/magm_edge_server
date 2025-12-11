@@ -13,7 +13,7 @@ from shared.utils.logger import logger
 try:
     from shared.utils.config_loader import load_config
 except ImportError as e:
-    print(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
+    logger.error(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
     sys.exit(1)
 
 # Default to local broker if not explicitly configured

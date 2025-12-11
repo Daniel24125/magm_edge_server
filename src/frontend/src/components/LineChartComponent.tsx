@@ -31,7 +31,7 @@ const LineChartComponent = ({ title, totalDuration, chartData, chartConfig, show
             totalDuration={totalDuration}
             chartData={chartData}
             chartConfig={chartConfig}
-            showNoSessionOverlay={showNoSessionOverlay}
+            showNoSessionOverlay={showNoSessionOverlay && !activeSession}
         />
     );
 

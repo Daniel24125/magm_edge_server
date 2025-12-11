@@ -78,7 +78,7 @@ class AWSIoTClient(threading.Thread):
 
     def on_message(self, topic, payload, dup, qos, retain, **kwargs):
         parsed_payload = payload.decode()
-        logger.info(f"Received message from AWS on {topic}: {parsed_payload}")
+        logger.info(f"Received message from AWS on {topic}")
         if hasattr(self, "data_queue") and isinstance(self.data_queue, Queue):
             self.data_queue.put({"topic": topic, "payload": json.loads(parsed_payload)})
             logger.info("Forwarded AWS message to data_queue for SessionController.")
@@ -101,7 +101,7 @@ class AWSIoTClient(threading.Thread):
             message = json.dumps(payload)
             source = payload.get("source", "")
             topic = AWS_PUBLISH_TOPIC_MAP.get(source)
-            logger.info(f"Publishing to {topic}: {message}")
+            logger.info(f"Publishing to {topic}")
             if not state_manager.aws_connected:
                 return
             
@@ -116,7 +116,7 @@ class AWSIoTClient(threading.Thread):
         try:
             topic = "ui/alerts"
             message = json.dumps(payload)
-            logger.info(f"Publishing alert to {topic}: {message}")
+            logger.info(f"Publishing alert to {topic}")
             if not state_manager.aws_connected:
                 return
             self.client.publish(topic, message)

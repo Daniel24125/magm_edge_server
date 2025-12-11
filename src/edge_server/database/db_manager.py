@@ -121,6 +121,7 @@ class DatabaseHelper:
                     od REAL,
                     co2 REAL,
                     status TEXT,
+                    synced INTEGER DEFAULT 0,
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE
                 );
@@ -169,6 +170,11 @@ class DatabaseHelper:
 
             try:
                 cur.execute("ALTER TABLE sensor_measurements ADD COLUMN synced INTEGER DEFAULT 0")
+            except Exception:
+                pass
+
+            try:
+                cur.execute("ALTER TABLE unified_measurements ADD COLUMN synced INTEGER DEFAULT 0")
             except Exception:
                 pass
 
@@ -331,8 +337,8 @@ class DatabaseHelper:
             self._retrying_execute(
                 cur,
                 """INSERT INTO unified_measurements
-                   (session_id, timestamp, ph, temp, od, co2, status)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (session_id, timestamp, ph, temp, od, co2, status, synced)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 0)""",
                 (session_id, timestamp_iso, ph, temp, od, co2, status),
             )
             rid = cur.lastrowid
@@ -439,18 +445,19 @@ class DatabaseHelper:
 
     def get_unsynced_measurements(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
-        Retrieves measurements that haven't been synced yet.
+        Retrieves unified measurements that haven't been synced yet.
         """
         rows = self.fetch_records_raw(
-            "SELECT id, timestamp, session_id, source, data, processed_value, calibration_id, status "
-            "FROM sensor_measurements WHERE synced = 0 LIMIT ?",
+            "SELECT id, timestamp, session_id, ph, temp, od, co2, status "
+            "FROM unified_measurements WHERE synced = 0 LIMIT ?",
             (limit,)
         )
         results = []
         for r in rows:
             results.append({
-                "id": r[0], "timestamp": r[1], "session_id": r[2], "source": r[3],
-                "data": r[4], "processed_value": r[5], "calibration_id": r[6], "status": r[7]
+                "id": r[0], "timestamp": r[1], "session_id": r[2], 
+                "data": {"ph": r[3], "temp": r[4], "od": r[5], "co2": r[6]}, # Reconstruct data object
+                "status": r[7]
             })
         return results
 
@@ -464,7 +471,8 @@ class DatabaseHelper:
             self.connect()
             
         placeholders = ",".join("?" for _ in ids)
-        sql = f"UPDATE sensor_measurements SET synced = 1 WHERE id IN ({placeholders})"
+        placeholders = ",".join("?" for _ in ids)
+        sql = f"UPDATE unified_measurements SET synced = 1 WHERE id IN ({placeholders})"
         
         with self._locked_cursor() as cur:
             self._begin_immediate(cur)

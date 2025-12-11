@@ -41,11 +41,9 @@ class SensorClient():
 
     
     def display_readings(self, readings):
-        print("\n--- Sensor Readings ---")
         for sensor_name, reading in readings.items():
             if reading:
                 formatted_value = f"{reading.value:.2f}"
-                logger.info(f"{sensor_name}: {formatted_value} {reading.unit}")
             else:
                 logger.error(f"{sensor_name}: Failed to read sensor.")
 

@@ -80,6 +80,5 @@ class AWSWSClient:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            logger.info("Disconnecting...")
             self._mqtt.disconnect().result()
             logger.info("Disconnected.")
