@@ -22,7 +22,7 @@ import { ISensorReading } from "@/types";
 const SYSTEM_NOTIF_TOPIC = process.env.NEXT_PUBLIC_SYSTEM_NOTIF_TOPIC || ""
 const DATA_TOPIC = process.env.NEXT_PUBLIC_DATA_TOPIC || ""
 const DEVICE_ID = process.env.NEXT_PUBLIC_DEVICE_ID || ""
-
+const DEVICE_UPDATE_TOPIC = process.env.NEXT_PUBLIC_DEVICE_UPDATE_TOPIC || ""
 
 // --- Types ---
 
@@ -119,7 +119,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
         };
 
         subscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
-        subscribe("ui/devices/update", handleDeviceUpdate);
+        subscribe(DEVICE_UPDATE_TOPIC, handleDeviceUpdate);
         subscribe(DATA_TOPIC, handleSensorData);
 
         // Initial Ping
@@ -127,7 +127,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
 
         return () => {
             unsubscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
-            unsubscribe("ui/devices/update", handleDeviceUpdate);
+            unsubscribe(DEVICE_UPDATE_TOPIC, handleDeviceUpdate);
             unsubscribe(DATA_TOPIC, handleSensorData);
         }
     }, [isConnected, subscribe, unsubscribe, pingDevice, addAlert]);

@@ -1,12 +1,12 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDeviceManager } from '@/contexts/DeviceManagerContext'
 import { Button } from '../ui/button'
-import { Pause, Play, Square } from 'lucide-react'
 import { useSession } from '@/contexts/SessionContext'
 import { formatDate, getFormartedTimeWithLetters } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
+import SessionControls from '../sessions/SessionControls'
 
 const SessionWidget = () => {
     const { isRPIConnected } = useDeviceManager()
@@ -41,34 +41,13 @@ const SessionWidget = () => {
                 <SessionTimer />
                 <Button disabled={!canPerformSession} onClick={() => {
                     if (!canPerformSession) return
-                    router.push("/dashboard/session")
+                    router.push("/session")
                 }} variant={"link"} className='text-blue-800 text-xs'>Open session</Button>
             </CardContent>
         </Card>
     )
 }
 
-export const SessionControls = () => {
-
-    const { activeSession, initiateSession, stopSession, pauseSession, resumeSession } = useSession()
-    const { isRPIConnected } = useDeviceManager()
-    return (
-        <div className='flex gap-2'>
-            {(!activeSession || activeSession.status === "paused") && <Button onClick={() => {
-                if (!activeSession) initiateSession()
-                else resumeSession()
-            }} disabled={!isRPIConnected} variant="ghost" className='text-primary p-0 h-auto w-auto hover:bg-transparent'>
-                <Play className='size-20' />
-            </Button>}
-            {activeSession && activeSession.status === "running" && <Button onClick={pauseSession} disabled={!isRPIConnected} variant="ghost" className='text-orange-300 p-0 h-auto w-auto hover:bg-transparent'>
-                <Pause className='size-20' />
-            </Button>}
-            {activeSession && <Button onClick={stopSession} disabled={!isRPIConnected} variant="ghost" className=' p-0 h-auto w-auto hover:bg-transparent'>
-                <Square className='size-10' />
-            </Button>}
-        </div>
-    )
-}
 
 const SessionTimer = ({ showSubtitle = true }: { showSubtitle?: boolean }) => {
     const { activeSession } = useSession()

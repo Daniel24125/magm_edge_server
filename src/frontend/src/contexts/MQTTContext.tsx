@@ -110,8 +110,8 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
                     if (handlers) {
                         handlers.forEach(h => h(topic, parsed));
                     }
-                } catch (e) {
-                    addAlert("error", "Failed to parse MQTT message", e);
+                } catch (e: any) {
+                    addAlert("error", "Failed to parse MQTT message " + e.message, "app");
                 }
             });
 
@@ -150,18 +150,18 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             messageHandlers.current.get(topic)?.add(handler);
         }
 
-        // Perform MQTT subscription (idempotent-ish)
-        // We always subscribe at least once. 
-        // Optimization: check if already subscribed to this topic at MQTT level? 
-        // For now, just sending subscribe is safe.
+        // // Perform MQTT subscription (idempotent-ish)
+        // // We always subscribe at least once. 
+        // // Optimization: check if already subscribed to this topic at MQTT level? 
+        // // For now, just sending subscribe is safe.
 
-        console.log("MQTTContext: Subscribing...", { topic, qos: mqtt.QoS.AtLeastOnce, connection: !!connectionRef.current });
+        // console.log("MQTTContext: Subscribing...", { topic, qos: mqtt.QoS.AtLeastOnce, connection: !!connectionRef.current });
         try {
             await connectionRef.current.subscribe(topic, mqtt.QoS.AtLeastOnce);
         } catch (e) {
             console.error("MQTT Subscribe Error:", e);
         }
-        console.log(`Subscribed to ${topic}`);
+        // console.log(`Subscribed to ${topic}`);
     }, []);
 
     const unsubscribe = useCallback(async (topic: string, handler?: TMessageHandler) => {

@@ -12,7 +12,7 @@
  */
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ISession, TMeasurement } from "@/types/sessions";
 import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
 import { createSession, updateSession } from "@/app/actions/sessions";
@@ -35,6 +35,7 @@ interface SessionContextType {
     addMeasurement: (measurement: TMeasurement) => void;
     isSessionVerified: boolean;
     latestLiveMeasurement: TMeasurement | null;
+    canPerformSession: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | null>(null);
@@ -43,13 +44,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
     const { addAlert } = useAlert();
     const { projects } = useProjects();
-    const { sendCommand } = useDeviceManager();
+    const { sendCommand, isRPIConnected, onlineDevices } = useDeviceManager();
     const [activeSession, setActiveSession] = useState<ISession | null>(null);
     const [latestLiveMeasurement, setLatestLiveMeasurement] = useState<TMeasurement | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionVerified, setIsSessionVerified] = useState(false);
     const [isProjectSelectionOpen, setIsProjectSelectionOpen] = useState(false);
     const [isStartSessionDialogOpen, setIsStartSessionDialogOpen] = useState(false);
+
 
     const [pendingSessionStart, setPendingSessionStart] = useState<{
         projectId: string;
@@ -143,6 +145,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             unsubscribe(liveTopic, handleSessionMessage);
         }
     }, [isConnected, subscribe, unsubscribe, publish]);
+
     // Stable callback for handling measurements
     const handleMeasurement = useCallback((topic: string, payload: any) => {
         const currentSession = activeSessionRef.current;
@@ -357,10 +360,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
     }
 
-
+    const canPerformSession = useMemo(() => !activeSession && !isLoading && isConnected && isSessionVerified && isRPIConnected && Object.keys(onlineDevices).length > 0,
+        [activeSession, isLoading, isConnected, isSessionVerified, isRPIConnected, onlineDevices])
 
     return (
-        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, isSessionVerified, latestLiveMeasurement }}>
+        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, isSessionVerified, latestLiveMeasurement, canPerformSession }}>
             {children}
             <ProjectSelectionDialog
                 open={isProjectSelectionOpen}

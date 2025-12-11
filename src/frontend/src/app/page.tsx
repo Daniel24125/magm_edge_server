@@ -32,7 +32,6 @@ const DashboardHeader = () => {
   return (
     <div className="w-full justify-between flex items-center gap-4 overflow-x-auto pb-2">
       <SessionWidget />
-      {/* <LastSessionWidget /> */}
       <ProjectDetailsWidget />
       <ConnectedDevicesWidget />
     </div>

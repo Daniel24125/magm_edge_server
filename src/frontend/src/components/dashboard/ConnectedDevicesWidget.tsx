@@ -4,7 +4,6 @@ import { useDeviceManager } from "@/contexts/DeviceManagerContext";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wifi, Server, Cpu, HardDrive } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 
 const ConnectedDevicesWidget = () => {
@@ -17,13 +16,13 @@ const ConnectedDevicesWidget = () => {
                     <CardTitle className="text-sm ">Connected Devices</CardTitle>
                 </div>
                 <Badge variant={isRPIConnected ? "default" : "destructive"} className="px-2 py-0.5 text-xs">
-                    {Object.keys(onlineDevices).length + (isRPIConnected ? 1 : 0)} Active
+                    {Object.keys(onlineDevices).length} Active
                 </Badge>
             </CardHeader>
             <CardContent >
                 <ScrollArea className="h-40">
 
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-muted/50 hover:bg-muted/50 transition-colors">
+                    {/* <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-muted/50 hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
                             <div className={cn("p-2 rounded-full", isRPIConnected ? "bg-green-500/10" : "bg-red-500/10")}>
                                 <Cpu className={cn("h-4 w-4", isRPIConnected ? "text-green-600" : "text-red-600")} />
@@ -36,13 +35,13 @@ const ConnectedDevicesWidget = () => {
                         <div>
                             <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", isRPIConnected ? "bg-green-500" : "bg-red-500")} />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* External Devices */}
                     <div className="space-y-2">
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Sensors</h4>
+                        {/* <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Sensors</h4> */}
                         {Object.keys(onlineDevices).length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-4 text-center border-2 border-dashed rounded-lg border-muted">
+                            <div className="flex flex-col items-center justify-center h-40 w-full p-4 text-center border-2 border-dashed rounded-lg border-muted">
                                 <p className="text-sm text-muted-foreground">No additional devices detected</p>
                             </div>
                         ) : (
