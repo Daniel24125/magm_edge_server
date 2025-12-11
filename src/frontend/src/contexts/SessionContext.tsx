@@ -124,11 +124,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 });
             } else if (topic === liveTopic) {
                 const data = message.data || {};
-                setLatestLiveMeasurement(prev => ({
-                    ...prev,
-                    ...data,
-                    timestamp: message.timestamp
-                } as TMeasurement));
+                setLatestLiveMeasurement(prev => {
+                    const { temp, ...rest } = data;
+                    return {
+                        ...prev,
+                        ...rest,
+                        temperature: temp !== undefined ? temp : prev?.temperature,
+                        timestamp: message.timestamp
+                    } as TMeasurement
+                });
             }
         };
 

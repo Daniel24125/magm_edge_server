@@ -83,6 +83,7 @@ export function SessionChartWidget() {
         },
     } satisfies ChartConfig
 
+    console.log(chartData)
     return (
         <Card className="w-full">
             <CardHeader>
