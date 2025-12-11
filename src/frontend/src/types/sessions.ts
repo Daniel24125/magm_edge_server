@@ -1,3 +1,4 @@
+import { TAlert } from ".";
 import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "./projects";
 
 export type TMeasurement = {
@@ -23,4 +24,5 @@ export interface ISession {
     settings: TSessionDefaultSettings;
     alertConfiguration: TAlertConfiguration[];
     measurements: TMeasurement[];
+    alerts: TAlert[];
 }

@@ -71,6 +71,7 @@ class FirebaseSyncService(threading.Thread):
                 try:
                     self._sync_sessions()
                     self._sync_measurements()
+                    self._sync_alerts()
                 except Exception as e:
                     logger.error(f"Firebase Sync: Error during sync cycle: {e}")
             
@@ -182,3 +183,40 @@ class FirebaseSyncService(threading.Thread):
         # Mark as synced locally
         self.db_helper.mark_measurements_synced(synced_ids)
         logger.info(f"Firebase Sync: Synced {len(synced_ids)} measurements.")
+
+    def _sync_alerts(self):
+        # Fetch unsynced alerts
+        alerts = self.db_helper.get_unsynced_alerts(limit=20)
+        if not alerts:
+            return
+
+        batch = self.db_ref.batch()
+        synced_ids = []
+
+        for a in alerts:
+            # Structure: sessions/{session_id}/alerts/{alert_id}
+            doc_ref = self.db_ref.collection('sessions').document(a['session_id'])\
+                          .collection('alerts').document() # auto-id
+
+            # Clean up data for upload
+            payload = {
+                'id': doc_ref.id, # Include ID in the document as well
+                'timestamp': a['timestamp'],
+                'type': a['severity'], # Map severity to type
+                'category': 'session',
+                'message': a['message'],
+                'details': {
+                    'sensorType': a['sensor_type'],
+                    'value': a['value']
+                },
+                'read': bool(a['acknowledged']) # Map acknowledged to read
+            }
+            
+            batch.set(doc_ref, payload)
+            synced_ids.append(a['id'])
+
+        batch.commit()
+
+        # Mark as synced locally
+        self.db_helper.mark_alerts_synced(synced_ids)
+        logger.info(f"Firebase Sync: Synced {len(synced_ids)} alerts.")

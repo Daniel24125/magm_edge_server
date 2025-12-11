@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from "../ui/responsive-dialog";
+import { useSession } from "@/contexts/SessionContext";
 
 interface StartSessionDialogProps {
     open: boolean;
@@ -29,6 +30,7 @@ export interface StartSessionFormData {
 }
 
 export function StartSessionDialog({ open, onOpenChange, initialSettings, initialAlerts, onConfirm, isLoading }: StartSessionDialogProps) {
+    const { canPerformSession } = useSession()
     const { register, control, handleSubmit, watch, reset } = useForm<StartSessionFormData>({
         defaultValues: {
             settings: initialSettings,
@@ -125,7 +127,7 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
                         Cancel
                     </Button>
-                    <Button type="submit" form="start-session-form" disabled={isLoading}>
+                    <Button type="submit" form="start-session-form" disabled={isLoading || !canPerformSession}>
                         {isLoading ? "Starting..." : "Start Session"}
                     </Button>
                 </ResponsiveDialogFooter>

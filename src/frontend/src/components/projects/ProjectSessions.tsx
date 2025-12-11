@@ -2,7 +2,8 @@
 import { ISession } from "@/types/sessions"
 import { useEffect, useMemo, useState } from "react"
 import NoSession from "./NoSession"
-import { getSessions, getSessionMeasurements } from "@/app/actions/sessions"
+import { getSessions, getSessionMeasurements, getSessionAlerts, exportSessionToExcel } from "@/app/actions/sessions"
+import { TAlert } from "@/types"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -13,10 +14,10 @@ import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 import { useSession } from "@/contexts/SessionContext"
 import { useParams } from "next/navigation"
 import LineChartComponent from "../LineChartComponent"
+import { useAlert } from "@/contexts/AlertContext"
 
 const ProjectSessionList = ({ projectID }: { projectID: string }) => {
     const [sessions, setSessions] = useState<ISession[]>([])
-
     useEffect(() => {
         const getSessionData = async () => {
             const sessions = await getSessions(projectID)
@@ -38,7 +39,7 @@ const ProjectSessionList = ({ projectID }: { projectID: string }) => {
 const SessionList = ({ sessions }: { sessions: ISession[] }) => {
     // Sort sessions by createdAt
     const sortedSessions = useMemo(() => {
-        return [...sessions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        return [...sessions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }, [sessions])
 
     // Default to the last session
@@ -75,13 +76,8 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <div className="relative">
-                                            <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-gray-900" />
-                                            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                                                {session.alertConfiguration?.length || 0}
-                                            </span>
-                                        </div>
-                                        <Download className="w-6 h-6 text-blue-600 cursor-pointer hover:text-blue-700" />
+                                        <SessionAlerts sessionID={session.id} />
+                                        <DownloadButton sessionId={session.id} />
                                     </div>
                                 </CardHeader>
                                 <CardContent>
@@ -98,6 +94,72 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
     )
 }
 
+const SessionAlerts = ({ sessionID }: { sessionID: string }) => {
+    const [alerts, setAlerts] = useState<TAlert[]>([])
+
+    useEffect(() => {
+        const fetchAlerts = async () => {
+            const result = await getSessionAlerts(sessionID)
+            if (result.success && result.data) {
+                setAlerts(result.data)
+            }
+        }
+        fetchAlerts()
+    }, [sessionID])
+
+    return <div className="relative">
+        <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-gray-900" />
+        <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+            {alerts.length}
+        </span>
+    </div>
+}
+
+const DownloadButton = ({ sessionId }: { sessionId: string }) => {
+    const [downloading, setDownloading] = useState(false);
+    const { addAlert } = useAlert()
+    const handleDownload = async () => {
+        try {
+            setDownloading(true);
+
+            const result = await exportSessionToExcel(sessionId);
+
+            if (result.success && result.data) {
+                // Convert Base64 to Blob
+                const byteCharacters = atob(result.data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+                // Trigger Download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = `session_${sessionId}_export.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                addAlert("error", result.error || "Failed to export session", "app")
+            }
+        } catch (e) {
+            console.error(e);
+            addAlert("error", "An error occurred during download", "app")
+        } finally {
+            setDownloading(false);
+        }
+    }
+
+    return (
+        <Button variant="ghost" size="icon" onClick={handleDownload} disabled={downloading}>
+            <Download className={`w-6 h-6 text-blue-600 ${downloading ? 'opacity-50' : 'hover:text-blue-700'}`} />
+        </Button>
+    )
+}
 
 const SessionChart = ({ session }: { session: ISession }) => {
     const [measurements, setMeasurements] = useState(session.measurements || [])
@@ -158,7 +220,7 @@ const SessionChart = ({ session }: { session: ISession }) => {
 
 const SessionListHeader = ({ sortedSessions }: { sortedSessions: ISession[] }) => {
     const { projectID } = useParams<{ projectID: string }>()
-    const { initiateSession } = useSession()
+    const { initiateSession, canPerformSession } = useSession()
 
     return <div className="flex items-center justify-between mb-6 w-full gap-4">
         <ScrollArea className="flex-1 min-w-0">
@@ -171,7 +233,7 @@ const SessionListHeader = ({ sortedSessions }: { sortedSessions: ISession[] }) =
             </TabsList>
             <ScrollBar orientation="horizontal" />
         </ScrollArea>
-        <Button onClick={() => initiateSession(projectID)} className="bg-[#1EBfa6] hover:bg-[#17a58f] text-white">
+        <Button onClick={() => initiateSession(projectID)} className="bg-[#1EBfa6] hover:bg-[#17a58f] text-white" disabled={!canPerformSession}>
             New Session
         </Button>
     </div>

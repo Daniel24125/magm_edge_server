@@ -147,6 +147,7 @@ class DatabaseHelper:
                     message TEXT NOT NULL,
                     severity TEXT DEFAULT 'info',
                     acknowledged INTEGER DEFAULT 0,
+                    synced INTEGER DEFAULT 0,
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE
                 );
@@ -170,6 +171,11 @@ class DatabaseHelper:
 
             try:
                 cur.execute("ALTER TABLE sensor_measurements ADD COLUMN synced INTEGER DEFAULT 0")
+            except Exception:
+                pass
+
+            try:
+                cur.execute("ALTER TABLE alerts ADD COLUMN synced INTEGER DEFAULT 0")
             except Exception:
                 pass
 
@@ -310,13 +316,14 @@ class DatabaseHelper:
             self._retrying_execute(
                 cur,
                 """INSERT INTO alerts
-                   (timestamp, session_id, sensor_type, value, message, severity)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (timestamp_iso, session_id, sensor_type, value, message, severity),
+                   (session_id, timestamp, sensor_type, value, message, severity, acknowledged, synced)
+                   VALUES (?, ?, ?, ?, ?, ?, 0, 0)""",
+                (session_id, timestamp_iso, sensor_type, value, message, severity),
             )
             rid = cur.lastrowid
             self._conn.commit()
             return rid
+
 
     def insert_unified_measurement(
         self,
@@ -471,12 +478,47 @@ class DatabaseHelper:
             self.connect()
             
         placeholders = ",".join("?" for _ in ids)
-        placeholders = ",".join("?" for _ in ids)
         sql = f"UPDATE unified_measurements SET synced = 1 WHERE id IN ({placeholders})"
         
         with self._locked_cursor() as cur:
             self._begin_immediate(cur)
-            self._retrying_execute(cur, sql, ids)
+            cur.execute(sql, ids)
+            self._conn.commit()
+
+    def get_unsynced_alerts(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        Retrieves alerts that haven't been synced yet.
+        """
+        rows = self.fetch_records_raw(
+            "SELECT id, session_id, timestamp, sensor_type, value, message, severity, acknowledged "
+            "FROM alerts WHERE synced = 0 LIMIT ?",
+            (limit,)
+        )
+        results = []
+        for r in rows:
+            results.append({
+                "id": r[0], "session_id": r[1], "timestamp": r[2], 
+                "sensor_type": r[3], "value": r[4], "message": r[5], 
+                "severity": r[6], "acknowledged": r[7]
+            })
+        return results
+
+    def mark_alerts_synced(self, ids: List[int]):
+        """
+        Marks alerts as synced.
+        """
+        if not ids:
+            return
+
+        if self._conn is None:
+            self.connect()
+            
+        placeholders = ",".join("?" for _ in ids)
+        sql = f"UPDATE alerts SET synced = 1 WHERE id IN ({placeholders})"
+        
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            cur.execute(sql, ids)
             self._conn.commit()
 
     # ---------------- Cleanup ----------------

@@ -97,7 +97,7 @@ const AlertElement = ({ alert }: { alert: TAlertConfiguration }) => {
         </div>
         <div style={colorStyles} className='rounded-sm p-1 min-w-12 text-center'>
             <p className='font-bold'>
-                {alert.enabled ? `${alert.threshold} ${units}` : "-"}
+                {alert.enabled ? `<${alert.threshold} ${units}` : "-"}
             </p>
         </div>
     </div>
