@@ -60,7 +60,7 @@ export const formatDuration = (seconds: number | undefined) => {
   const minutes = Math.floor((seconds % 3600) / 60)
 
   const pad = (n: number) => n.toString().padStart(2, "0")
-  return `${pad(days)}:${pad(hours)}:${pad(minutes)}`
+  return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds % 60)}`
 }
 
 export const getFormartedTimeWithLetters = (seconds: number | undefined) => {
