@@ -3,12 +3,12 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { TAlert } from "@/types";
 import { useSession } from "@/contexts/SessionContext";
 import { MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDuration } from "@/lib/utils";
+import { formatDate, formatDuration } from "@/lib/utils";
 
 const AlertTable = () => {
     const { activeSession } = useSession();
@@ -17,7 +17,7 @@ const AlertTable = () => {
 
     const alerts: TAlert[] = activeSession.alerts || [];
 
-    const sortedAlerts = [...alerts].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const sortedAlerts = [...alerts].sort((a, b) => new Date(Number(b.timestamp)).getTime() - new Date(Number(a.timestamp)).getTime());
 
     return (
         <Card className="w-full">
@@ -28,49 +28,57 @@ const AlertTable = () => {
                 </Button>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Time</TableHead>
-                            <TableHead>Session Time</TableHead>
-                            <TableHead>Event</TableHead>
-                            <TableHead>Severity</TableHead>
-                            <TableHead>Device</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {sortedAlerts.length === 0 ? (
+                <ScrollArea className="h-[400px] rounded-md border">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-card z-10">
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                    No events recorded in this session.
-                                </TableCell>
+                                <TableHead>Time</TableHead>
+                                <TableHead>Session Time</TableHead>
+                                <TableHead>Event</TableHead>
+                                <TableHead>Severity</TableHead>
+                                <TableHead>Device</TableHead>
                             </TableRow>
-                        ) : (
-                            sortedAlerts.map((alert) => (
-                                <AlertRow key={alert.id} alert={alert} sessionStart={activeSession.createdAt} />
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {sortedAlerts.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                                        No events recorded in this session.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                sortedAlerts.map((alert) => (
+                                    <AlertRow key={alert.id} alert={alert} sessionStart={activeSession.createdAt} />
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
             </CardContent>
         </Card>
     );
 };
 
 const AlertRow = ({ alert, sessionStart }: { alert: TAlert, sessionStart: string }) => {
-    const time = new Date(alert.timestamp);
-    const start = new Date(sessionStart);
-    const sessionTimeSeconds = Math.max(0, Math.floor((time.getTime() - start.getTime()) / 1000));
+    let time: Date | null = new Date(Number(alert.timestamp));
+    const start = new Date(sessionStart).getTime();
+
+    // Calculate session time only if both times are valid
+    let sessionTimeSeconds = 0;
+
+    if (time && !isNaN(start)) {
+        sessionTimeSeconds = Math.max(0, Math.floor((time.getTime() - start) / 1000));
+    }
 
     return (
         <TableRow>
-            <TableCell>{format(time, "dd/MM/yyyy - HH:mm")}</TableCell>
+            <TableCell>{formatDate(time)}</TableCell>
             <TableCell className="font-mono">{formatDuration(sessionTimeSeconds)}</TableCell>
             <TableCell>{alert.message}</TableCell>
             <TableCell>
                 <SeverityBadge type={alert.type} />
             </TableCell>
-            <TableCell>{alert.details?.source || "System"}</TableCell>
+            <TableCell>{alert.details?.source + " sensor" || "System"}</TableCell>
         </TableRow>
     );
 };

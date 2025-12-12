@@ -111,17 +111,31 @@ class AWSIoTClient(threading.Thread):
     
     def publish_alert(self, payload: Dict[str, Any]):
         """
-        Publish an alert to the UI.
+        Publish a general app alert to the UI (ui/alerts).
         """
         try:
             topic = "ui/alerts"
             message = json.dumps(payload)
-            logger.info(f"Publishing alert to {topic}")
+            logger.info(f"Publishing app alert to {topic}")
             if not state_manager.aws_connected:
                 return
             self.client.publish(topic, message)
         except Exception as err:
-            logger.error(f"Failed to publish alert: {err}")
+            logger.error(f"Failed to publish app alert: {err}")
+
+    def publish_session_alert(self, payload: Dict[str, Any]):
+        """
+        Publish a session-specific alert (session/alerts).
+        """
+        try:
+            topic = "session/alerts"
+            message = json.dumps(payload)
+            logger.info(f"Publishing session alert to {topic}")
+            if not state_manager.aws_connected:
+                return
+            self.client.publish(topic, message)
+        except Exception as err:
+            logger.error(f"Failed to publish session alert: {err}")
 
     def _notify_user(self, event, message, extra_data=None):
         topic = "system/notifications"

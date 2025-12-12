@@ -254,6 +254,7 @@ class SessionController:
             return
 
         try:
+            # 1. Global Anomaly Detection
             for sensor_type, reading in data.items():
                 if isinstance(reading, dict) and "value" in reading:
                     value = float(reading.get("value"))
@@ -261,8 +262,63 @@ class SessionController:
                     
                     if alert_msg:
                         self._handle_anomaly(session_id, device_id, sensor_type, value, alert_msg, timestamp)
+
+            # 2. Session-Specific Alert Configuration
+            if not self.active_session:
+                return
+
+            alert_config_str = self.active_session.get("alert_configuration")
+            if not alert_config_str:
+                return
+
+            try:
+                alert_configs = json.loads(alert_config_str)
+            except json.JSONDecodeError:
+                logger.warning("Failed to parse alert configuration JSON")
+                return
+
+            for config in alert_configs:
+                if not config.get("enabled"):
+                    continue
+
+                target_type = config.get("alertType") # e.g. "temperature", "ph"
+                threshold = config.get("threshold")
+                
+                # Check if this type exists in the current data payload
+                # Data payload format: {"temp": {"value": 25, ...}, "ph": {"value": 7, ...}}
+                # We need to map config type to data key. Assuming 1:1 or logic:
+                # config.alertType usually matches keys like "temperature" but data keys might be "temp".
+                # Let's handle the mapping or assume keys match.
+                # In frontend: settings use "temperature", "ph", "od", "co2".
+                # In backend data: "temp", "ph", "od", "co2".
+                
+                reading_key = target_type
+                if target_type == "temperature":
+                    reading_key = "temp"
+                
+                if reading_key not in data:
+                    continue
+
+                reading = data[reading_key]
+                if isinstance(reading, dict) and "value" in reading:
+                    val = float(reading.get("value"))
+                    
+                    # Logic: Threshold check (Max Limit)
+                    if val > float(threshold):
+                        msg = f"{target_type.upper()} threshold exceeded: {val:.2f} > {threshold}"
+                        self.alert_manager.send_session_alert(
+                            session_id=session_id,
+                            device_id=device_id,
+                            sensor_type=target_type,
+                            value=val,
+                            message=msg,
+                            severity="warning",
+                            timestamp=timestamp,
+                            cooldown_seconds=30 # Prevent spam
+                        )
+
         except Exception as e:
-            logger.error(f"Error in anomaly detection: {e}")
+            logger.error(f"Error in anomaly/alert processing: {e}")
 
     def _handle_anomaly(self, session_id: str, device_id: str, sensor_type: str, value: float, message: str, timestamp: str):
         self.alert_manager.send_session_alert(
@@ -297,9 +353,11 @@ class SessionController:
 
     def publish_history(self, session_id: str):
         history = self.db.get_unified_measurements(session_id)
+        alerts = self.db.get_session_alerts(session_id)
         payload = {
             "session_id": session_id,
             "history": history,
+            "alerts": alerts,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         self.aws.client.publish(self.TOPIC_SESSION_HISTORY, json.dumps(payload))

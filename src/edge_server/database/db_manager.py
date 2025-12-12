@@ -377,6 +377,30 @@ class DatabaseHelper:
             })
         return results
 
+    def get_session_alerts(self, session_id: str) -> List[Dict[str, Any]]:
+        """
+        Retrieves all alerts for a session, ordered by timestamp.
+        """
+        query = """
+            SELECT timestamp, sensor_type, value, message, severity, acknowledged
+            FROM alerts
+            WHERE session_id = ?
+            ORDER BY timestamp ASC
+        """
+        rows = self.fetch_records_raw(query, (session_id,))
+        
+        results = []
+        for r in rows:
+            results.append({
+                "timestamp": r[0],
+                "sensor_type": r[1],
+                "value": r[2],
+                "message": r[3],
+                "severity": r[4],
+                "acknowledged": r[5]
+            })
+        return results
+
     # ---------------- Generic CRUD ----------------
 
     def add_record(self, table: str, data: Dict[str, Any]) -> int:

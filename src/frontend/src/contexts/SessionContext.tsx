@@ -16,7 +16,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { ISession, TMeasurement } from "@/types/sessions";
 import { TAlert } from "@/types";
 import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
-import { updateSession } from "@/app/actions/sessions";
 import { useMQTT } from "./MQTTContext";
 import { useAlert } from "./AlertContext";
 import { StartSessionDialog, StartSessionFormData } from "@/components/sessions/StartSessionDialog";
@@ -70,6 +69,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         activeSessionRef.current = activeSession;
     }, [activeSession]);
 
+    const addSessionAlert = useCallback((type: TAlert['type'], message: string, details?: any) => {
+        // 1. Add to global AlertContext (for toast/widget) - Clearable
+        addAlert(type, message, 'session', details);
+
+        // 2. Add to local activeSession state (for Table) - Persistent
+        setActiveSession(prev => {
+            if (!prev) return null;
+            const newAlert: TAlert = {
+                id: crypto.randomUUID(),
+                type,
+                category: 'session',
+                message,
+                timestamp: new Date().toISOString(),
+                details,
+                read: false
+            };
+            const currentAlerts = prev.alerts || [];
+            return {
+                ...prev,
+                alerts: [newAlert, ...currentAlerts]
+            };
+        });
+    }, [addAlert]);
+
     // Verify Connection via Device Status (Received via DeviceManager)
     // Subscription Effect - Dedicated Session Topic
     useEffect(() => {
@@ -78,6 +101,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const sessionTopic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "session/status";
         const historyTopic = "session/history";
         const liveTopic = "session/live";
+        const alertsTopic = "session/alerts";
 
         const handleSessionMessage = (topic: string, message: any) => {
             // console.log("Session Message:", topic, message);
@@ -117,10 +141,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             } else if (topic === historyTopic) {
                 // Handle History
                 const history = message.history || [];
-                console.log("Received Session History:", history.length, "records");
+                const historyAlerts = message.alerts || [];
+                console.log("Received Session History:", history.length, "measurements,", historyAlerts.length, "alerts");
 
                 setActiveSession(prev => {
-                    if (!prev) return null; // Should we set it if null? Maybe not.
+                    if (!prev) return null;
+
                     // Map history to TMeasurement
                     const historicalMeasurements: TMeasurement[] = history.map((r: any) => ({
                         timestamp: r.timestamp,
@@ -130,9 +156,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                         co2: r.co2
                     }));
 
+                    // Map history alerts to TAlert
+                    const historicalAlerts: TAlert[] = historyAlerts.map((a: any) => ({
+                        id: crypto.randomUUID(), // Or use ID from DB if available/needed
+                        type: a.severity || "info",
+                        category: "session",
+                        message: a.message,
+                        timestamp: a.timestamp,
+                        details: {
+                            source: a.sensor_type,
+                            value: a.value
+                        },
+                        read: true // History alerts considered read? Or strictly purely based on ack? For now, persist state.
+                    }));
+
                     return {
                         ...prev,
-                        measurements: historicalMeasurements
+                        measurements: historicalMeasurements,
+                        alerts: historicalAlerts
                     };
                 });
             } else if (topic === liveTopic) {
@@ -146,12 +187,25 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                         timestamp: message.timestamp
                     } as TMeasurement
                 });
+            } else if (topic === alertsTopic) {
+                // Handle dedicated session alerts
+                console.log("Received Session Alert:", message);
+                addSessionAlert(
+                    message.severity || "info",
+                    message.message,
+                    {
+                        source: message.sensor_type || "System",
+                        value: message.value,
+                        ...message
+                    }
+                );
             }
         };
 
         subscribe(sessionTopic, handleSessionMessage);
         subscribe(historyTopic, handleSessionMessage);
         subscribe(liveTopic, handleSessionMessage);
+        subscribe(alertsTopic, handleSessionMessage);
 
         // Request status
         publish("ui/commands/get_session_status", { command: "get_session_status" });
@@ -160,32 +214,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             unsubscribe(sessionTopic, handleSessionMessage);
             unsubscribe(historyTopic, handleSessionMessage);
             unsubscribe(liveTopic, handleSessionMessage);
+            unsubscribe(alertsTopic, handleSessionMessage);
         }
-    }, [isConnected, subscribe, unsubscribe, publish]);
+    }, [isConnected, subscribe, unsubscribe, publish, addSessionAlert]); // Added addSessionAlert dependency
 
-    const addSessionAlert = useCallback((type: TAlert['type'], message: string, details?: any) => {
-        // 1. Add to global AlertContext (for toast/widget) - Clearable
-        addAlert(type, message, 'session', details);
 
-        // 2. Add to local activeSession state (for Table) - Persistent
-        setActiveSession(prev => {
-            if (!prev) return null;
-            const newAlert: TAlert = {
-                id: crypto.randomUUID(),
-                type,
-                category: 'session',
-                message,
-                timestamp: new Date().toISOString(),
-                details,
-                read: false
-            };
-            const currentAlerts = prev.alerts || [];
-            return {
-                ...prev,
-                alerts: [newAlert, ...currentAlerts]
-            };
-        });
-    }, [addAlert]);
 
     // Stable callback for handling measurements
     const handleMeasurement = useCallback((topic: string, payload: any) => {

@@ -67,8 +67,8 @@ class AlertManager:
                 "severity": severity,
                 "timestamp": timestamp
             }
-            # Uses existing aws.publish_alert method which handles topic 'ui/alerts'
-            self.aws.publish_alert(payload) 
+            # Uses new aws.publish_session_alert method which handles topic 'session/alerts'
+            self.aws.publish_session_alert(payload) 
         except Exception as e:
             logger.error(f"Failed to publish session alert to AWS: {e}")
 

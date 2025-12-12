@@ -93,7 +93,7 @@ const SessionChartMonitor = () => {
         <div className='w-full flex-1'>
             <SessionChart />
         </div>
-        <div className='w-52 shrink-0 h-full bg-slate-300 px-4 py-2 flex flex-col items-start gap-2'>
+        {latestMeasurement && <div className='w-52 shrink-0 h-full bg-slate-300 px-4 py-2 flex flex-col items-start gap-2'>
             <p className='text-text-faded font-semibold text-sm mb-2'>Live Measurements</p>
             {metrics.map((metric) => {
                 const measurementProperties = getAlertIcon(metric)
@@ -105,7 +105,7 @@ const SessionChartMonitor = () => {
                     units={measurementProperties.units}
                 />
             })}
-        </div>
+        </div>}
     </div>
 }
 
