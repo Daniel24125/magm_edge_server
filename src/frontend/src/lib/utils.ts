@@ -1,7 +1,7 @@
 import { ChartConfig } from "@/components/ui/chart";
-import { TAlertType } from "@/types/projects";
+import { TMeasurementType } from "@/types/projects";
 import { clsx, type ClassValue } from "clsx"
-import { Drone, Hand, LucideProps, Target, TestTube, Thermometer, Timer } from "lucide-react";
+import { Drone, Hand, LucideProps, Target, TestTube, Thermometer, Timer, Wind } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { twMerge } from "tailwind-merge"
 
@@ -39,6 +39,7 @@ export const getProjectTypeProperties = (projectType: "manual" | "timer" | "targ
         icon: Target,
         description: "Target projects allow you to automatically stop an experiment when the OD reaches a certain limit."
       };
+
   }
 }
 
@@ -54,7 +55,7 @@ export const formatDate = (date: Date | string | number) => {
 }
 
 export const formatDuration = (seconds: number | undefined) => {
-  if (!seconds) return "00:00:00"
+  if (!seconds) return "00:00:00:00"
   const days = Math.floor(seconds / 86400)
   const hours = Math.floor((seconds % 86400) / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
@@ -74,7 +75,7 @@ export const getFormartedTimeWithLetters = (seconds: number | undefined) => {
   return `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m ${pad(remainingSeconds)}s`
 }
 
-export const getAlertIcon = (alertType: TAlertType) => {
+export const getAlertIcon = (alertType: TMeasurementType) => {
   switch (alertType) {
     case "temperature":
       return {
@@ -90,12 +91,19 @@ export const getAlertIcon = (alertType: TAlertType) => {
         label: "pH",
         units: ""
       };
-    case "OD":
+    case "od":
       return {
         icon: Drone,
         color: "#004CCE",
         label: "OD",
         units: ""
+      };
+    case "co2":
+      return {
+        icon: Wind,
+        color: "#E1A325",
+        label: "CO2",
+        units: "mmol/L"
       };
   }
 }
@@ -107,7 +115,7 @@ export const configEnv = {
   },
   temperature: {
     label: "Temp (°C)",
-    color: "#E14942",
+    color: "#F42E25",
   },
 } satisfies ChartConfig
 

@@ -24,10 +24,10 @@ export type TSessionDefaultSettings = {
     phSetPoint: number;
 }
 
-export type TAlertType = "temperature" | "ph" | "OD";
+export type TMeasurementType = "temperature" | "ph" | "od" | "co2";
 
 export type TAlertConfiguration = {
-    alertType: TAlertType;
+    alertType: TMeasurementType;
     threshold: number;
     delay?: number;
     enabled: boolean;

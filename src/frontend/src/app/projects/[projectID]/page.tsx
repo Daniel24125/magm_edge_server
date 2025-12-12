@@ -5,7 +5,7 @@ import ProjectSessionList from '@/components/projects/ProjectSessions'
 import { ProjectSummaryElements } from '@/components/projects/ProjectSummary'
 import ProjectType from '@/components/projects/ProjectType'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getAlertIcon } from '@/lib/utils'
+import { formatDuration, getAlertIcon } from '@/lib/utils'
 import { IProject, TAlertConfiguration } from '@/types/projects'
 import { Bolt, CircleAlert, TestTube, Thermometer } from 'lucide-react'
 import { notFound } from 'next/navigation'
@@ -44,7 +44,9 @@ const ProjectDetaildHeader = ({ project }: { project: IProject }) => {
             <p className="text-muted-foreground text-sm">{project.id}</p>
         </div>
         <div className='flex gap-2'>
-            <ProjectType projectType={project.projectDetails.projectType} />
+            <ProjectType
+                projectType={project.projectDetails.projectType}
+                info={project.projectDetails.projectType === "timer" ? formatDuration(project.projectDetails.timer) : project.projectDetails.projectType === "target" ? project.projectDetails.target?.toString() : ""} />
             <ProjectMenu project={project} />
         </div>
     </div>

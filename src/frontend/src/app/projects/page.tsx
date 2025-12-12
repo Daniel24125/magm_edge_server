@@ -5,14 +5,16 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useProjects } from '@/contexts/ProjectsContext'
-import { IProject } from '@/types/projects'
+import { IProject, TMeasurementType } from '@/types/projects'
 import { Filter } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { getSessions } from '../actions/sessions'
-import { ISession } from '@/types/sessions'
+import { getSessionMeasurements, getSessions } from '../actions/sessions'
+import { ISession, TMeasurement } from '@/types/sessions'
 import NoSession from '@/components/projects/NoSession'
 import ProjectMenu from '@/components/projects/ProjectMenu'
 import NoProjects from '@/components/projects/NoProjects'
+import { formatDuration, getAlertIcon, getFormartedTimeWithLetters } from '@/lib/utils'
+import { NoMeasurementsIlustration } from '@/components/ilustrations'
 
 const ProjectsPage = () => {
     const { projects } = useProjects()
@@ -55,12 +57,7 @@ const ProjectListCards = () => {
 }
 
 
-
-
-
 const ProjectCard = ({ project }: { project: IProject }) => {
-
-
     return (
         <>
             <Card className="w-full max-w-sm">
@@ -94,23 +91,64 @@ const ProjectSessionSummary = ({ projectID }: { projectID: string }) => {
         getSessionData()
     }, [projectID])
 
-
     const hasSessions = useMemo(() => sessions.length > 0, [sessions])
-    return (<>
-        {hasSessions ? (
-            <>
-                {sessions.map((session) => (
-                    <div key={session.id}>
-                        <p>{session.id}</p>
-                    </div>
-                ))}
-            </>
-        ) : (
-            <NoSession size={150} />
-        )}
-    </>
+    const lastSession = useMemo(() => !hasSessions ? null : sessions.length > 0 ? sessions[sessions.length - 1] : null, [sessions])
+
+    if (!hasSessions) return <NoSession size={150} />
+
+    return (
+        <div className="flex flex-col items-center gap-4 mt-5">
+            <h6 className='text-2xl font-bold'>{getFormartedTimeWithLetters(lastSession?.time)}</h6>
+            <LastSessionMeasurements sessionID={lastSession!.id} />
+        </div>
     )
 
 }
 
+const LastSessionMeasurements = ({ sessionID }: { sessionID: string }) => {
+    const [measurements, setMeasurements] = useState<TMeasurement[]>([])
+    const measurementTypes: TMeasurementType[] = ["od", "ph", "temperature"]
+    useEffect(() => {
+        const getMeasurementData = async () => {
+            const measurements = await getSessionMeasurements(sessionID)
+            setMeasurements(measurements.data || [])
+        }
+        getMeasurementData()
+    }, [sessionID])
+
+    const lastMeasurement = useMemo(() => measurements.length > 0 ? measurements[measurements.length - 1] : null, [measurements])
+
+    if (!lastMeasurement) return <NoMeasurements size={150} />
+
+    return (
+        <div className="flex justify-between items-center w-full">
+            {measurementTypes.map(mType => <MeasurementItem measurementType={mType} measurementValue={lastMeasurement[mType] as number} />)}
+        </div>
+    )
+}
+
+const MeasurementItem = ({ measurementType, measurementValue }: { measurementType: TMeasurementType, measurementValue: number }) => {
+    const measurementProperties = getAlertIcon(measurementType)
+    const value = useMemo(() => measurementValue ? Number(measurementValue).toFixed(2) : "--", [measurementValue])
+    return (
+        <div className="flex flex-col gap-1 items-center">
+            <div style={{ color: measurementProperties!.color }} className='flex gap-2 items-center'>
+                {/* @ts-ignore */}
+                <measurementProperties.icon className="w-5 h-5" />
+                <span className='font-bold text-lg'>{value} {measurementProperties!.units}</span>
+            </div>
+            <p style={{ color: measurementProperties!.color }} className="text-sm text-text-faded font-medium">Last {measurementProperties!.label}</p>
+        </div>
+    )
+}
+
+
+const NoMeasurements = ({ size }: { size: number }) => {
+    return (
+        <div className='flex flex-col items-center gap-2'>
+            <NoMeasurementsIlustration width={size} />
+            <p className='text-sm text-text-faded font-medium'>No measurements in this session</p>
+        </div>
+    )
+}
 export default ProjectsPage

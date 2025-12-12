@@ -26,7 +26,7 @@ const SessionTimer = () => {
                     onClick={() => router.push("/session")}
                     className="cursor-pointer hover:bg-slate-100 p-2 rounded-lg transition-colors"
                 >
-                    <span className="font-mono font-bold  tabular-nums">
+                    <span className="font-mono font-bold  tabular-nums text-primary">
                         {formatDuration(activeSession.time || 0)}
                     </span>
 

@@ -24,5 +24,5 @@ export interface ISession {
     settings: TSessionDefaultSettings;
     alertConfiguration: TAlertConfiguration[];
     measurements: TMeasurement[];
-    alerts: TAlert[];
+    alerts?: TAlert[];
 }

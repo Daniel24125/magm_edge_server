@@ -14,6 +14,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ISession, TMeasurement } from "@/types/sessions";
+import { TAlert } from "@/types";
 import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
 import { updateSession } from "@/app/actions/sessions";
 import { useMQTT } from "./MQTTContext";
@@ -34,6 +35,7 @@ interface SessionContextType {
     pauseSession: () => Promise<void>;
     resumeSession: () => Promise<void>;
     addMeasurement: (measurement: TMeasurement) => void;
+    addSessionAlert: (type: TAlert['type'], message: string, details?: any) => void;
     isSessionVerified: boolean;
     latestLiveMeasurement: TMeasurement | null;
     canPerformSession: boolean;
@@ -85,7 +87,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 if (message.type === 'session') {
                     const payload = message.payload;
                     if (payload.active) {
-                        setActiveSession(payload);
+                        setActiveSession(prev => {
+                            if (prev && prev.id === payload.id) {
+                                return {
+                                    ...payload,
+                                    measurements: payload.measurements?.length ? payload.measurements : prev.measurements,
+                                    alerts: payload.alerts?.length ? payload.alerts : prev.alerts
+                                }
+                            }
+                            return payload;
+                        });
                         setIsSessionVerified(true);
                         // Once we know session is active, request history
                         publish("ui/commands/get_session_history", { command: "get_session_history", params: { id: payload.id } });
@@ -152,6 +163,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
     }, [isConnected, subscribe, unsubscribe, publish]);
 
+    const addSessionAlert = useCallback((type: TAlert['type'], message: string, details?: any) => {
+        // 1. Add to global AlertContext (for toast/widget) - Clearable
+        addAlert(type, message, 'session', details);
+
+        // 2. Add to local activeSession state (for Table) - Persistent
+        setActiveSession(prev => {
+            if (!prev) return null;
+            const newAlert: TAlert = {
+                id: crypto.randomUUID(),
+                type,
+                category: 'session',
+                message,
+                timestamp: new Date().toISOString(),
+                details,
+                read: false
+            };
+            const currentAlerts = prev.alerts || [];
+            return {
+                ...prev,
+                alerts: [newAlert, ...currentAlerts]
+            };
+        });
+    }, [addAlert]);
+
     // Stable callback for handling measurements
     const handleMeasurement = useCallback((topic: string, payload: any) => {
         const currentSession = activeSessionRef.current;
@@ -160,24 +195,49 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.log("Received measurement:", payload);
         const data = payload.data || {};
 
+        const measurement: TMeasurement = {
+            timestamp: payload.timestamp || new Date().toISOString(),
+            temperature: data.temp,
+            ph: data.ph,
+            od: data.od,
+            co2: data.co2
+        };
+
+        // Check Alerts
+        if (currentSession.alertConfiguration) {
+            currentSession.alertConfiguration.forEach(config => {
+                if (!config.enabled) return;
+
+                const value = measurement[config.alertType];
+                if (value !== undefined && typeof value === 'number') {
+                    // Logic: If value exceeds threshold. 
+                    // Assumption: Threshold is a MAX limit for now based on typical usage (e.g. Temp too high). 
+                    // Refinements: user might want Min/Max. For now, we'll trigger if it exceeds threshold.
+                    // TODO: Clarify if threshold is deviation or absolute max.
+                    if (value > config.threshold) {
+                        // TODO: Implement delay logic?
+                        const alertMessage = `${config.alertType.toUpperCase()} exceeded threshold: ${value.toFixed(2)} > ${config.threshold}`;
+                        // Avoid spamming? Add logic to debounce? 
+                        // For now, duplicate alerts are allowed in table, but maybe unique per timestamp?
+                        addSessionAlert("warning", alertMessage, {
+                            source: "System",
+                            value: value,
+                            threshold: config.threshold
+                        });
+                    }
+                }
+            });
+        }
+
         // Use functional update to avoid dependency on activeSession
         setActiveSession(prev => {
             if (!prev) return null;
-
-            const measurement: TMeasurement = {
-                timestamp: payload.timestamp || new Date().toISOString(),
-                temperature: data.temp,
-                ph: data.ph,
-                od: data.od,
-                co2: data.co2
-            };
-
             return {
                 ...prev,
                 measurements: [...prev.measurements, measurement]
             };
         });
-    }, []);
+    }, [addSessionAlert]); // Added addSessionAlert dependency
 
     // Subscription Effect - Only re-subscribes if CRITICAL ID/Status changes, not time/measurements
     useEffect(() => {
@@ -250,7 +310,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             console.log("Sending start session command to device (Offline-First)...");
             sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/start_session`, newSession);
 
-            addAlert("success", "Session command sent");
+            addSessionAlert("success", "Session started", { source: "User" });
         } catch (error) {
             console.error(error);
             addAlert("error", "An unexpected error occurred starting the session");
@@ -288,7 +348,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             console.log("Sending start session command to device (Offline-First)...");
             sendCommand("start_session", newSession);
 
-            addAlert("success", "Session command sent");
+            addSessionAlert("success", "Session started", { source: "User" });
             setIsStartSessionDialogOpen(false);
             setPendingSessionStart(null);
 
@@ -308,7 +368,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             // Optimistic Update
             setActiveSession(null);
             sendCommand("stop_session", { "cmd": "stop_session" });
-            addAlert("success", "Session stop command sent");
+            addAlert("success", "Session stopped"); // Use simple alert as session is gone
         } catch (error) {
             console.error(error);
             addAlert("error", "An unexpected error occurred stopping the session");
@@ -329,6 +389,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 command: "pause_session",
                 params: { id: activeSession.id }
             });
+            addSessionAlert("info", "Session paused", { source: "User" });
         } catch (error) {
             console.error(error);
             addAlert("error", "Failed to send pause command");
@@ -348,6 +409,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 command: "resume_session",
                 params: { id: activeSession.id }
             });
+            addSessionAlert("info", "Session resumed", { source: "User" });
         } catch (error) {
             console.error(error);
             addAlert("error", "Failed to send resume command");
@@ -364,11 +426,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
     }
 
+
+
     const canPerformSession = useMemo(() => !activeSession && !isLoading && isConnected && isSessionVerified && isRPIConnected && Object.keys(onlineDevices).length > 0,
         [activeSession, isLoading, isConnected, isSessionVerified, isRPIConnected, onlineDevices])
 
     return (
-        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, isSessionVerified, latestLiveMeasurement, canPerformSession }}>
+        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, addSessionAlert, isSessionVerified, latestLiveMeasurement, canPerformSession }}>
             {children}
             <ProjectSelectionDialog
                 open={isProjectSelectionOpen}
