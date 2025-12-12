@@ -153,7 +153,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                         temperature: r.temp,
                         ph: r.ph,
                         od: r.od,
-                        co2: r.co2
+                        co2: r.co2,
+                        session_time: r.session_time
                     }));
 
                     // Map history alerts to TAlert
@@ -178,18 +179,22 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 });
             } else if (topic === liveTopic) {
                 const data = message.data || {};
+
+                // 1. Update Latest Live Measurement (for Wizard/Widgets)
                 setLatestLiveMeasurement(prev => {
                     const { temp, ...rest } = data;
                     return {
                         ...prev,
                         ...rest,
                         temperature: temp !== undefined ? temp : prev?.temperature,
-                        timestamp: message.timestamp
+                        timestamp: message.timestamp,
+                        session_time: message.session_time
                     } as TMeasurement
                 });
+
+
+
             } else if (topic === alertsTopic) {
-                // Handle dedicated session alerts
-                console.log("Received Session Alert:", message);
                 addSessionAlert(
                     message.severity || "info",
                     message.message,
@@ -218,73 +223,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
     }, [isConnected, subscribe, unsubscribe, publish, addSessionAlert]); // Added addSessionAlert dependency
 
-
-
-    // Stable callback for handling measurements
-    const handleMeasurement = useCallback((topic: string, payload: any) => {
-        const currentSession = activeSessionRef.current;
-        if (!currentSession || currentSession.status !== 'running') return;
-
-        console.log("Received measurement:", payload);
-        const data = payload.data || {};
-
-        const measurement: TMeasurement = {
-            timestamp: payload.timestamp || new Date().toISOString(),
-            temperature: data.temp,
-            ph: data.ph,
-            od: data.od,
-            co2: data.co2
-        };
-
-        // Check Alerts
-        if (currentSession.alertConfiguration) {
-            currentSession.alertConfiguration.forEach(config => {
-                if (!config.enabled) return;
-
-                const value = measurement[config.alertType];
-                if (value !== undefined && typeof value === 'number') {
-                    // Logic: If value exceeds threshold. 
-                    // Assumption: Threshold is a MAX limit for now based on typical usage (e.g. Temp too high). 
-                    // Refinements: user might want Min/Max. For now, we'll trigger if it exceeds threshold.
-                    // TODO: Clarify if threshold is deviation or absolute max.
-                    if (value > config.threshold) {
-                        // TODO: Implement delay logic?
-                        const alertMessage = `${config.alertType.toUpperCase()} exceeded threshold: ${value.toFixed(2)} > ${config.threshold}`;
-                        // Avoid spamming? Add logic to debounce? 
-                        // For now, duplicate alerts are allowed in table, but maybe unique per timestamp?
-                        addSessionAlert("warning", alertMessage, {
-                            source: "System",
-                            value: value,
-                            threshold: config.threshold
-                        });
-                    }
-                }
-            });
-        }
-
-        // Use functional update to avoid dependency on activeSession
-        setActiveSession(prev => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                measurements: [...prev.measurements, measurement]
-            };
-        });
-    }, [addSessionAlert]); // Added addSessionAlert dependency
-
-    // Subscription Effect - Only re-subscribes if CRITICAL ID/Status changes, not time/measurements
-    useEffect(() => {
-        const shouldSubscribe = activeSession?.status === 'running';
-        const topic = process.env.NEXT_PUBLIC_DATA_TOPIC || "";
-
-        if (shouldSubscribe && topic) {
-            subscribe(topic, handleMeasurement);
-
-            return () => {
-                unsubscribe(topic, handleMeasurement);
-            }
-        }
-    }, [activeSession?.id, activeSession?.status, subscribe, unsubscribe, handleMeasurement]);
 
     const initiateSession = (projectId?: string) => {
         if (projectId) {
@@ -341,7 +279,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             setActiveSession(newSession);
 
             console.log("Sending start session command to device (Offline-First)...");
-            sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/start_session`, newSession);
+            sendCommand("start_session", newSession);
 
             addSessionAlert("success", "Session started", { source: "User" });
         } catch (error) {
@@ -418,7 +356,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         try {
             console.log("Sending pause session command to device (Offline-First)...");
-            sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/pause_session`, {
+            sendCommand("pause_session", {
                 command: "pause_session",
                 params: { id: activeSession.id }
             });
@@ -438,7 +376,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         try {
             console.log("Sending resume session command to device (Offline-First)...");
-            sendCommand(`${process.env.NEXT_PUBLIC_COMMAND_TOPIC}/resume_session`, {
+            sendCommand("resume_session", {
                 command: "resume_session",
                 params: { id: activeSession.id }
             });
@@ -461,7 +399,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
 
 
-    const canPerformSession = useMemo(() => !activeSession && !isLoading && isConnected && isSessionVerified && isRPIConnected && Object.keys(onlineDevices).length > 0,
+    const canPerformSession = useMemo(() => (!activeSession || activeSession.status === "paused") && !isLoading && isConnected && isSessionVerified && isRPIConnected && Object.keys(onlineDevices).length > 0,
         [activeSession, isLoading, isConnected, isSessionVerified, isRPIConnected, onlineDevices])
 
     return (

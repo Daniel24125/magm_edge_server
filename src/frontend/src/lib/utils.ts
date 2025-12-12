@@ -66,6 +66,7 @@ export const formatDuration = (seconds: number | undefined) => {
 
 export const getFormartedTimeWithLetters = (seconds: number | undefined) => {
   if (!seconds) return "00d 00h 00m 00s"
+
   const days = Math.floor(seconds / 86400)
   const hours = Math.floor((seconds % 86400) / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)

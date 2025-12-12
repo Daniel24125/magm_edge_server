@@ -30,14 +30,14 @@ export default async function ProjectDetailsPage({ params }: ProjectDetailsPageP
 
     return (
         <div className="flex flex-col gap-6 p-6 w-full">
-            <ProjectDetaildHeader project={project} />
+            <ProjectDetailHeader project={project} />
             <ProjectDetailsBody project={project} />
             <ProjectSessionList projectID={project.id} />
         </div>
     )
 }
 
-const ProjectDetaildHeader = ({ project }: { project: IProject }) => {
+const ProjectDetailHeader = ({ project }: { project: IProject }) => {
     return <div className='flex justify-between items-center'>
         <div className='flex flex-col gap-1'>
             <h1 className="text-2xl font-bold">{project.projectDetails.projectTitle}</h1>

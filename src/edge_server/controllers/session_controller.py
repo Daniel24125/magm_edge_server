@@ -73,6 +73,18 @@ class SessionController:
         self.db.add_record("sessions", db_record)
         logger.info(f"Session {self.id} is now ACTIVE")
 
+        # Alert: Session Started
+        self.alert_manager.send_session_alert(
+            session_id=self.id,
+            device_id="System",
+            sensor_type="System",
+            value=0,
+            message="Session started",
+            severity="success",
+            timestamp=sess_payload.createdAt,
+            cooldown_seconds=0
+        )
+
         # Start Data Acquisition
         self._start_acquisition_thread(payload.get("settings", {}))
         self.publish_status()
@@ -84,17 +96,30 @@ class SessionController:
                 return
             
             # Update DB
+            now_iso = datetime.now(timezone.utc).isoformat()
             self.db.update_record(
                 "sessions",
                 self.id,
                 {
                     "status": "completed", 
-                    "end_time": datetime.now(timezone.utc).isoformat(),
+                    "end_time": now_iso,
                     "synced": 0
                 },
                 id_column="id"
             )
             
+            # Alert: Session Stopped
+            self.alert_manager.send_session_alert(
+                session_id=self.id,
+                device_id="System",
+                sensor_type="System",
+                value=0,
+                message="Session stopped",
+                severity="success",
+                timestamp=now_iso,
+                cooldown_seconds=0
+            )
+
             # Reset State
             self.session_active = False
             self.id = None
@@ -112,16 +137,44 @@ class SessionController:
         with self.session_lock:
             if self.session_active:
                 self.paused = True
+                now_iso = datetime.now(timezone.utc).isoformat()
                 self.db.update_record("sessions", self.id, {"status": "paused", "synced": 0}, id_column="id")
                 logger.info(f"Session {self.id} paused")
+                
+                # Alert: Session Paused
+                self.alert_manager.send_session_alert(
+                    session_id=self.id,
+                    device_id="System",
+                    sensor_type="System",
+                    value=0,
+                    message="Session paused",
+                    severity="info",
+                    timestamp=now_iso,
+                    cooldown_seconds=0
+                )
+
                 self.publish_status()
 
     def resume_session(self):
         with self.session_lock:
             if self.session_active:
                 self.paused = False
+                now_iso = datetime.now(timezone.utc).isoformat()
                 self.db.update_record("sessions", self.id, {"status": "running", "synced": 0}, id_column="id")
                 logger.info(f"Session {self.id} resumed")
+
+                # Alert: Session Resumed
+                self.alert_manager.send_session_alert(
+                    session_id=self.id,
+                    device_id="System",
+                    sensor_type="System",
+                    value=0,
+                    message="Session resumed",
+                    severity="info",
+                    timestamp=now_iso,
+                    cooldown_seconds=0
+                )
+
                 self.publish_status()
 
     def request_measurements(self):
@@ -178,6 +231,11 @@ class SessionController:
             expected_sources = set(["rpi"]) 
             
             while self.session_active:
+
+                if self.paused:
+                    time.sleep(1)
+                    continue
+
                 # Update expected sources dynamically
                 if self.device_controller:
                     expected_sources = set(self.device_controller.online_devices.keys())
@@ -190,13 +248,14 @@ class SessionController:
                     self.id, 
                     datetime.now(timezone.utc).isoformat(), 
                     expected_sources,
-                    save_to_db=save_to_db
+                    save_to_db=save_to_db,
+                    session_time=self.time_elapsed
                 )
 
                 if save_to_db:
                     logger.info(f"Requests measurements for session {self.id} (Saving to DB)")
                 
-                # Always request measurements for live view, unless paused
+                # Always request measurements for live view, unless paused (redundant check if we sleep above, but kept for safety if logic changes)
                 if not self.paused:
                     self.request_measurements()
 
@@ -340,7 +399,9 @@ class SessionController:
                 "timestamp": payload.get("timestamp"),
                 "data": payload.get("data"),
                 "source": "aggregator", # Unified source
-                "session_id": payload.get("session_id")
+                "session_id": payload.get("session_id"),
+                "session_time": payload.get("session_time"),
+                "is_recorded": payload.get("is_recorded")
             }
             self.aws.client.publish(self.TOPIC_SESSION_LIVE, json.dumps(live_payload))
 
@@ -387,7 +448,7 @@ class SessionController:
             "projectId": self.active_session.get("project_id"),
             "userId": self.active_session.get("user_id"),
             "createdAt": self.active_session.get("start_time"),
-            "status": "running",
+            "status": "paused" if self.paused else "running",
             "sessionDetails": json.loads(self.active_session.get("session_details", "{}")),
             "settings": json.loads(self.active_session.get("settings", "{}")),
             "alertConfiguration": json.loads(self.active_session.get("alert_configuration", "[]")),

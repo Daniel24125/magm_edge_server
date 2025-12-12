@@ -17,16 +17,11 @@ export function SessionChartWidget() {
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
-        const startTime = activeSession.createdAt
-            ? new Date(activeSession.createdAt).getTime()
-            : new Date(sortedMeasurements[0].timestamp).getTime();
-
         const data = sortedMeasurements.map(m => {
-            const time = new Date(m.timestamp).getTime();
             return {
                 timestamp: m.timestamp,
                 formattedTime: format(new Date(m.timestamp), "HH:mm:ss"),
-                relativeTime: time - startTime, // ms from start
+                relativeTime: m.session_time!,
                 ph: m.ph,
                 temperature: m.temperature,
                 od: m.od,
@@ -38,8 +33,7 @@ export function SessionChartWidget() {
         const maxTime = Math.max(...strings);
 
         return { chartData: data, totalDuration: maxTime }
-    }, [activeSession?.measurements, activeSession?.createdAt])
-
+    }, [activeSession?.measurements])
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

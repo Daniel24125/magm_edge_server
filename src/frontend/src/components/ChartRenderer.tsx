@@ -21,10 +21,10 @@ interface ChartRendererProps {
 const ChartRenderer = ({ totalDuration, chartData, chartConfig, showNoSessionOverlay }: ChartRendererProps) => {
 
     const getTimeUnit = () => {
-        // totalDuration is in ms
-        const minutes = totalDuration / (1000 * 60);
-        const hours = totalDuration / (1000 * 60 * 60);
-        const days = totalDuration / (1000 * 60 * 60 * 24);
+        // totalDuration is in seconds
+        const minutes = totalDuration / 60;
+        const hours = totalDuration / (60 * 60);
+        const days = totalDuration / (60 * 60 * 24);
 
         if (days > 5) return 'd';
         if (hours > 12) return 'h';
@@ -36,13 +36,13 @@ const ChartRenderer = ({ totalDuration, chartData, chartConfig, showNoSessionOve
 
     const formatXAxis = (tickItem: number) => {
         if (timeUnit === 'd') {
-            return `${(tickItem / (1000 * 60 * 60 * 24)).toFixed(1)}d`;
+            return `${(tickItem / (60 * 60 * 24)).toFixed(1)}d`;
         } else if (timeUnit === 'h') {
-            return `${(tickItem / (1000 * 60 * 60)).toFixed(1)}h`;
+            return `${(tickItem / (60 * 60)).toFixed(1)}h`;
         } else if (timeUnit === 'm') {
-            return `${Math.round(tickItem / (1000 * 60))}m`;
+            return `${Math.round(tickItem / 60)}m`;
         } else {
-            return `${Math.round(tickItem / 1000)}s`;
+            return `${Math.round(tickItem)}s`;
         }
     }
 
@@ -81,7 +81,7 @@ const ChartRenderer = ({ totalDuration, chartData, chartConfig, showNoSessionOve
                         axisLine={false}
                         tickMargin={8}
                         minTickGap={32}
-                        domain={isEmpty ? [0, 60000] : ['dataMin', 'dataMax']} // Default to 60s if empty
+                        domain={isEmpty ? [0, 60] : ['dataMin', 'dataMax']} // Default to 60s if empty
                         type="number"
                         label={{ value: `Time (${timeUnit})`, position: 'insideBottom', offset: -10 }}
                     />
@@ -102,12 +102,12 @@ const ChartRenderer = ({ totalDuration, chartData, chartConfig, showNoSessionOve
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent labelFormatter={(value) => {
-                            // Value is relativeTime in ms
+                            // Value is relativeTime in seconds
                             if (typeof value !== 'number') return value;
-                            const days = Math.floor(value / (1000 * 60 * 60 * 24));
-                            const hours = Math.floor(value / (1000 * 60 * 60));
-                            const minutes = Math.floor((value % (1000 * 60 * 60)) / (1000 * 60));
-                            const seconds = Math.floor((value % (1000 * 60)) / 1000);
+                            const days = Math.floor(value / (60 * 60 * 24));
+                            const hours = Math.floor((value % (60 * 60 * 24)) / (60 * 60));
+                            const minutes = Math.floor((value % (60 * 60)) / 60);
+                            const seconds = Math.floor((value % 60));
                             return `Time: ${days}d ${hours}h ${minutes}m ${seconds}s`;
                         }} />}
                     />

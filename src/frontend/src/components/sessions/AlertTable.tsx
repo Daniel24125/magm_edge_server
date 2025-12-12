@@ -17,7 +17,11 @@ const AlertTable = () => {
 
     const alerts: TAlert[] = activeSession.alerts || [];
 
-    const sortedAlerts = [...alerts].sort((a, b) => new Date(Number(b.timestamp)).getTime() - new Date(Number(a.timestamp)).getTime());
+    const sortedAlerts = [...alerts].sort((a, b) => {
+        const timeA = new Date(!isNaN(Number(a.timestamp)) ? Number(a.timestamp) : a.timestamp).getTime();
+        const timeB = new Date(!isNaN(Number(b.timestamp)) ? Number(b.timestamp) : b.timestamp).getTime();
+        return timeB - timeA;
+    });
 
     return (
         <Card className="w-full">
@@ -60,7 +64,16 @@ const AlertTable = () => {
 };
 
 const AlertRow = ({ alert, sessionStart }: { alert: TAlert, sessionStart: string }) => {
-    let time: Date | null = new Date(Number(alert.timestamp));
+    // Handle both numeric (unix) and string (ISO) timestamps
+    const rawTime = alert.timestamp;
+    const timeValue = !isNaN(Number(rawTime)) ? Number(rawTime) : rawTime;
+    let time: Date | null = new Date(timeValue);
+
+    // Check if time is valid
+    if (isNaN(time.getTime())) {
+        time = null;
+    }
+
     const start = new Date(sessionStart).getTime();
 
     // Calculate session time only if both times are valid
@@ -72,13 +85,13 @@ const AlertRow = ({ alert, sessionStart }: { alert: TAlert, sessionStart: string
 
     return (
         <TableRow>
-            <TableCell>{formatDate(time)}</TableCell>
+            <TableCell>{time ? formatDate(time) : "--"}</TableCell>
             <TableCell className="font-mono">{formatDuration(sessionTimeSeconds)}</TableCell>
             <TableCell>{alert.message}</TableCell>
             <TableCell>
                 <SeverityBadge type={alert.type} />
             </TableCell>
-            <TableCell>{alert.details?.source + " sensor" || "System"}</TableCell>
+            <TableCell>{alert.details?.source || "System"}</TableCell>
         </TableRow>
     );
 };

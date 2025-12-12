@@ -69,7 +69,7 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
                                     </div>
                                     <div className="text-center my-4 md:my-0">
                                         <div className="text-2xl font-bold text-gray-900 font-mono">
-                                            {getFormartedTimeWithLetters(session.time || 0)}
+                                            {getFormartedTimeWithLetters(session.time)}
                                         </div>
                                         <div className="text-sm text-text-faded">
                                             Started at {formatDate(session.createdAt)}
@@ -188,17 +188,13 @@ const SessionChart = ({ session }: { session: ISession }) => {
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
-        const startTime = session.createdAt
-            ? new Date(session.createdAt).getTime()
-            : new Date(sortedMeasurements[0].timestamp).getTime();
 
         const data = sortedMeasurements.map(m => {
-            const time = new Date(m.timestamp).getTime();
 
             return {
                 timestamp: m.timestamp,
                 formattedTime: formatDate(m.timestamp),
-                relativeTime: (time - startTime), // milliseconds
+                relativeTime: m.session_time!,
                 ph: m.ph,
                 temperature: m.temperature,
                 od: m.od,

@@ -7,6 +7,7 @@ export type TMeasurement = {
     ph?: number;
     od?: number;
     co2?: number;
+    session_time?: number;
 }
 
 export interface ISession {

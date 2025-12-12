@@ -26,7 +26,7 @@ class DataAggregator:
     
     # -------------------- Public API --------------------
 
-    def start_collection(self, session_id: str, timestamp_iso: str, expected_sources: Set[str], save_to_db: bool = True):
+    def start_collection(self, session_id: str, timestamp_iso: str, expected_sources: Set[str], save_to_db: bool = True, session_time: int = 0):
         """
         Starts a new data collection window. 
         Force-closes previous window if active.
@@ -37,7 +37,7 @@ class DataAggregator:
                 self._finalize_collection()
                 self._stop_timer()
 
-            self._reset_state(session_id, timestamp_iso, expected_sources, save_to_db)
+            self._reset_state(session_id, timestamp_iso, expected_sources, save_to_db, session_time)
             self._start_timer()
             
 
@@ -58,13 +58,14 @@ class DataAggregator:
 
     # -------------------- Internal Logic --------------------
 
-    def _reset_state(self, session_id, timestamp, expected_sources, save_to_db):
+    def _reset_state(self, session_id, timestamp, expected_sources, save_to_db, session_time):
         self.session_id = session_id
         self.pending_timestamp = timestamp
         self.current_collection = {} 
         self.expected_sources = expected_sources
         self.received_sources = set()
         self.save_to_db = save_to_db
+        self.session_time = session_time
 
     def _start_timer(self):
         self.timer = threading.Timer(self.timeout, self._on_timeout)
@@ -147,7 +148,8 @@ class DataAggregator:
             temp=self.current_collection.get('temp'),
             od=self.current_collection.get('od'),
             co2=self.current_collection.get('co2'),
-            status=status
+            status=status,
+            session_time=getattr(self, 'session_time', 0)
         )
         logger.info(f"Saved measurement. Status: {status}")
 
@@ -157,5 +159,6 @@ class DataAggregator:
             "timestamp": self.pending_timestamp,
             "data": self.current_collection,
             "status": status,
-            "is_recorded": self.save_to_db
+            "is_recorded": self.save_to_db,
+            "session_time": getattr(self, 'session_time', 0)
         })

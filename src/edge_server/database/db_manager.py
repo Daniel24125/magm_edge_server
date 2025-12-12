@@ -122,6 +122,7 @@ class DatabaseHelper:
                     co2 REAL,
                     status TEXT,
                     synced INTEGER DEFAULT 0,
+                    session_time INTEGER DEFAULT 0,  -- Added for tracking actual session duration
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                         ON UPDATE CASCADE ON DELETE CASCADE
                 );
@@ -181,6 +182,11 @@ class DatabaseHelper:
 
             try:
                 cur.execute("ALTER TABLE unified_measurements ADD COLUMN synced INTEGER DEFAULT 0")
+            except Exception:
+                pass
+
+            try:
+                cur.execute("ALTER TABLE unified_measurements ADD COLUMN session_time INTEGER DEFAULT 0")
             except Exception:
                 pass
 
@@ -333,7 +339,8 @@ class DatabaseHelper:
         od: Optional[float] = None,
         co2: Optional[float] = None,
         status: Optional[str] = "OK",
-        timestamp_iso: Optional[str] = None
+        timestamp_iso: Optional[str] = None,
+        session_time: int = 0
     ) -> int:
         """
         Inserts a unified measurement row.
@@ -344,9 +351,9 @@ class DatabaseHelper:
             self._retrying_execute(
                 cur,
                 """INSERT INTO unified_measurements
-                   (session_id, timestamp, ph, temp, od, co2, status, synced)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 0)""",
-                (session_id, timestamp_iso, ph, temp, od, co2, status),
+                   (session_id, timestamp, ph, temp, od, co2, status, synced, session_time)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)""",
+                (session_id, timestamp_iso, ph, temp, od, co2, status, session_time),
             )
             rid = cur.lastrowid
             self._conn.commit()
@@ -357,7 +364,7 @@ class DatabaseHelper:
         Retrieves all unified measurements for a session, ordered by timestamp.
         """
         query = """
-            SELECT timestamp, ph, temp, od, co2, status 
+            SELECT timestamp, ph, temp, od, co2, status, session_time
             FROM unified_measurements 
             WHERE session_id = ? 
             ORDER BY timestamp ASC
@@ -373,7 +380,8 @@ class DatabaseHelper:
                 "temp": r[2],
                 "od": r[3],
                 "co2": r[4],
-                "status": r[5]
+                "status": r[5],
+                "session_time": r[6]
             })
         return results
 
@@ -479,7 +487,7 @@ class DatabaseHelper:
         Retrieves unified measurements that haven't been synced yet.
         """
         rows = self.fetch_records_raw(
-            "SELECT id, timestamp, session_id, ph, temp, od, co2, status "
+            "SELECT id, timestamp, session_id, ph, temp, od, co2, status, session_time "
             "FROM unified_measurements WHERE synced = 0 LIMIT ?",
             (limit,)
         )
@@ -487,7 +495,7 @@ class DatabaseHelper:
         for r in rows:
             results.append({
                 "id": r[0], "timestamp": r[1], "session_id": r[2], 
-                "data": {"ph": r[3], "temp": r[4], "od": r[5], "co2": r[6]}, # Reconstruct data object
+                "data": {"ph": r[3], "temp": r[4], "od": r[5], "co2": r[6], "session_time": r[8]}, # Reconstruct data object
                 "status": r[7]
             })
         return results
