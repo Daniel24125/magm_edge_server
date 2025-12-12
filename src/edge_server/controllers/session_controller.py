@@ -455,5 +455,6 @@ class SessionController:
             "notes": self.active_session.get("notes"),
             "duration": self.active_session.get("duration"),
             "target": self.active_session.get("target"),
+            "time": self.time_elapsed,
             "active": True
         }
