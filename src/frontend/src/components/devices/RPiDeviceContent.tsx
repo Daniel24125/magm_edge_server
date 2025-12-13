@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { ISensor } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -11,16 +12,9 @@ import { CalibrationDialog } from "./CalibrationDialog";
 import { PumpControlDialog } from "./PumpControlDialog";
 import { Settings2, Thermometer, Droplets, MoreVertical, Pipette, Beaker } from "lucide-react";
 
-interface Sensor {
-    key: string;
-    type: string;
-    name: string;
-    unit?: string;
-    enabled: boolean;
-    [key: string]: any;
-}
 
-export const RPiDeviceContent = ({ deviceId, sensors }: { deviceId: string, sensors: Sensor[] }) => {
+
+export const RPiDeviceContent = ({ deviceId, sensors }: { deviceId: string, sensors: ISensor[] }) => {
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -35,7 +29,7 @@ export const RPiDeviceContent = ({ deviceId, sensors }: { deviceId: string, sens
     )
 }
 
-const SensorItem = ({ deviceId, sensor }: { deviceId: string, sensor: Sensor }) => {
+const SensorItem = ({ deviceId, sensor }: { deviceId: string, sensor: ISensor }) => {
     const isPh = sensor.type === "pH" || sensor.key.toLowerCase().includes("ph");
     const isTemp = sensor.type === "Temperature" || sensor.key.toLowerCase().includes("temp");
 

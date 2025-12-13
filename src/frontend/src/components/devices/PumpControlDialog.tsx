@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useDeviceManager } from "@/contexts/DeviceManagerContext";
-import { Loader2, Pipette } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -11,12 +11,11 @@ import { toast } from "sonner";
 interface PumpControlDialogProps {
     deviceId: string;
     sensorId: string;
-    trigger?: React.ReactNode;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 }
 
-export function PumpControlDialog({ deviceId, sensorId, trigger, open: controlledOpen, onOpenChange }: PumpControlDialogProps) {
+export function PumpControlDialog({ deviceId, sensorId, open: controlledOpen, onOpenChange }: PumpControlDialogProps) {
     const { sendCommand } = useDeviceManager();
     const [internalOpen, setInternalOpen] = useState(false);
 

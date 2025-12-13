@@ -46,7 +46,7 @@ const SessionHeader = () => {
                 setIsLoading(false)
             }
         }
-        if (activeSession?.projectId) {
+        if (activeSession?.projectId && !projectDetails) {
             getProjectDetails()
         }
     }, [activeSession])
@@ -125,10 +125,11 @@ const SessionChartMonitor = () => {
 
 const SessionChart = () => {
     const { activeSession } = useSession()
+    const measurements = activeSession?.measurements;
     const { chartData, totalDuration } = useMemo(() => {
-        if (!activeSession?.measurements || activeSession.measurements.length === 0) return { chartData: [], totalDuration: 0 }
+        if (!measurements || measurements.length === 0) return { chartData: [], totalDuration: 0 }
 
-        const sortedMeasurements = [...activeSession.measurements].sort((a, b) =>
+        const sortedMeasurements = [...measurements].sort((a, b) =>
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
@@ -150,7 +151,7 @@ const SessionChart = () => {
         const maxTime = Math.max(...strings);
 
         return { chartData: data, totalDuration: maxTime }
-    }, [activeSession?.measurements, activeSession?.createdAt])
+    }, [measurements])
 
     return <div className='w-full p-4 h-full'>
         <ChartRenderer

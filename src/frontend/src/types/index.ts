@@ -13,10 +13,27 @@ export type TAlert = {
 export type TDeviceStatus = "ONLINE" | "OFFLINE";
 
 export interface ISensorReading {
-    value: number;
+    value: number | string | boolean;
     unit?: string;
     timestamp: string;
-    status?: string;
+    status: string;
+}
+
+export interface ISensor {
+    key: string;
+    type: string;
+    name: string;
+    unit?: string;
+    enabled: boolean;
+    sensor_id?: string;
+    [key: string]: unknown;
+}
+
+export interface IDeviceDetails {
+    device_name: string;
+    sensors?: ISensor[];
+    status: string;
+    [key: string]: unknown;
 }
 
 // --- Calibration Types ---

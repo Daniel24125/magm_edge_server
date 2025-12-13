@@ -1,19 +1,15 @@
 "use client"
 import ProjectType from '@/components/projects/ProjectType'
-import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import { useProjects } from '@/contexts/ProjectsContext'
 import { IProject, TMeasurementType } from '@/types/projects'
-import { Filter } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { getSessionMeasurements, getSessions } from '../actions/sessions'
 import { ISession, TMeasurement } from '@/types/sessions'
 import NoSession from '@/components/projects/NoSession'
 import ProjectMenu from '@/components/projects/ProjectMenu'
 import NoProjects from '@/components/projects/NoProjects'
-import { formatDuration, getAlertIcon, getFormartedTimeWithLetters } from '@/lib/utils'
+import { getAlertIcon, getFormartedTimeWithLetters } from '@/lib/utils'
 import { NoMeasurementsIlustration } from '@/components/ilustrations'
 import Loading from '@/components/ui/loading'
 
@@ -30,20 +26,20 @@ const ProjectsPage = () => {
 }
 
 
-const SearchProjects = () => {
+// const SearchProjects = () => {
 
 
-    return (
-        <div className='flex w-full justify-between items-center'>
-            <Field className='w-full max-w-96'>
-                <Input placeholder='Search projects...' />
-            </Field>
-            <Button variant='outline' size='icon'>
-                <Filter size={20} />
-            </Button>
-        </div>
-    )
-}
+//     return (
+//         <div className='flex w-full justify-between items-center'>
+//             <Field className='w-full max-w-96'>
+//                 <Input placeholder='Search projects...' />
+//             </Field>
+//             <Button variant='outline' size='icon'>
+//                 <Filter size={20} />
+//             </Button>
+//         </div>
+//     )
+// }
 
 const ProjectListCards = () => {
     const { projects } = useProjects()
@@ -144,7 +140,7 @@ const LastSessionMeasurements = ({ sessionID }: { sessionID: string }) => {
 
     return (
         <div className="flex justify-between items-center w-full">
-            {measurementTypes.map(mType => <MeasurementItem measurementType={mType} measurementValue={lastMeasurement[mType] as number} />)}
+            {measurementTypes.map(mType => <MeasurementItem key={mType} measurementType={mType} measurementValue={lastMeasurement[mType] as number} />)}
         </div>
     )
 }

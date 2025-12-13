@@ -1,26 +1,40 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useDeviceManager } from "@/contexts/DeviceManagerContext";
 import { useMQTT } from "@/contexts/MQTTContext";
-import { Loader2, CheckCircle2, XCircle, Beaker } from "lucide-react";
+import { Loader2, CheckCircle2, Beaker } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Loading from "@/components/ui/loading";
 import { Badge } from "@/components/ui/badge";
 
 interface CalibrationDialogProps {
     deviceId: string;
     sensorId: string;
     sensorName: string;
-    trigger?: React.ReactNode;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 }
 
-type CalibrationState = "IDLE" | "STARTING" | "RUNNING" | "COMPLETE" | "ERROR";
+type CalibrationState = "IDLE" | "STARTING" | "RUNNING" | "COMPLETE" | "ERROR" | "START" | "NEXT" | "STABLE";
 
-export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, open: controlledOpen, onOpenChange }: CalibrationDialogProps) {
+interface CalibrationPayload {
+    type: string;
+    status: CalibrationState;
+    message: string;
+    data?: {
+        calibration_data?: Record<string, number>;
+        [key: string]: unknown;
+    };
+}
+
+interface LiveReadingPayload {
+    ph_value?: number;
+    is_stable?: boolean;
+    [key: string]: unknown;
+}
+
+export function CalibrationDialog({ deviceId, sensorId, sensorName, open: controlledOpen, onOpenChange }: CalibrationDialogProps) {
     const { sendCommand } = useDeviceManager();
     const { subscribe, unsubscribe } = useMQTT();
     const [internalOpen, setInternalOpen] = useState(false);
@@ -37,7 +51,7 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, ope
     // State
     const [status, setStatus] = useState<CalibrationState>("IDLE");
     const [messages, setMessages] = useState<{ timestamp: string, message: string, type: string }[]>([]);
-    const [calibrationData, setCalibrationData] = useState<any>(null);
+    const [calibrationData, setCalibrationData] = useState<Record<string, number> | null>(null);
     const [liveReading, setLiveReading] = useState<number | null>(null);
     const [isStable, setIsStable] = useState(false);
 
@@ -46,7 +60,6 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, ope
     // Topics
     const promptTopic = `/devices/${deviceId}/cal/prompt_user`;
     const liveTopic = `/devices/${deviceId}/cal/live_readings`;
-    const confirmTopic = `/devices/${deviceId}/cal/confirm`; // From backend logic in command_handler
 
     // Auto-scroll messages
     useEffect(() => {
@@ -56,30 +69,16 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, ope
     }, [messages]);
 
     // Handle incoming MQTT messages
+    // Handle incoming MQTT messages
     useEffect(() => {
         if (!open) return;
 
-        const handlePrompt = (topic: string, payload: any) => {
-            // Payload wrapped in { topic, payload: { ... } } by calibration_manager?
-            // Let's verify payload structure from calibration_manager.py line 191
-            /*
-            payload = {
-                "type": "calibration",
-                "status": status, // START, NEXT, STABLE, COMPLETE, ERROR
-                "message": message,
-                ...
-                "data": {"calibration_data": ...}
-            }
-            */
-            // The mqtt_client.py wraps it in { topic, payload: { ... } } (Line 204)
-            // So we receive { topic, payload: { ...innerPayload... } }
+        const handlePrompt = (topic: string, rawPayload: unknown) => {
+            // Payload might be wrapped in { topic, payload: { ... } }
+            const wrapper = rawPayload as { payload?: CalibrationPayload };
+            const data = (wrapper.payload || rawPayload) as CalibrationPayload;
 
-            // However, useMQTT usually parses JSON? 
-            // If useMQTT returns already parsed object? Yes.
-
-            const data = payload.payload || payload; // Handle wrapper if present
-
-            if (data.type !== "calibration") return;
+            if (data?.type !== "calibration") return;
 
             setMessages(prev => [...prev, {
                 timestamp: new Date().toLocaleTimeString(),
@@ -99,14 +98,13 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, ope
             }
         };
 
-        const handleLive = (topic: string, payload: any) => {
-            // Wrapper from mqtt_client.py line 204?
-            // calibration_manager.py line 181 send_message_to_user wrapper
-            const data = payload.payload || payload;
+        const handleLive = (topic: string, rawPayload: unknown) => {
+            const wrapper = rawPayload as { payload?: LiveReadingPayload };
+            const data = (wrapper.payload || rawPayload) as LiveReadingPayload;
 
-            if (data.ph_value !== undefined) {
+            if (data?.ph_value !== undefined) {
                 setLiveReading(data.ph_value);
-                setIsStable(data.is_stable);
+                setIsStable(!!data.is_stable);
             }
         };
 
@@ -146,23 +144,22 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, ope
         toast.info("Calibration cancelled");
     };
 
-    // Reset state on close
-    useEffect(() => {
-        if (!open) {
-            setStatus("IDLE");
-            setMessages([]);
-            setLiveReading(null);
-        }
-    }, [open]);
-
+    // Reset state helper
+    const resetState = useCallback(() => {
+        setStatus("IDLE");
+        setMessages([]);
+        setLiveReading(null);
+    }, []);
 
     return (
         <Dialog open={open} onOpenChange={(val) => {
-            if (!val && status === "RUNNING") {
-                // Prevent closing if running? Or warn?
-                // For now allow closing but maybe send cancel?
-                // Better to use handleCancel explicitly
-                handleCancel();
+            if (!val) {
+                if (status === "RUNNING") {
+                    handleCancel(); // This closes and toasts
+                } else {
+                    setOpen(false);
+                    resetState();
+                }
             } else {
                 setOpen(val);
             }
@@ -217,7 +214,7 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, ope
                         <div className="bg-green-50/50 dark:bg-green-900/20 p-3 rounded text-sm">
                             <h5 className="font-semibold text-green-700 dark:text-green-400 mb-1">Calibration Points Detected</h5>
                             <div className="flex gap-4">
-                                {Object.entries(calibrationData).map(([buffer, val]: [string, any]) => (
+                                {Object.entries(calibrationData).map(([buffer, val]: [string, number]) => (
                                     <div key={buffer} className="flex flex-col">
                                         <span className="text-xs uppercase opacity-70">{buffer}</span>
                                         <span className="font-mono">{Number(val).toFixed(2)}</span>

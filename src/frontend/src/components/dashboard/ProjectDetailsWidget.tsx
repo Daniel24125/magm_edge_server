@@ -21,20 +21,16 @@ const ProjectDetailsWidget = () => {
         return [...projects].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }, [projects])
 
-    useEffect(() => {
-        if (sortedProjects.length > 0 && !selectedProjectId) {
-            setSelectedProjectId(sortedProjects[0].id)
-        }
-    }, [sortedProjects, selectedProjectId])
+    const effectiveProjectId = selectedProjectId || (sortedProjects.length > 0 ? sortedProjects[0].id : "")
 
     const isSessionResponsible = useMemo(() => {
-        return activeSession?.projectId === selectedProjectId
-    }, [activeSession, selectedProjectId])
+        return activeSession?.projectId === effectiveProjectId
+    }, [activeSession, effectiveProjectId])
 
 
     const selectedProject = useMemo(() => {
-        return projects.find((project) => project.id === selectedProjectId)
-    }, [projects, selectedProjectId])
+        return projects.find((project) => project.id === effectiveProjectId)
+    }, [projects, effectiveProjectId])
 
     const isDisabled = useMemo(() => {
         return projects.length === 0 || !selectedProject
@@ -50,7 +46,7 @@ const ProjectDetailsWidget = () => {
                         isDisabled={isDisabled}
                     />
                     <Select
-                        value={selectedProjectId}
+                        value={effectiveProjectId}
                         onValueChange={setSelectedProjectId}
                         disabled={isDisabled}
                     >

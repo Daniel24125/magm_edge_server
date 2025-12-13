@@ -21,7 +21,7 @@ const AWS_REGION = "eu-west-3";
 const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
 const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com";
 
-type TMessageHandler = (topic: string, payload: any) => void;
+type TMessageHandler = (topic: string, payload: unknown) => void;
 
 interface MQTTContextType {
     connection: mqtt.MqttClientConnection | null;
@@ -30,7 +30,7 @@ interface MQTTContextType {
     disconnect: () => Promise<void>;
     subscribe: (topic: string, handler?: TMessageHandler) => Promise<void>;
     unsubscribe: (topic: string, handler?: TMessageHandler) => Promise<void>;
-    publish: (topic: string, payload: any) => Promise<void>;
+    publish: (topic: string, payload: unknown) => Promise<void>;
 }
 
 const MQTTContext = createContext<MQTTContextType | null>(null);
@@ -110,8 +110,9 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
                     if (handlers) {
                         handlers.forEach(h => h(topic, parsed));
                     }
-                } catch (e: any) {
-                    addAlert("error", "Failed to parse MQTT message " + e.message, "app");
+                } catch (e: unknown) {
+                    const error = e instanceof Error ? e : new Error(String(e));
+                    addAlert("error", "Failed to parse MQTT message " + error.message, "app");
                 }
             });
 
@@ -173,7 +174,7 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     // 3. Publish Logic
-    const publish = useCallback(async (topic: string, payload: any) => {
+    const publish = useCallback(async (topic: string, payload: unknown) => {
         if (!connectionRef.current) {
             addAlert("warning", "No MQTT connection");
             return;

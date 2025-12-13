@@ -10,10 +10,11 @@ import { configEnv, configGrowth } from "@/lib/utils"
 export function SessionChartWidget() {
     const { activeSession } = useSession()
 
+    const measurements = activeSession?.measurements;
     const { chartData, totalDuration } = React.useMemo(() => {
-        if (!activeSession?.measurements || activeSession.measurements.length === 0) return { chartData: [], totalDuration: 0 }
+        if (!measurements || measurements.length === 0) return { chartData: [], totalDuration: 0 }
 
-        const sortedMeasurements = [...activeSession.measurements].sort((a, b) =>
+        const sortedMeasurements = [...measurements].sort((a, b) =>
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
@@ -33,7 +34,7 @@ export function SessionChartWidget() {
         const maxTime = Math.max(...strings);
 
         return { chartData: data, totalDuration: maxTime }
-    }, [activeSession?.measurements])
+    }, [measurements])
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

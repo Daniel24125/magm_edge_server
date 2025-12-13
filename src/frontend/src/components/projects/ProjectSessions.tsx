@@ -54,20 +54,14 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
     }, [sessions])
 
     // Default to the last session
-    const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
-        sortedSessions.length > 0 ? sortedSessions[sortedSessions.length - 1].id : undefined
-    )
+    const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(undefined)
 
-    useEffect(() => {
-        if (sortedSessions.length > 0 && !selectedSessionId) {
-            setSelectedSessionId(sortedSessions[sortedSessions.length - 1].id)
-        }
-    }, [sortedSessions, selectedSessionId])
+    const effectiveSessionId = selectedSessionId || (sortedSessions.length > 0 ? sortedSessions[sortedSessions.length - 1].id : undefined)
 
     return (
         <div className="w-full space-y-6">
             <div className="flex items-center justification-between w-full">
-                <Tabs value={selectedSessionId} onValueChange={setSelectedSessionId} className="w-full">
+                <Tabs value={effectiveSessionId} onValueChange={setSelectedSessionId} className="w-full">
                     <SessionListHeader sortedSessions={sortedSessions} />
 
                     {sortedSessions.map((session) => (
@@ -227,7 +221,7 @@ const SessionChart = ({ session }: { session: ISession }) => {
         const maxTime = Math.max(...strings);
 
         return { chartData: data, totalDuration: maxTime }
-    }, [measurements, session?.createdAt])
+    }, [measurements])
 
     if (loading) return <Loading isLoading={loading} />
 

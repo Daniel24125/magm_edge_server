@@ -115,16 +115,6 @@ const NavigationList = () => {
             label="Devices"
             href="/devices"
         />
-        <NavigationItem
-            icon={<Bell className='size-6' />}
-            label="Notifications"
-            href="/notifications"
-        />
-        <NavigationItem
-            icon={<Settings className='size-6' />}
-            label="Settings"
-            href="/settings"
-        />
     </div>
 }
 

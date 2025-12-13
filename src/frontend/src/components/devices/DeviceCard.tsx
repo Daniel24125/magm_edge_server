@@ -1,15 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { RPiDeviceContent } from "./RPiDeviceContent"
+import { IDeviceDetails, ISensor } from "@/types"
 
 interface DeviceCardProps {
     deviceId: string;
-    device: {
-        device_name: string;
-        status: string;
-        sensors?: any[];
-        [key: string]: any;
-    }
+    device: IDeviceDetails;
 }
 
 export const DeviceCard = ({ deviceId, device }: DeviceCardProps) => {

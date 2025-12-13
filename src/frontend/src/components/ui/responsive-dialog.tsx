@@ -33,7 +33,7 @@ interface RootProps extends BaseProps {
     onOpenChange?: (open: boolean) => void
 }
 
-interface ResponsiveDialogProps extends RootProps { }
+type ResponsiveDialogProps = RootProps;
 
 export function ResponsiveDialog({ children, ...props }: ResponsiveDialogProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")

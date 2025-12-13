@@ -24,7 +24,6 @@ interface IApplicationContext {
 
     // Page Title
     pageTitle: string;
-    setPageTitle: (title: string) => void;
 
     // Sidebar State
     isSidebarOpen: boolean;
@@ -37,7 +36,6 @@ const ApplicationContext = createContext<IApplicationContext | null>(null);
 
 export const ApplicationProvider = ({ children }: { children: React.ReactNode }) => {
     const windowSize = useWindowSize();
-    const [pageTitle, setPageTitle] = useState("Dashboard");
     const { subscribe, unsubscribe, isConnected } = useMQTT();
     const { addAlert } = useAlert();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -53,10 +51,7 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
         "/session": "Session Details",
     };
 
-    useEffect(() => {
-        const title = ROUTE_TITLES[pathname] || "Dashboard";
-        setPageTitle(title);
-    }, [pathname]);
+    const pageTitle = ROUTE_TITLES[pathname] || "Dashboard";
 
     useEffect(() => {
         if (!isConnected) return;
@@ -99,7 +94,6 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
                 windowSize,
                 isMobile,
                 pageTitle,
-                setPageTitle,
                 isSidebarOpen,
                 toggleSidebar,
                 closeSidebar,

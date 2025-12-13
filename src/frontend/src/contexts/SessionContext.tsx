@@ -34,7 +34,7 @@ interface SessionContextType {
     pauseSession: () => Promise<void>;
     resumeSession: () => Promise<void>;
     addMeasurement: (measurement: TMeasurement) => void;
-    addSessionAlert: (type: TAlert['type'], message: string, details?: any) => void;
+    addSessionAlert: (type: TAlert['type'], message: string, details?: Record<string, unknown>) => void;
     isSessionVerified: boolean;
     latestLiveMeasurement: TMeasurement | null;
     canPerformSession: boolean;
@@ -70,7 +70,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         activeSessionRef.current = activeSession;
     }, [activeSession]);
 
-    const addSessionAlert = useCallback((type: TAlert['type'], message: string, details?: any) => {
+    const addSessionAlert = useCallback((type: TAlert['type'], message: string, details?: Record<string, unknown>) => {
         // 1. Add to global AlertContext (for toast/widget) - Clearable
         addAlert(type, message, 'session', details);
 
@@ -104,8 +104,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const liveTopic = "session/live";
         const alertsTopic = "session/alerts";
 
-        const handleSessionMessage = (topic: string, message: any) => {
-            // console.log("Session Message:", topic, message);
+        const handleSessionMessage = (topic: string, rawMessage: unknown) => {
+            // console.log("Session Message:", topic, rawMessage);
+            const message = rawMessage as { type?: string; payload?: any; history?: any[]; alerts?: any[]; data?: any; severity?: any; message?: string; sensor_type?: string; value?: any; timestamp?: string; session_time?: number };
 
             if (topic === sessionTopic) {
                 // ... (existing logic)
@@ -198,7 +199,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             } else if (topic === alertsTopic) {
                 addSessionAlert(
                     message.severity || "info",
-                    message.message,
+                    message.message || "New Alert",
                     {
                         source: message.sensor_type || "System",
                         value: message.value,
@@ -281,7 +282,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             setActiveSession(newSession);
 
             console.log("Sending start session command to device (Offline-First)...");
-            sendCommand("start_session", newSession);
+            sendCommand("start_session", newSession as unknown as Record<string, unknown>);
 
             addSessionAlert("success", "Session started", { source: "User" });
         } catch (error) {
@@ -320,7 +321,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             setActiveSession(newSession);
 
             console.log("Sending start session command to device (Offline-First)...");
-            sendCommand("start_session", newSession);
+            sendCommand("start_session", newSession as unknown as Record<string, unknown>);
 
             addSessionAlert("success", "Session started", { source: "User" });
             setIsStartSessionDialogOpen(false);
