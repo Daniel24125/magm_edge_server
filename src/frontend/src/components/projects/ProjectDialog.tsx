@@ -46,12 +46,14 @@ export function ProjectDialog({ open, setOpen, onSubmit, defaultValues, mode = "
         }
     };
 
+
+
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTitle className="hidden">{mode === "create" ? "Create Project" : "Edit Project"}</DialogTitle>
                 <DialogContent>
-                    <ProjectForm onSubmit={handleSubmit} defaultValues={defaultValues} isLoading={isLoading} />
+                    <ProjectForm onSubmit={handleSubmit} defaultValues={defaultValues} isLoading={isLoading} open={open} />
                 </DialogContent>
             </Dialog>
         );
@@ -67,7 +69,7 @@ export function ProjectDialog({ open, setOpen, onSubmit, defaultValues, mode = "
                     </DrawerDescription>
                 </DrawerHeader>
                 <div className="px-4">
-                    <ProjectForm className="px-4" onSubmit={handleSubmit} defaultValues={defaultValues} isLoading={isLoading} />
+                    <ProjectForm className="px-4" onSubmit={handleSubmit} defaultValues={defaultValues} isLoading={isLoading} open={open} />
                 </div>
                 <DrawerFooter className="pt-2">
                     <DrawerClose asChild>

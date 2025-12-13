@@ -15,14 +15,15 @@ import ProjectMenu from '@/components/projects/ProjectMenu'
 import NoProjects from '@/components/projects/NoProjects'
 import { formatDuration, getAlertIcon, getFormartedTimeWithLetters } from '@/lib/utils'
 import { NoMeasurementsIlustration } from '@/components/ilustrations'
+import Loading from '@/components/ui/loading'
 
 const ProjectsPage = () => {
     const { projects } = useProjects()
     if (projects.length === 0) return <NoProjects className='pt-10' />
 
     return (
-        <div className='flex flex-col gap-10 h-full w-full pt-10'>
-            <SearchProjects />
+        <div className='flex flex-col gap-10 h-full w-full pt-20'>
+            {/* <SearchProjects /> */}
             <ProjectListCards />
         </div>
     )
@@ -82,17 +83,27 @@ const ProjectCard = ({ project }: { project: IProject }) => {
 
 const ProjectSessionSummary = ({ projectID }: { projectID: string }) => {
     const [sessions, setSessions] = useState<ISession[]>([])
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         const getSessionData = async () => {
-            const sessions = await getSessions(projectID)
-            setSessions(sessions.data || [])
+            setIsLoading(true)
+            try {
+                const sessions = await getSessions(projectID)
+                setSessions(sessions.data || [])
+            } catch (e) {
+                console.error(e)
+            } finally {
+                setIsLoading(false)
+            }
         }
         getSessionData()
     }, [projectID])
 
     const hasSessions = useMemo(() => sessions.length > 0, [sessions])
     const lastSession = useMemo(() => !hasSessions ? null : sessions.length > 0 ? sessions[sessions.length - 1] : null, [sessions])
+
+    if (isLoading) return <div className='py-10 flex justify-center'><Loading isLoading={true} /></div>
 
     if (!hasSessions) return <NoSession size={150} />
 
@@ -107,16 +118,27 @@ const ProjectSessionSummary = ({ projectID }: { projectID: string }) => {
 
 const LastSessionMeasurements = ({ sessionID }: { sessionID: string }) => {
     const [measurements, setMeasurements] = useState<TMeasurement[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const measurementTypes: TMeasurementType[] = ["od", "ph", "temperature"]
+
     useEffect(() => {
         const getMeasurementData = async () => {
-            const measurements = await getSessionMeasurements(sessionID)
-            setMeasurements(measurements.data || [])
+            setIsLoading(true)
+            try {
+                const measurements = await getSessionMeasurements(sessionID)
+                setMeasurements(measurements.data || [])
+            } catch (e) {
+                console.error(e)
+            } finally {
+                setIsLoading(false)
+            }
         }
         getMeasurementData()
     }, [sessionID])
 
     const lastMeasurement = useMemo(() => measurements.length > 0 ? measurements[measurements.length - 1] : null, [measurements])
+
+    if (isLoading) return <div className='py-4 flex justify-center'><Loading isLoading={true} /></div>
 
     if (!lastMeasurement) return <NoMeasurements size={150} />
 

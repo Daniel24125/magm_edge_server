@@ -31,15 +31,29 @@ const Session = () => {
 const SessionHeader = () => {
     const { activeSession } = useSession()
     const [projectDetails, setProjectDetails] = useState<IProject | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         const getProjectDetails = async () => {
-            const project = await getProject(activeSession!.projectId)
-            if (!project.data) throw new Error("Project not found")
-            setProjectDetails(project.data)
+            setIsLoading(true)
+            try {
+                const project = await getProject(activeSession!.projectId)
+                if (!project.data) throw new Error("Project not found")
+                setProjectDetails(project.data)
+            } catch (error) {
+                console.error(error)
+            } finally {
+                setIsLoading(false)
+            }
         }
-        getProjectDetails()
+        if (activeSession?.projectId) {
+            getProjectDetails()
+        }
     }, [activeSession])
+
+    if (isLoading) return <div className='w-full pt-32 flex items-center justify-center'>
+        <p>Loading project details...</p>
+    </div>
 
     if (!projectDetails) return <div className='w-full pt-32 flex items-center justify-center'>
         <p>NO PROJECT FOUND</p>

@@ -89,7 +89,15 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
         refreshProjects();
     }, [refreshProjects]);
 
+    useEffect(() => {
+        if (!open) {
+            setSelectedProject(null);
+            setMode('create');
+        }
+    }, [open])
+
     const addProject = useCallback(async (data: Omit<IProject, "id" | "createdAt" | "updatedAt">) => {
+        setIsLoading(true);
         try {
             const result = await createProject(data);
             if (result.success && result.data) {
@@ -103,10 +111,13 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
             console.error(err);
             toast.error("An unexpected error occurred");
             throw err;
+        } finally {
+            setIsLoading(false);
         }
     }, []);
 
     const editProject = useCallback(async (id: string, data: Partial<IProject>) => {
+        setIsLoading(true);
         try {
             // Optimistic update
             setProjects(prev => prev.map(p => p.id === id ? { ...p, ...data } as IProject : p));
@@ -127,10 +138,13 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
             toast.error("An unexpected error occurred");
             refreshProjects(); // Revert
             throw err;
+        } finally {
+            setIsLoading(false);
         }
     }, [refreshProjects]);
 
     const removeProject = useCallback(async (id: string) => {
+        setIsLoading(true);
         try {
             // Optimistic update
             setProjects(prev => prev.filter(p => p.id !== id));
@@ -148,6 +162,8 @@ export const ProjectsProvider = ({ children }: { children: React.ReactNode }) =>
             toast.error("An unexpected error occurred");
             refreshProjects(); // Revert
             throw err;
+        } finally {
+            setIsLoading(false);
         }
     }, [refreshProjects]);
 

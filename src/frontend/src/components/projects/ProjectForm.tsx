@@ -20,6 +20,7 @@ interface ProjectFormProps extends React.HTMLAttributes<HTMLFormElement> {
     defaultValues?: Partial<IProject>;
     onSubmit: (data: any) => void;
     isLoading?: boolean;
+    open?: boolean;
 }
 
 interface IProjectFormContext extends UseFormReturn<IProject> {
@@ -40,7 +41,7 @@ export function useProjectFormContext() {
     return context;
 }
 
-export function ProjectForm({ defaultValues, onSubmit, isLoading, className, ...props }: ProjectFormProps) {
+export function ProjectForm({ defaultValues, onSubmit, isLoading, open, className, ...props }: ProjectFormProps) {
     const [step, setStep] = React.useState(0);
     const form = useForm<IProject>({
         defaultValues: defaultValues || {
@@ -55,42 +56,53 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, className, ...
             alertConfiguration: [
                 { alertType: "temperature", enabled: false, threshold: 0, delay: 0 },
                 { alertType: "ph", enabled: false, threshold: 0, delay: 0 },
-                { alertType: "OD", enabled: false, threshold: 0, delay: 0 }
+                { alertType: "od", enabled: false, threshold: 0, delay: 0 }
             ]
         }
     });
+
+    const resetForm = () => {
+        form.reset({
+            projectDetails: {
+                projectType: "manual",
+                projectTitle: "",
+                description: "",
+                timer: 0,
+                target: 0
+            },
+            sessionDetails: {
+                reactorName: "",
+                sampleName: "",
+                cultureMedium: "",
+                co2Pressure: undefined
+            },
+            sessionDefaultSettings: {
+                dataAcquisitionInterval: 1,
+                temperatureSetPoint: 25,
+                phSetPoint: 7
+            },
+            alertConfiguration: [
+                { alertType: "temperature", enabled: false, threshold: 0, delay: 0 },
+                { alertType: "ph", enabled: false, threshold: 0, delay: 0 },
+                { alertType: "od", enabled: false, threshold: 0, delay: 0 }
+            ]
+        });
+    }
 
     React.useEffect(() => {
         if (defaultValues) {
             form.reset(defaultValues);
         } else {
-            form.reset({
-                projectDetails: {
-                    projectType: "manual",
-                    projectTitle: "",
-                    description: "",
-                    timer: 0,
-                    target: 0
-                },
-                sessionDetails: {
-                    reactorName: "",
-                    sampleName: "",
-                    cultureMedium: "",
-                    co2Pressure: undefined
-                },
-                sessionDefaultSettings: {
-                    dataAcquisitionInterval: 1,
-                    temperatureSetPoint: 25,
-                    phSetPoint: 7
-                },
-                alertConfiguration: [
-                    { alertType: "temperature", enabled: false, threshold: 0, delay: 0 },
-                    { alertType: "ph", enabled: false, threshold: 0, delay: 0 },
-                    { alertType: "OD", enabled: false, threshold: 0, delay: 0 }
-                ]
-            });
+            resetForm();
         }
     }, [defaultValues, form]);
+
+    React.useEffect(() => {
+        if (!open) {
+            setStep(0);
+            resetForm()
+        }
+    }, [open, form]);
 
     const projectTitle = form.watch("projectDetails.projectTitle");
     const projectType = form.watch("projectDetails.projectType");

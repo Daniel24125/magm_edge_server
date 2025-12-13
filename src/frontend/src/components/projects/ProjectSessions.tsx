@@ -15,19 +15,30 @@ import { useSession } from "@/contexts/SessionContext"
 import { useParams } from "next/navigation"
 import LineChartComponent from "../LineChartComponent"
 import { useAlert } from "@/contexts/AlertContext"
+import Loading from "../ui/loading"
 
 const ProjectSessionList = ({ projectID }: { projectID: string }) => {
     const [sessions, setSessions] = useState<ISession[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
     useEffect(() => {
         const getSessionData = async () => {
-            const sessions = await getSessions(projectID)
-            setSessions(sessions.data || [])
+            setIsLoading(true)
+            try {
+                const sessions = await getSessions(projectID)
+                setSessions(sessions.data || [])
+            } catch (e) {
+                console.error(e)
+            } finally {
+                setIsLoading(false)
+            }
         }
         getSessionData()
     }, [projectID])
 
-
     const hasSessions = useMemo(() => !!sessions && sessions.length > 0, [sessions])
+
+    if (isLoading) return <Loading isLoading={true} />
 
     return <div className=' w-full pt-10'>
         {hasSessions ? <SessionList sessions={sessions} /> : <NoSession size={300} />}
@@ -97,11 +108,21 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
 const SessionAlerts = ({ sessionID }: { sessionID: string }) => {
     const [alerts, setAlerts] = useState<TAlert[]>([])
 
+    // Optional: could add loading state here if needed, but for badge it's often fine to show 0 until loaded
+    // User requested loading state on every component though.
+    // Let's add it for correctness.
+    const [isLoading, setIsLoading] = useState(true)
+
     useEffect(() => {
         const fetchAlerts = async () => {
-            const result = await getSessionAlerts(sessionID)
-            if (result.success && result.data) {
-                setAlerts(result.data)
+            setIsLoading(true)
+            try {
+                const result = await getSessionAlerts(sessionID)
+                if (result.success && result.data) {
+                    setAlerts(result.data)
+                }
+            } finally {
+                setIsLoading(false)
             }
         }
         fetchAlerts()
@@ -207,6 +228,8 @@ const SessionChart = ({ session }: { session: ISession }) => {
 
         return { chartData: data, totalDuration: maxTime }
     }, [measurements, session?.createdAt])
+
+    if (loading) return <Loading isLoading={loading} />
 
     return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <LineChartComponent showNoSessionOverlay={false} title="Sensor Measurements" totalDuration={totalDuration} chartData={chartData} chartConfig={configEnv} />
