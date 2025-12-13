@@ -116,6 +116,20 @@ class MQTTClient:
         elif topic.endswith("cal/confirm"):
             if getattr(self, "ph_calibration"):
                 self.ph_calibration.finalize_from_user()
+        elif topic.endswith("pump_control"):
+            # Payload: { sensor_id, pump_type, duration }
+            sensor_id = payload.get("sensor_id")
+            pump_type = payload.get("pump_type")
+            try:
+                duration = float(payload.get("duration", 1.0))
+            except:
+                duration = 1.0
+                
+            sensor = self.sensor_manager.get_sensor(sensor_id)
+            if sensor and hasattr(sensor, "test_pump"):
+                sensor.test_pump(pump_type, duration)
+            else:
+                logger.warning(f"Sensor {sensor_id} does not support pump control")
     
     def calibrate_device(self, payload: dict):
         sensor_id =payload.get("sensor_id", "")

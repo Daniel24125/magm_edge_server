@@ -14,14 +14,25 @@ interface CalibrationDialogProps {
     sensorId: string;
     sensorName: string;
     trigger?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 type CalibrationState = "IDLE" | "STARTING" | "RUNNING" | "COMPLETE" | "ERROR";
 
-export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger }: CalibrationDialogProps) {
+export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger, open: controlledOpen, onOpenChange }: CalibrationDialogProps) {
     const { sendCommand } = useDeviceManager();
     const { subscribe, unsubscribe } = useMQTT();
-    const [open, setOpen] = useState(false);
+    const [internalOpen, setInternalOpen] = useState(false);
+
+    // Use controlled state if provided, otherwise internal
+    const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const setOpen = (val: boolean) => {
+        if (controlledOpen === undefined) {
+            setInternalOpen(val);
+        }
+        onOpenChange?.(val);
+    };
 
     // State
     const [status, setStatus] = useState<CalibrationState>("IDLE");
@@ -156,9 +167,9 @@ export function CalibrationDialog({ deviceId, sensorId, sensorName, trigger }: C
                 setOpen(val);
             }
         }}>
-            <DialogTrigger asChild>
+            {/* <DialogTrigger asChild>
                 {trigger || <Button variant="outline">Calibrate</Button>}
-            </DialogTrigger>
+            </DialogTrigger> */}
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>Evaluate pH Sensor: {sensorName}</DialogTitle>

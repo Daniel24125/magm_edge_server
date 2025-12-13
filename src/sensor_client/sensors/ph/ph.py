@@ -120,5 +120,32 @@ class PHSensor(AbstractSensor):
             return  # pH is at target, no adjustment needed
         return (pump, pump_pin)
 
+    def test_pump(self, pump_type: str, duration: float):
+        """Manually activate a pump for a specific duration."""
+        if pump_type not in ["acidic", "alkaline"]:
+            logger.error(f"Invalid pump type: {pump_type}")
+            return
+
+        pin = self.acidic_pin if pump_type == "acidic" else self.alkaline_pin
+        logger.info(f"Testing {pump_type} pump on pin {pin} for {duration}s")
+        
+        import threading
+        def run():
+            if SIMULATION_MODE:
+                logger.info(f"[SIMULATION] Pump {pump_type} ON")
+                time.sleep(duration)
+                logger.info(f"[SIMULATION] Pump {pump_type} OFF")
+            else:
+                try:
+                    # Assuming active LOW (init was 1)
+                    lgpio.gpio_write(chip, pin, 0) 
+                    time.sleep(duration)
+                except Exception as e:
+                    logger.error(f"Error controlling pump: {e}")
+                finally:
+                    lgpio.gpio_write(chip, pin, 1) # Ensure OFF
+        
+        threading.Thread(target=run, daemon=True).start()
+
 
    

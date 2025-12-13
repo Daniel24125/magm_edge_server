@@ -1,7 +1,15 @@
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CalibrationDialog } from "./CalibrationDialog";
-import { Settings2, Thermometer, Droplets } from "lucide-react";
+import { PumpControlDialog } from "./PumpControlDialog";
+import { Settings2, Thermometer, Droplets, MoreVertical, Pipette, Beaker } from "lucide-react";
 
 interface Sensor {
     key: string;
@@ -31,6 +39,8 @@ const SensorItem = ({ deviceId, sensor }: { deviceId: string, sensor: Sensor }) 
     const isPh = sensor.type === "pH" || sensor.key.toLowerCase().includes("ph");
     const isTemp = sensor.type === "Temperature" || sensor.key.toLowerCase().includes("temp");
 
+    const [activeDialog, setActiveDialog] = useState<"calibration" | "pump" | null>(null);
+
     return (
         <div className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">
@@ -48,11 +58,40 @@ const SensorItem = ({ deviceId, sensor }: { deviceId: string, sensor: Sensor }) 
 
             <div className="flex items-center gap-2">
                 {isPh && sensor.enabled && (
-                    <CalibrationDialog
-                        deviceId={deviceId}
-                        sensorId={sensor.sensor_id || sensor.key}
-                        sensorName={sensor.name}
-                    />
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setActiveDialog("pump")}>
+                                    <Pipette className="mr-2 h-4 w-4" />
+                                    <span>Test Pump</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setActiveDialog("calibration")}>
+                                    <Beaker className="mr-2 h-4 w-4" />
+                                    <span>Calibrate Sensor</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <PumpControlDialog
+                            deviceId={deviceId}
+                            sensorId={sensor.sensor_id || sensor.key}
+                            open={activeDialog === "pump"}
+                            onOpenChange={(open) => !open && setActiveDialog(null)}
+                        />
+                        <CalibrationDialog
+                            deviceId={deviceId}
+                            sensorId={sensor.sensor_id || sensor.key}
+                            sensorName={sensor.name}
+                            open={activeDialog === "calibration"}
+                            onOpenChange={(open) => !open && setActiveDialog(null)}
+                        />
+                    </>
                 )}
             </div>
         </div>

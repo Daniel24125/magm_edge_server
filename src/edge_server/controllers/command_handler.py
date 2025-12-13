@@ -64,6 +64,8 @@ class CommandHandler:
                     "device_id": device_id
                    }
                 }))
+            case "pump_control":
+                self.device_controller.forward_device_command(cmd.params, "pump_control")
             case _:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 
