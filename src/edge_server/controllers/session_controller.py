@@ -263,7 +263,6 @@ class SessionController:
                 self.time_elapsed += 1
                 self._send_heartbeat()
 
-                # Check for timer project duration
                 duration = self.active_session.get("duration")
                 if duration and isinstance(duration, (int, float)) and duration > 0:
                     if self.time_elapsed >= duration:

@@ -15,7 +15,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ISession, TMeasurement } from "@/types/sessions";
 import { TAlert } from "@/types";
-import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
+import { TSessionDetails, TSessionDefaultSettings, TAlertConfiguration, TProjectDetails } from "@/types/projects";
 import { useMQTT } from "./MQTTContext";
 import { useAlert } from "./AlertContext";
 import { StartSessionDialog, StartSessionFormData } from "@/components/sessions/StartSessionDialog";
@@ -59,6 +59,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const [pendingSessionStart, setPendingSessionStart] = useState<{
         projectId: string;
         sessionDetails: TSessionDetails;
+        projectDetails: TProjectDetails;
         settings: TSessionDefaultSettings;
         alertConfiguration: TAlertConfiguration[];
     } | null>(null);
@@ -246,6 +247,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setPendingSessionStart({
             projectId: project.id,
             sessionDetails: project.sessionDetails,
+            projectDetails: project.projectDetails,
             settings: project.sessionDefaultSettings,
             alertConfiguration: project.alertConfiguration
         });
@@ -310,7 +312,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 alertConfiguration: data.alertConfiguration,
                 status: 'running',
                 notes: data.notes,
-                duration: 0,
+                duration: pendingSessionStart.projectDetails.timer || 0,
+                target: pendingSessionStart.projectDetails.target,
                 measurements: []
             };
 
