@@ -1,7 +1,8 @@
 {
   "device_config": {
     "device_name": "Temperature and pH Sensor",
-    "device_id": "d09454f7-6a4a-44af-9e0d-eb0bea17e9de"
+    "device_id": "d09454f7-6a4a-44af-9e0d-eb0bea17e9de",
+    "device_type": "RPi"
   },
   "sampling": {
     "sensor_interval": 5,

@@ -99,6 +99,12 @@ class DeviceController:
             qos=1
         )
 
+    def _handle_user_prompt(self, payload, subtopic):
+        device_id = payload.get("device_id", "")
+        logger.info(f"Forwarding user prompt/live data from {device_id}: {subtopic}")
+        # Forward to AWS:
+        self.aws.client.publish(f"/devices/{device_id}/{subtopic}", json.dumps(payload))
+
     def _get_online_status(self):
         return {d: True for d in self.online_devices.keys()}
 
