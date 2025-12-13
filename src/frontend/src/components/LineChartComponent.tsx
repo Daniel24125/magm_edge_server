@@ -37,7 +37,7 @@ const LineChartComponent = ({ title, totalDuration, chartData, chartConfig, show
 
     return (
         <ResponsiveDialog open={open} onOpenChange={setOpen}>
-            <Card>
+            <Card className="h-full flex flex-col">
                 <CardHeader>
                     <CardTitle className='text-sm font-normal'>{title}</CardTitle>
                     <CardAction>
@@ -48,7 +48,7 @@ const LineChartComponent = ({ title, totalDuration, chartData, chartConfig, show
                         </ResponsiveDialogTrigger>
                     </CardAction>
                 </CardHeader>
-                <CardContent className='relative'>
+                <CardContent className='relative flex-1 min-h-0'>
                     {ChartContent}
                 </CardContent>
             </Card>

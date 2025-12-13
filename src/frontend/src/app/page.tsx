@@ -20,10 +20,9 @@ export default function Page() {
 
 
   return (
-    <main className="pt-10 space-y-6">
+    <main className="pt-10 space-y-6 flex flex-col pb-4">
       <DashboardHeader />
       <SessionChartWidget />
-      {/* <LiveMeasurementsWidget /> */}
     </main>
   );
 }

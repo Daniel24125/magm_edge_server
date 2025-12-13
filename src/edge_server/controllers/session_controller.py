@@ -129,7 +129,7 @@ class SessionController:
             self.publish_status()
 
         # Stop Thread
-        if self.acquisition_thread and self.acquisition_thread.is_alive():
+        if self.acquisition_thread and self.acquisition_thread.is_alive() and self.acquisition_thread is not threading.current_thread():
             self.acquisition_thread.join(timeout=2)
             logger.info("Acquisition thread stopped successfully.")
 
@@ -262,6 +262,14 @@ class SessionController:
                 time.sleep(1)
                 self.time_elapsed += 1
                 self._send_heartbeat()
+
+                # Check for timer project duration
+                duration = self.active_session.get("duration")
+                if duration and isinstance(duration, (int, float)) and duration > 0:
+                    if self.time_elapsed >= duration:
+                        logger.info(f"Timer duration ({duration}s) reached. Stopping session.")
+                        self.stop_session()
+                        break
 
         except Exception as e:
             logger.error(f"Unexpected error in acquisition loop: {e}")

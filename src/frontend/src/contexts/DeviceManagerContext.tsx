@@ -76,6 +76,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
             }
             if (payload.event === "rpi_disconnected") {
                 setIsRPIConnected(false);
+                setOnlineDevices({});
             }
         };
 
