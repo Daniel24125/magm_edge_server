@@ -9,7 +9,7 @@ import { ScrollArea } from "../ui/scroll-area";
 const ConnectedDevicesWidget = () => {
     const { isRPIConnected, onlineDevices } = useDeviceManager();
     return (
-        <Card className="w-96 h-64 shrink-0">
+        <Card className=" h-64 shrink-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <div className="flex items-center gap-2">
                     <Server className="h-4 w-4 text-primary" />

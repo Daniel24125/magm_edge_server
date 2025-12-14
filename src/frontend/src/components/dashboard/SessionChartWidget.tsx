@@ -37,7 +37,7 @@ export function SessionChartWidget() {
     }, [measurements])
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <LineChartComponent title="Sensor Measurements" totalDuration={totalDuration} chartData={chartData} chartConfig={configEnv} />
             <LineChartComponent title="Spectroscopy Measurements" totalDuration={totalDuration} chartData={chartData} chartConfig={configGrowth} />
         </div>

@@ -17,7 +17,7 @@ const SessionWidget = () => {
 
 
     return (
-        <Card className='w-64 h-64 shrink-0'>
+        <Card className='lg:w-64 w-full h-64 shrink-0'>
             <CardHeader className='flex items-start justify-between'>
                 <div className='flex flex-col gap-1'>
                     <CardTitle className='text-sm'>Main Session</CardTitle>

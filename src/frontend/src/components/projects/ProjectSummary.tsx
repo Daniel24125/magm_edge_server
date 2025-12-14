@@ -44,11 +44,11 @@ const AlertSummaryComponent = () => {
 
 export const ProjectSummaryElements = ({ sessionDetails, sessionDefaultSettings }: { sessionDetails: TSessionDetails, sessionDefaultSettings: TSessionDefaultSettings }) => {
     return (<>
-        <div className='flex justify-between gap-4'>
+        <div className='flex flex-col sm:flex-row justify-between gap-4'>
             <ProjectSettingElement title="Reactor Name" value={sessionDetails && sessionDetails.reactorName ? sessionDetails.reactorName : "Not available"} icon={<Biohazard size={20} />} color="#8462D1" />
             <ProjectSettingElement title="CO2 Pressure" value={sessionDetails && sessionDetails.co2Pressure ? sessionDetails.co2Pressure.toString() : "Not available"} icon={<Gauge size={20} />} color="#17B8A6" />
         </div>
-        <div className='flex justify-between gap-4'>
+        <div className='flex flex-col sm:flex-row justify-between gap-4'>
             <ProjectSettingElement title="Medium Composition" value={sessionDetails && sessionDetails.cultureMedium ? sessionDetails.cultureMedium : "Not available"} icon={<Waves size={20} />} color="#74B9FF" />
             <ProjectSettingElement title="Data Aquisition" value={sessionDefaultSettings && sessionDefaultSettings.dataAcquisitionInterval ? `Every ${sessionDefaultSettings.dataAcquisitionInterval} minutes` : "Not available"} icon={<Gauge size={20} />} color="#000000" />
         </div>

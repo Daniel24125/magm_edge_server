@@ -8,7 +8,7 @@ const ProjectSettingElement = ({ title, value, icon, color }: TSummaryElementPro
             </div>
             <p className='text-text-faded text-xs'>{title}</p>
         </div>
-        <p className='font-bold'>{value}</p>
+        <p className='font-bold text-sm sm:text-base'>{value}</p>
     </div>
 }
 
