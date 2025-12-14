@@ -46,7 +46,7 @@ export default function RootLayout({
                     <ApplicationProvider>
                       <section className="flex w-screen">
                         <Sidebar />
-                        <main className="w-full h-screen overflow-y-auto p-4">
+                        <main className="w-full h-screen overflow-y-auto p-4 pb-24 md:pb-4">
                           <Topbar />
                           {children}
                         </main>

@@ -16,29 +16,44 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUserContext } from '@/contexts/UserContext';
 import { useProjects } from '@/contexts/ProjectsContext';
 
+import MobileSidebar from './MobileSidebar';
+
 const Sidebar = () => {
     const { isSidebarOpen } = useApplication();
 
     return (
-        <motion.aside
-            initial={{ width: isSidebarOpen ? '280px' : '72px' }}
-            animate={{ width: isSidebarOpen ? '280px' : '72px' }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className='h-screen bg-sidebar-background flex flex-col shrink-0 px-4 py-10 gap-10 justify-between overflow-hidden border-r border-sidebar-border'
-        >
-            <section className='flex flex-col gap-10'>
-                <SidebarHeader />
-                <CreateProjectButton />
-                <NavigationList />
-            </section>
-            <section className='flex flex-col gap-5'>
-                <AWSConnectionStatus />
-                <DeviceConnectionStatus />
-                <Separator />
-                <AccountElement />
-            </section>
-        </motion.aside>
+        <>
+            <div className="hidden md:block h-screen shrink-0">
+                <motion.aside
+                    initial={{ width: isSidebarOpen ? '280px' : '72px' }}
+                    animate={{ width: isSidebarOpen ? '280px' : '72px' }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className='h-full bg-sidebar-background flex flex-col px-4 py-10 gap-10 justify-between overflow-hidden border-r border-sidebar-border'
+                >
+                    <SidebarContent />
+                </motion.aside>
+            </div>
+            <div className="md:hidden">
+                <MobileSidebar />
+            </div>
+        </>
     )
+}
+
+const SidebarContent = () => {
+    return <>
+        <section className='flex flex-col gap-10'>
+            <SidebarHeader />
+            <CreateProjectButton />
+            <NavigationList />
+        </section>
+        <section className='flex flex-col gap-5'>
+            <AWSConnectionStatus />
+            <DeviceConnectionStatus />
+            <Separator />
+            <AccountElement />
+        </section>
+    </>
 }
 
 const SidebarHeader = () => {
