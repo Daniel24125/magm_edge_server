@@ -4,16 +4,16 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card'
 import { Avatar, AvatarFallback } from '@radix-ui/react-avatar'
 
 
-const ProjectType = ({ projectType, info, showText = true }: { projectType: TProjectType, info?: string, showText?: boolean }) => {
+const ProjectType = ({ projectType, info, showText = true, className }: { projectType: TProjectType, info?: string, showText?: boolean, className?: string }) => {
     const projectTypeProperties = getProjectTypeProperties(projectType)
     return (<ProjectTypeHoverCard projectTypeProperties={projectTypeProperties}>
         <div style={{
             color: projectTypeProperties.color,
             backgroundColor: projectTypeProperties.color + "33"
-        }} className='flex items-center gap-2 justify-between rounded-full px-2 py-1 shrink-0 cursor-default'>
+        }} className={`flex items-center gap-2 justify-between rounded-full px-2 py-1 shrink-0 cursor-default ${className}`}>
             <div className='flex items-center gap-2'>
                 <projectTypeProperties.icon size={15} />
-                {showText && <p className='text-xs'>{projectTypeProperties.title}</p>}
+                {showText && <p className='text-xs hidden md:block'>{projectTypeProperties.title}</p>}
             </div>
             {info && <p className='text-sm font-bold'>{info}</p>}
         </div>

@@ -9,7 +9,7 @@ const DevicesPage = () => {
     const { onlineDevices } = useDeviceManager()
 
     return (
-        <div className='flex flex-col gap-5 p-10 h-full w-full overflow-y-auto'>
+        <div className='flex flex-col gap-5 py-6 md:p-6 h-full w-full overflow-y-auto'>
             <div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5'>
                 {Object.keys(onlineDevices).length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/20">

@@ -78,8 +78,8 @@ const SessionDataDisplay = () => {
 
     return (
         <div className='flex flex-col w-full gap-4'>
-            <div className='flex justify-between items-center w-full gap-2'>
-                <div className='w-80 h-80 border rounded-xl flex flex-col items-center justify-evenly p-4'>
+            <div className='flex flex-col lg:flex-row justify-between items-center w-full gap-2'>
+                <div className='w-full lg:w-80 h-80 border rounded-xl flex flex-col items-center justify-evenly p-4'>
                     <SessionControls />
                     <div className='flex flex-col items-center gap-2'>
                         <p className='text-3xl font-bold'>{formatDuration(activeSession!.time)}</p>
@@ -104,11 +104,11 @@ const SessionChartMonitor = () => {
 
 
     return <div className='border rounded-xl h-80 w-full flex-1 flex justify-between overflow-hidden'>
-        <div className='w-full flex-1'>
+        <div className='flex-1 min-w-0'>
             <SessionChart />
         </div>
-        {latestMeasurement && <div className='w-52 shrink-0 h-full bg-slate-300 px-4 py-2 flex flex-col items-start gap-2'>
-            <p className='text-text-faded font-semibold text-sm mb-2'>Live Measurements</p>
+        {latestMeasurement && <div className='max-w-52 shrink-0 h-full bg-slate-300 px-4 py-2 flex flex-col items-start gap-2'>
+            <p className='text-text-faded font-semibold text-xs mb-2 hidden xl:block'>Live Measurements</p>
             {metrics.map((metric) => {
                 const measurementProperties = getAlertIcon(metric)
                 return <LiveMeasurementItem
@@ -153,7 +153,7 @@ const SessionChart = () => {
         return { chartData: data, totalDuration: maxTime }
     }, [measurements])
 
-    return <div className='w-full p-4 h-full'>
+    return <div className='w-full p-4 h-full shrink'>
         <ChartRenderer
             totalDuration={totalDuration}
             chartData={chartData}
@@ -169,9 +169,9 @@ const LiveMeasurementItem = ({ value, label, color, units }: { value: number | s
     return <div className='flex flex-col items-start gap-1'>
         <div className='flex gap-2 items-center'>
             <div style={{ backgroundColor: color }} className='w-2.5 h-2.5 rounded-full'></div>
-            <p className='text-sm text-text-faded font-medium'>{label}</p>
+            <p className='text-xs xl:text-sm text-text-faded font-medium'>{label}</p>
         </div>
-        <p className='text-2xl font-bold ml-3'>{value} {typeof value === "number" ? units : ""}</p>
+        <p className='text-sm xl:text-2xl font-bold ml-3'>{value} {typeof value === "number" ? units : ""}</p>
     </div>
 }
 

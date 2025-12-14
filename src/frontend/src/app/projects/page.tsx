@@ -59,7 +59,9 @@ const ProjectCard = ({ project }: { project: IProject }) => {
         <>
             <Card className="w-full max-w-sm">
                 <CardHeader>
-                    <CardTitle>{project.projectDetails.projectTitle}</CardTitle>
+                    <CardTitle>{project.projectDetails.projectTitle.length > 25
+                        ? `${project.projectDetails.projectTitle.substring(0, 25)}...`
+                        : project.projectDetails.projectTitle}</CardTitle>
                     <CardDescription>
                         {project.id}
                     </CardDescription>
