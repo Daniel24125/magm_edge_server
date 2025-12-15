@@ -1,6 +1,5 @@
 import time, statistics
-import os
-from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, logger, save_config, project_root
+from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, logger
 from collections import deque
 
 
@@ -72,7 +71,6 @@ class PHSensor(AbstractSensor):
         for i in range(10):
             ph_val = self.analog_comunicator.get_read() 
             self.values.append(ph_val)
-
         is_stable = False
         avg_ph = ph_val
 
@@ -149,3 +147,28 @@ class PHSensor(AbstractSensor):
 
 
    
+if __name__ == "__main__": 
+    config = {
+      "key": "ph",
+      "type": "pH",
+      "name": "pH Sensor 1",
+      "sensor_id": "e6cc7497-d0aa-4cd9-9e56-578b6f9db521",
+      "unit": "",
+      "enabled": True,
+      "probe": 3,
+      "read_window_size": 10,
+      "read_stability_threshold": 0.02,
+      "pin":{
+          "acidic": 10,
+          "alkaline": 9,
+          "alkaline_pump_pin": 10, 
+          "acidic_pump_pin": 10
+      },
+      "simulator_params": {
+        "min_val": 6.0,
+        "max_val": 8.5,
+        "period_seconds": 43200,
+        "noise": 0.05
+      }
+    }
+    sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")

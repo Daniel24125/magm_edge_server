@@ -31,7 +31,6 @@ class AnalogCommunication:
     def __init__(self, sensor_config):
         self.sensor_config = sensor_config
         self.cal_data = self.db.get_last_calibration("pH")
-       
 
 
     # This method is responsible for getting an analog read of the sensors. The read value corresponds to an average of 20 reads (i.e., 20 by default)
@@ -59,8 +58,8 @@ class AnalogCommunication:
 
     # This method is responsible for converting the analog read to the pH value according to the sensors' calibration curve
     def convert_analog(self, analog_read):
-        m, b, _, _, _ = self.cal_data
-        return round(analog_read*m+b, 2)
+        _,m, b, _, _, _ = self.cal_data
+        return round((analog_read-b)/m, 2)
 
     # this method is responsible for updating the classes' current values for the pH sensor
     def update_current_values(self):

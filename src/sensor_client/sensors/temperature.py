@@ -17,7 +17,8 @@ class TemperatureSensor(AbstractSensor):
             self.gpio_init()
 
     def gpio_init(self):
-        lgpio.setup(self.pin, lgpio.IN)
+        # lgpio.setup(self.pin, lgpio.IN)
+        pass
 
     def read(self) -> SensorReading:
         if SIMULATION_MODE and self.simulated_sensor:
@@ -28,5 +29,6 @@ class TemperatureSensor(AbstractSensor):
                 timestamp=time.time(),
                 value=value,
                 unit=self.unit,
-                sensor_type="Temperature"
+                sensor_type="Temperature",
+                is_stable=True
             )

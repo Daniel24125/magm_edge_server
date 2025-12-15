@@ -234,6 +234,8 @@ class DatabaseHelper:
 
     def insert_calibration(
         self,
+        sensor_id:str,
+        device_id:str,
         sensor_type: str,
         slope: float,
         intercept: float,
@@ -245,15 +247,16 @@ class DatabaseHelper:
         """
         Returns the inserted calibration row id.
         """
+        print(sensor_id, sensor_type, slope, intercept, calibration_temp, operator, notes, date_iso)
         date_iso = date_iso or utcnow_iso()
         with self._locked_cursor() as cur:
             self._begin_immediate(cur)
             self._retrying_execute(
                 cur,
                 """INSERT INTO ph_calibration
-                   (sensor_type, date, slope, intercept, calibration_temp, operator, notes)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (sensor_type, date_iso, slope, intercept, calibration_temp, operator, notes),
+                   (sensor_id, device_id, sensor_type, date, slope, intercept, calibration_temp, operator, notes)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (sensor_id, device_id, sensor_type, date_iso, slope, intercept, calibration_temp, operator, notes),
             )
             rid = cur.lastrowid
             self._conn.commit()
@@ -263,19 +266,21 @@ class DatabaseHelper:
         self, sensor_type: str
     ) -> Optional[Tuple[float, float, float, str, int]]:
         """
-        Returns (slope, intercept, calibration_temp, date_iso, id) for the most recent calibration.
+        Returns (sensor_id, slope, intercept, calibration_temp, date_iso, id) for the most recent calibration.
         """
         with self._locked_cursor() as cur:
             row = self._retrying_execute(
                 cur,
-                """SELECT slope, intercept, calibration_temp, date, id
+                """SELECT sensor_id, slope, intercept, calibration_temp, date, id
                    FROM ph_calibration
                    WHERE sensor_type = ?
                    ORDER BY date DESC
                    LIMIT 1""",
                 (sensor_type,),
             ).fetchone()
-            return row if row else None
+            if not row:
+                self.insert_calibration( "e6cc7497-d0aa-4cd9-9e56-578b6f9db521","d09454f7-6a4a-44af-9e0d-eb0bea17e9de", "pH", 3221.217, -8168.85, 25, "Daniel Madalena", "note", datetime.now(timezone.utc).isoformat())
+            return row 
 
     def insert_measurement(
         self,
