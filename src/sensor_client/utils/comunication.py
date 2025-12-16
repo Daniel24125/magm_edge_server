@@ -11,6 +11,7 @@ if PROJECT_ROOT not in sys.path:
 
 try:
     from edge_server.database.db_manager import DatabaseHelper
+    from shared.utils.logger import logger
 
 except ImportError as e:
     logger.error(f"Configuration import failed. Please ensure the 'config' package is set up correctly. Error: {e}")
@@ -31,20 +32,25 @@ class AnalogCommunication:
     def __init__(self, sensor_config):
         self.sensor_config = sensor_config
         self.cal_data = self.db.get_last_calibration("pH")
-
+        self.probe = self.sensor_config.get("probe")
+        self.analog = AnalogIn(ads, port_map[self.probe])
 
     # This method is responsible for getting an analog read of the sensors. The read value corresponds to an average of 20 reads (i.e., 20 by default)
     def get_read(self, NUM_MEAS_FOR_AVG=20):
         analog_avg = self.get_analog_read(NUM_MEAS_FOR_AVG)
+
         return self.convert_analog(analog_avg)
 
     def get_analog_read(self, NUM_MEAS_FOR_AVG=20): 
         self.ready=False
         analog_values = np.zeros(NUM_MEAS_FOR_AVG)
-        probe = self.sensor_config.get("probe")
+        
+
         for i in range(NUM_MEAS_FOR_AVG):
             try:
-                an_read = AnalogIn(ads, port_map[probe]).value
+                logger.info(f"Attempting read {i+1}/{NUM_MEAS_FOR_AVG}...") # Add this debug log
+                an_read = self.analog.value
+                logger.info(f"Read successful: {an_read}") 
                 analog_values[i] = an_read
 
             except Exception as err:

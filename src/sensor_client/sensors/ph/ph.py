@@ -71,6 +71,7 @@ class PHSensor(AbstractSensor):
         for i in range(10):
             ph_val = self.analog_comunicator.get_read() 
             self.values.append(ph_val)
+        
         is_stable = False
         avg_ph = ph_val
 

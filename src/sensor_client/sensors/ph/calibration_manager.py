@@ -30,7 +30,7 @@ class PHCalibrationManager:
 
     def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], payload: dict):
         self.mqtt = mqtt_client
-        self.db = db
+        self.db = db 
         self.read_ph = read_ph_callback
 
         self.device_id = payload.get("device_id")
@@ -55,7 +55,7 @@ class PHCalibrationManager:
             logger.warning("Calibration already running")
             return
         self.running = True
-        threading.Thread(target=self._run, daemon=True).start()
+        #threading.Thread(target=self._run, daemon=True).start()
         threading.Thread(target=self._broadcast_live_readings, daemon=True).start()
 
     def reset_calibration(self):
@@ -98,9 +98,10 @@ class PHCalibrationManager:
                 if not reading:
                     time.sleep(self.sample_rate)
                     continue
-
+                logger.info("Detecting standard...")
                 ph_val, is_stable = reading.value, reading.is_stable
                 detected = PHCalibrationHelper.detect_standard(ph_val, self.detection_tolerance)
+                logger.info(f"detected: {detected}")
 
                 if detected != "unknown" and is_stable:
                     if detected == last_detected:
@@ -168,14 +169,16 @@ class PHCalibrationManager:
         while self.running:
             try:
                 r = self.read_ph()
+                print(f"READ: {r.value}")
                 if not r:
                     time.sleep(self.publish_live_interval)
                     continue
                 topic = f"/devices/{self.device_id}/cal/live_readings"
+                is_stable = bool(r.is_stable)
                 payload = {
                     "ph_value": r.value,
-                    "is_stable": r.is_stable,
-                    "stability_index": 1.0 if r.is_stable else 0.5,
+                    "is_stable": is_stable,
+                    "stability_index": 1.0 if is_stable else 0.5,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
                 self._send_message_to_user(topic, payload)
@@ -201,15 +204,16 @@ class PHCalibrationManager:
 
     def _send_message_to_user(self, topic: str, payload: dict):
         try:
-            self.mqtt.publish(topic, json.dumps({
-                "topic": topic,
-                "payload": {
-                    **payload,
-                    "device_id": self.device_id,
-                    "sensor_id": self.sensor_id,
-                    "source": "rpi"
-                }
-            }), qos=1)
+            if self.mqtt:
+                self.mqtt.publish(topic, json.dumps({
+                    "topic": topic,
+                    "payload": {
+                        **payload,
+                        "device_id": self.device_id,
+                        "sensor_id": self.sensor_id,
+                        "source": "rpi"
+                    }
+                }), qos=1)
         except Exception as e:
             logger.error(f"MQTT publish failed: {e}")
 

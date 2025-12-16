@@ -1,4 +1,13 @@
 from sensors.ph.ph import PHSensor
+from sensors.ph.calibration_manager import PHCalibrationManager
+import sys, os
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from edge_server.database.db_manager import DatabaseHelper
+
+
 config = {
       "key": "ph",
       "type": "pH",
@@ -31,15 +40,21 @@ def get_analog_ph_read():
         print(read)
         time.sleep(1)
         
- 
-if __name__ == "__main__": 
-   sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
-
-   import time
-   
-   while True:
+def get_ph_read():
+    sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
+    import time
+    while True:
         read = sensor.read() 
-        an_read = sensor.analog_comunicator.get_analog_read() 
-        print(read.value, an_read)
-        time.sleep(1)   
-   
+        print(read)
+        time.sleep(1)
+if __name__ == "__main__": 
+  sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
+
+  db =  DatabaseHelper("src/edge_server/database/models/sessions.db")
+  payload = {
+      "device_id": "wodvgoeijhifh wef i",
+      "sensor_id": config.get("sensor_id"), 
+      "user_name": "Daniel Madalena"
+  }
+  calibrator = PHCalibrationManager(None, db,sensor.read, payload)
+  calibrator.start()

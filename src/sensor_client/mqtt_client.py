@@ -132,6 +132,7 @@ class MQTTClient:
                 logger.warning(f"Sensor {sensor_id} does not support pump control")
     
     def calibrate_device(self, payload: dict):
+        logger.info("Starting device calibration...")
         sensor_id =payload.get("sensor_id", "")
         sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
         self.ph_calibration = PHCalibrationManager(self.client, self.db, sensor.read, payload)
