@@ -1,4 +1,5 @@
 import time, statistics
+import numpy as np
 from ..base import AbstractSensor, SensorReading, state_manager, lgpio, chip, logger
 from collections import deque
 
@@ -47,9 +48,11 @@ class PHSensor(AbstractSensor):
     def init_read_settings(self):
         self.window = self.config.get("read_window_size")
         self.stability_threshold = self.config.get("read_stability_threshold")
+        self.drift_stability_threshold = self.config.get("drift_stability_threshold", 0.005)
 
         self.values = deque(maxlen=self.window)
         self.raw_values = deque(maxlen=self.window)
+        self.history = deque(maxlen=self.window) # Stores (timestamp, value) tuples
         self.last_stable = False
 
     def init_gpio(self):  
@@ -79,10 +82,28 @@ class PHSensor(AbstractSensor):
         avg_ph = ph_val
 
         if len(self.values) == self.values.maxlen:
-            sigma = statistics.stdev(self.values)
-            print(sigma)
-            is_stable = sigma < self.stability_threshold
             avg_ph = statistics.mean(self.values)
+            self.history.append((time.time(), avg_ph))
+            
+            # Require at least 3 points to calculate a meaningful slope
+            if len(self.history) >= 3:
+                timestamps = np.array([x[0] for x in self.history])
+                ph_values = np.array([x[1] for x in self.history])
+                
+                # Normalize time to avoid floating point issues with large timestamps
+                timestamps -= timestamps[0]
+                
+                slope, _ = np.polyfit(timestamps, ph_values, 1)
+                
+                # Check for stability based on slope (change per second)
+                # We can also keep the standard deviation check combined if desired, 
+                # but user specifically asked for slope. Let's rely on slope as primary stability.
+                is_stable = abs(slope) < self.drift_stability_threshold
+                
+                # Optional debug print
+                # print(f"Slope: {slope:.6f}, Threshold: {self.drift_stability_threshold}, Stable: {is_stable}")
+            else:
+                is_stable = False # Not enough history yet
 
         self.last_stable = is_stable
         return SensorReading(
