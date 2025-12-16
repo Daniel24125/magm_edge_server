@@ -55,7 +55,7 @@ class PHCalibrationManager:
             logger.warning("Calibration already running")
             return
         self.running = True
-        #threading.Thread(target=self._run, daemon=True).start()
+        threading.Thread(target=self._run, daemon=True).start()
         threading.Thread(target=self._broadcast_live_readings, daemon=True).start()
 
     def reset_calibration(self):
