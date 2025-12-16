@@ -18,7 +18,7 @@
       "unit": "Celsius",
       "enabled": true,
       "pin": 4,
-      "calibration_offset": 0.2,
+      "onewire_id": "",
       "simulator_params": {
         "min_val": 18.0,
         "max_val": 35.0,
