@@ -49,9 +49,7 @@ class AnalogCommunication:
         with ads_lock:
             for i in range(NUM_MEAS_FOR_AVG):
                 try:
-                    logger.info(f"Attempting read {i+1}/{NUM_MEAS_FOR_AVG}...") # Add this debug log
                     an_read = self.analog.value
-                    logger.info(f"Read successful: {an_read}") 
                     analog_values[i] = an_read
 
                 except Exception as err:

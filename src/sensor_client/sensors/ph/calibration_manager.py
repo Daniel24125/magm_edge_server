@@ -13,7 +13,7 @@ from edge_server.database.db_manager import DatabaseHelper
 
 
 class PHCalibrationHelper:
-    STANDARDS = {"acidic": 4.0, "neutral": 7.0, "alkaline": 10.0}
+    STANDARDS = {"acidic": 4.0, "neutral": 7.0, "alkaline": 9.0}
 
     @staticmethod
     def detect_standard(ph_value: float, tolerance: float = 0.5) -> str:
@@ -41,8 +41,8 @@ class PHCalibrationManager:
         self.running = False
         self.calibration_data: Dict[str, float] = {}
         self.sample_rate = 1.0
-        self.timeout = 180
-        self.stability_min_count = 5
+        self.timeout = 18000
+        self.stability_min_count = 3
         self.detection_tolerance = 0.5
         self.publish_live_interval = 1.0
 
@@ -98,7 +98,6 @@ class PHCalibrationManager:
                 if not reading:
                     time.sleep(self.sample_rate)
                     continue
-                logger.info("Detecting standard...")
                 ph_val, is_stable = reading.value, reading.is_stable
                 detected = PHCalibrationHelper.detect_standard(ph_val, self.detection_tolerance)
                 logger.info(f"detected: {detected}")
@@ -111,7 +110,7 @@ class PHCalibrationManager:
 
                     if stable_counter >= self.stability_min_count and detected not in self.calibration_data:
                         self._register_standard(detected, ph_val)
-                        if len(self.calibration_data) >= 2:
+                        if len(self.calibration_data) >= 3:
                             break
                         self._notify_user(
                             "NEXT",
@@ -130,10 +129,10 @@ class PHCalibrationManager:
                 self.running = False
                 return
 
-        if len(self.calibration_data) >= 2 and self.running:
+        if len(self.calibration_data) >= 3 and self.running:
             self._compute_pending_results()
-        elif self.running:
-            self._notify_user("ERROR", "Calibration incomplete: insufficient stable standards.")
+        #elif self.running:
+            #self._notify_user("ERROR", "Calibration incomplete: insufficient stable standards.")
         self.running = False
 
 
@@ -169,7 +168,6 @@ class PHCalibrationManager:
         while self.running:
             try:
                 r = self.read_ph()
-                print(f"READ: {r.value}")
                 if not r:
                     time.sleep(self.publish_live_interval)
                     continue

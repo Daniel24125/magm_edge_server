@@ -47,7 +47,8 @@ def get_ph_read():
         read = sensor.read() 
         print(read)
         time.sleep(1)
-if __name__ == "__main__": 
+
+def test_cal():
   sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
 
   db =  DatabaseHelper("src/edge_server/database/models/sessions.db")
@@ -65,3 +66,6 @@ if __name__ == "__main__":
   except KeyboardInterrupt:
       calibrator.reset_calibration()
       print("\nExiting...")
+
+if __name__ == "__main__": 
+  get_ph_read()
