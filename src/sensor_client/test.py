@@ -1,6 +1,6 @@
 from sensors.ph.ph import PHSensor
 from sensors.ph.calibration_manager import PHCalibrationManager
-import sys, os
+import sys, os, time
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -58,3 +58,10 @@ if __name__ == "__main__":
   }
   calibrator = PHCalibrationManager(None, db,sensor.read, payload)
   calibrator.start()
+  
+  try:
+      while True:
+          time.sleep(1)
+  except KeyboardInterrupt:
+      calibrator.reset_calibration()
+      print("\nExiting...")
