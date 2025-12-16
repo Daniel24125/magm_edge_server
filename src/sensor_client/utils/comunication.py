@@ -64,7 +64,7 @@ class AnalogCommunication:
     # This method is responsible for converting the analog read to the pH value according to the sensors' calibration curve
     def convert_analog(self, analog_read):
         _,m, b, _, _, _ = self.cal_data
-        return round((analog_read-b)/m, 2)
+        return round(m*analog_read+b, 2)
 
     # this method is responsible for updating the classes' current values for the pH sensor
     def update_current_values(self):

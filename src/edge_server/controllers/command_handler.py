@@ -52,7 +52,9 @@ class CommandHandler:
             case "resume_session":
                 self.session_controller.resume_session()
             case "confirm_calibration":
-                topic = f"/devices/{cmd.params.device_id}/cal/confirm"
+                device_id = cmd.params.get("device_id")
+                topic = f"/devices/{device_id}/cal/confirm"
+                
                 self.mqtt.client.publish(topic, json.dumps(cmd.params))
             case "cancel_calibration":
                 device_id = cmd.params.get("device_id")

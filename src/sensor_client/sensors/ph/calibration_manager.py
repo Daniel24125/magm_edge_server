@@ -45,7 +45,7 @@ class PHCalibrationManager:
         self.sample_rate = 1.0
         self.timeout = 18000
         self.stability_min_count = 3
-        self.detection_tolerance = 0.5
+        self.detection_tolerance = 0.3
         self.publish_live_interval = 1.0
 
         # --- Temporary slope/intercept before confirmation ---
@@ -207,6 +207,7 @@ class PHCalibrationManager:
                 "type": "calibration",
                 "status": status,
                 "message": message,
+                "device_id":self.device_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data": {"calibration_data": self.calibration_data},
             },

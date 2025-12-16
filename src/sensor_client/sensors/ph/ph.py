@@ -80,6 +80,7 @@ class PHSensor(AbstractSensor):
 
         if len(self.values) == self.values.maxlen:
             sigma = statistics.stdev(self.values)
+            print(sigma)
             is_stable = sigma < self.stability_threshold
             avg_ph = statistics.mean(self.values)
 

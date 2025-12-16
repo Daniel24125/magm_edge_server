@@ -247,7 +247,6 @@ class DatabaseHelper:
         """
         Returns the inserted calibration row id.
         """
-        print(sensor_id, sensor_type, slope, intercept, calibration_temp, operator, notes, date_iso)
         date_iso = date_iso or utcnow_iso()
         with self._locked_cursor() as cur:
             self._begin_immediate(cur)
@@ -279,7 +278,7 @@ class DatabaseHelper:
                 (sensor_type,),
             ).fetchone()
             if not row:
-                self.insert_calibration( "e6cc7497-d0aa-4cd9-9e56-578b6f9db521","d09454f7-6a4a-44af-9e0d-eb0bea17e9de", "pH", 3221.217, -8168.85, 25, "Daniel Madalena", "note", datetime.now(timezone.utc).isoformat())
+                self.insert_calibration( "e6cc7497-d0aa-4cd9-9e56-578b6f9db521","d09454f7-6a4a-44af-9e0d-eb0bea17e9de", "pH", 0.000315967, 2.35586, 25, "Daniel Madalena", "note", datetime.now(timezone.utc).isoformat())
             return row 
 
     def insert_measurement(

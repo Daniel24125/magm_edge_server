@@ -35,7 +35,7 @@
       "enabled": true,
       "probe": 3,
       "read_window_size": 10,
-      "read_stability_threshold": 0.02,
+      "read_stability_threshold": 0.006,
       "pin":{
           "acidic": 10,
           "alkaline": 9,

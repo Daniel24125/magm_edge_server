@@ -135,7 +135,7 @@ class MQTTClient:
         logger.info("Starting device calibration...")
         sensor_id =payload.get("sensor_id", "")
         sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
-        self.ph_calibration = PHCalibrationManager(self.client, self.db, sensor.read, payload)
+        self.ph_calibration = PHCalibrationManager(self.client, self.db, sensor.read,sensor.get_last_raw_average, payload)
         self.ph_calibration.start()
 
     def start_session(self, payload: str):
