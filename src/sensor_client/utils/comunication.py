@@ -1,7 +1,7 @@
 import numpy as np 
 import sys
 import os 
-from .ads_utils import ads
+from .ads_utils import ads, ads_lock
 from adafruit_ads1x15.analog_in import AnalogIn
 port_map = [0,1,2,3]
 
@@ -40,20 +40,23 @@ class AnalogCommunication:
         analog_avg = self.get_analog_read(NUM_MEAS_FOR_AVG)
 
         return self.convert_analog(analog_avg)
-
+    
     def get_analog_read(self, NUM_MEAS_FOR_AVG=20): 
         self.ready=False
         analog_values = np.zeros(NUM_MEAS_FOR_AVG)
         
 
-        for i in range(NUM_MEAS_FOR_AVG):
-            try:
-                an_read = self.analog.value
-                analog_values[i] = an_read
+        with ads_lock:
+            for i in range(NUM_MEAS_FOR_AVG):
+                try:
+                    logger.info(f"Attempting read {i+1}/{NUM_MEAS_FOR_AVG}...") # Add this debug log
+                    an_read = self.analog.value
+                    logger.info(f"Read successful: {an_read}") 
+                    analog_values[i] = an_read
 
-            except Exception as err:
-                logger.error("Error while retrieving analog signal: ",err)
-                pass
+                except Exception as err:
+                    logger.error("Error while retrieving analog signal: ",err)
+                    pass
 
         mask = np.ma.masked_equal(analog_values,0).compressed()
         analog_avg = np.average(mask)
