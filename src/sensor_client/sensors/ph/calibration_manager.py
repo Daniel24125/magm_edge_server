@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import sys, os, threading
 from typing import Callable, Dict
 import json
+import numpy as np
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -28,10 +29,11 @@ class PHCalibrationHelper:
 class PHCalibrationManager:
 
 
-    def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], payload: dict):
+    def __init__(self, mqtt_client, db: DatabaseHelper, read_ph_callback: Callable[[], SensorReading], read_raw_callback: Callable[[], float], payload: dict):
         self.mqtt = mqtt_client
         self.db = db 
         self.read_ph = read_ph_callback
+        self.read_raw = read_raw_callback
 
         self.device_id = payload.get("device_id")
         self.sensor_id = payload.get("sensor_id")
@@ -137,28 +139,40 @@ class PHCalibrationManager:
 
 
     def _register_standard(self, name: str, value: float):
-        self.calibration_data[name] = value
-        logger.info(f"✅ Registered {name} buffer at {value:.2f} pH")
+        raw_val = self.read_raw()
+        self.calibration_data[name] = raw_val
+        logger.info(f"✅ Registered {name} buffer at {value:.2f} pH (raw: {raw_val:.2f})")
         self._notify_user("STABLE", f"Stable {name} buffer detected ({value:.2f}).")
 
     def _compute_pending_results(self):
         try:
-            items = sorted(
-                self.calibration_data.items(),
-                key=lambda kv: PHCalibrationHelper.STANDARDS[kv[0]],
-            )
-            (name1, v1), (name2, v2) = items[0], items[1]
-            p1, p2 = PHCalibrationHelper.STANDARDS[name1], PHCalibrationHelper.STANDARDS[name2]
-            self.slope = (v2 - v1) / (p2 - p1)
-            self.intercept = v1 - self.slope * p1
+            # Prepare data for regression
+            raw_values = []
+            standard_ph_values = []
+            
+            for name, raw_val in self.calibration_data.items():
+                if name in PHCalibrationHelper.STANDARDS:
+                    raw_values.append(raw_val)
+                    standard_ph_values.append(PHCalibrationHelper.STANDARDS[name])
+            
+            if len(raw_values) < 2:
+                raise ValueError("Insufficient calibration points for regression")
+
+            # Perform linear regression to find slope (m) and intercept (b)
+            # We want raw * m + b = pH  => pH = m * raw + b
+            # numpy.polyfit(x, y, deg) returns [slope, intercept]
+            slope, intercept = np.polyfit(raw_values, standard_ph_values, 1)
+            
+            self.slope = slope
+            self.intercept = intercept
 
             logger.info(
-                f"Calibration computed from {name1}({p1}) and {name2}({p2}): "
-                f"slope={self.slope:.5f}, intercept={self.intercept:.5f}"
+                f"Calibration computed with {len(raw_values)} points: "
+                f"slope={self.slope:.5e}, intercept={self.intercept:.5f}"
             )
             self._notify_user(
                 "COMPLETE",
-                f"Calibration ready. slope={self.slope:.4f}, intercept={self.intercept:.4f}. Awaiting user confirmation."
+                f"Calibration ready. slope={self.slope:.4e}, intercept={self.intercept:.4f}. Awaiting user confirmation."
             )
         except Exception as e:
             logger.error(f"Failed computing calibration: {e}")

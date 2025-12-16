@@ -49,6 +49,7 @@ class PHSensor(AbstractSensor):
         self.stability_threshold = self.config.get("read_stability_threshold")
 
         self.values = deque(maxlen=self.window)
+        self.raw_values = deque(maxlen=self.window)
         self.last_stable = False
 
     def init_gpio(self):  
@@ -69,7 +70,9 @@ class PHSensor(AbstractSensor):
 
     def get_instrument_read(self):
         for i in range(10):
-            ph_val = self.analog_comunicator.get_read() 
+            raw_val = self.analog_comunicator.get_analog_read()
+            self.raw_values.append(raw_val)
+            ph_val = self.analog_comunicator.convert_analog(raw_val)
             self.values.append(ph_val)
         
         is_stable = False
@@ -88,6 +91,11 @@ class PHSensor(AbstractSensor):
             is_stable=is_stable,
             sensor_type="pH"
         )
+
+    def get_last_raw_average(self):
+        if not self.raw_values:
+            return 0
+        return statistics.mean(self.raw_values)
 
     def set_mode(self, mode):
         if mode != "acidic" or mode != "alkaline" or mode != "auto":

@@ -1,3 +1,4 @@
+
 from sensors.ph.ph import PHSensor
 from sensors.ph.calibration_manager import PHCalibrationManager
 import sys, os, time
@@ -6,7 +7,6 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from edge_server.database.db_manager import DatabaseHelper
-
 
 config = {
       "key": "ph",
@@ -25,47 +25,52 @@ config = {
           "acidic_pump_pin": 10
       },
       "simulator_params": {
-        "min_val": 6.0,
-        "max_val": 8.5,
-        "period_seconds": 43200,
-        "noise": 0.05
+        "min_val": 4.0,
+        "max_val": 10.0,
+        "period_seconds": 60,
+        "noise": 0.01
       }
     }
 
-def get_analog_ph_read(): 
-    sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
-    import time
-    while True:
-        read = sensor.analog_comunicator.get_analog_read() 
-        print(read)
-        time.sleep(1)
-        
-def get_ph_read():
-    sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
-    import time
-    while True:
-        read = sensor.read() 
-        print(read)
-        time.sleep(1)
-
 def test_cal():
+  print("Initializing Sensor...")
   sensor = PHSensor("Ph sensor", "", config, "owiebhfowebfbfweoibf")
+  
+  # Mock DB
+  class MockDB:
+      def get_last_calibration(self, key):
+          return (1, 1, 0, 1, 1, 1) # dummy
+      def add_record(self, table, data):
+          print(f"[DB] Added record to {table}: {data}")
 
-  db =  DatabaseHelper("src/edge_server/database/models/sessions.db")
+  db = MockDB()
   payload = {
-      "device_id": "wodvgoeijhifh wef i",
+      "device_id": "test_device",
       "sensor_id": config.get("sensor_id"), 
-      "user_name": "Daniel Madalena"
+      "user_name": "Test User"
   }
-  calibrator = PHCalibrationManager(None, db,sensor.read, sensor.get_last_raw_average, payload)
+  
+  # Mock MQTT
+  class MockMQTT:
+      def publish(self, topic, payload, qos=0):
+          print(f"[MQTT] {topic}: {payload}")
+
+  mqtt = MockMQTT()
+
+  print("Initializing Calibration Manager...")
+  calibrator = PHCalibrationManager(mqtt, db, sensor.read, sensor.get_last_raw_average, payload)
   calibrator.start()
   
+  print("Starting Calibration Loop. This will run for 30 seconds...")
   try:
-      while True:
+      start = time.time()
+      while time.time() - start < 30:
           time.sleep(1)
   except KeyboardInterrupt:
-      calibrator.reset_calibration()
-      print("\nExiting...")
+      pass
+  finally:
+       calibrator.reset_calibration()
+       print("\nExiting...")
 
 if __name__ == "__main__": 
-  get_ph_read()
+    test_cal()
