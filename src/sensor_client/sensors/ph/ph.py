@@ -57,12 +57,16 @@ class PHSensor(AbstractSensor):
         self.raw_values = deque(maxlen=self.window)
         self.history = deque(maxlen=self.window) # Stores (timestamp, value) tuples
         self.last_stable = False
+        
+        # Initialize pins from config (safely)
+        self.acidic_pin = self.config.get("pin", {}).get("acidic")
+        self.alkaline_pin = self.config.get("pin", {}).get("alkaline")
 
     def init_gpio(self):  
-        self.acidic_pin = self.config.get("pin").get("acidic")
-        self.alkaline_pin = self.config.get("pin").get("alkaline")
-        lgpio.gpio_claim_output(chip, self.acidic_pin, level=1)
-        lgpio.gpio_claim_output(chip, self.alkaline_pin, level=1)
+        if self.acidic_pin is not None:
+             lgpio.gpio_claim_output(chip, self.acidic_pin, level=1)
+        if self.alkaline_pin is not None:
+             lgpio.gpio_claim_output(chip, self.alkaline_pin, level=1)
 
     
     def read(self) -> SensorReading:
