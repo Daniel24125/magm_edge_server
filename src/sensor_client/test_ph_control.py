@@ -27,18 +27,7 @@ def test_ph_control_logic():
     print(f"--- Starting pH Control Logic Test (Sim Mode: {state_manager.simulation_mode}) ---")
 
     # 1. Mock Config
-    config = {
-        "read_window_size": 10,
-        "read_stability_threshold": 0.02,
-        "drift_stability_threshold": 0.005,
-        "pin": {
-            "acidic": 10,
-            "alkaline": 9
-        },
-        "simulator_params": {
-            "min_val": 6.0, "max_val": 8.0, "period_seconds": 100, "noise": 0
-        }
-    }
+    config = load_config("src/sensor_client/config/sensors.json").get("sensors")[1]
 
     # 2. Instantiate Sensor
     sensor = PHSensor("Test pH Sensor", "pH", config, "test_sensor_id")

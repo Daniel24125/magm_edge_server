@@ -417,9 +417,6 @@ class SessionController:
             # 2. Publish History ONLY if recorded (saved to DB)
             if payload.get("is_recorded"):
                 self.publish_history(payload.get("session_id"))
-            
-                else: 
-                     logger.debug(f"Received pH data: {ph_value}")
 
         except Exception as e:
             logger.error(f"Error publishing measurement: {e}")

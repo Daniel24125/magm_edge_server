@@ -60,23 +60,15 @@ def main():
 
     while True:
         try:
-            val_str = input("\nEnter simulated pH: ").strip()
-            if val_str.lower() == 'q':
-                break
+            current_ph = sensor.read().value
             
-            if not val_str:
-                continue
-
-            current_ph = float(val_str)
-            
-            # Reset cooldown to allow immediate triggering
             sensor.last_pump_activation = 0 
             
             print(f"Processing pH {current_ph}...")
             sensor.control_loop(current_ph)
             
             # Small sleep to let background pump thread log messages appear
-            time.sleep(0.6)
+            time.sleep(5)
 
         except ValueError:
             print("Invalid number. Please enter a float.")
