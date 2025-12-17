@@ -65,6 +65,12 @@ class SensorManager:
         """Returns the list of configured sensors with their static details."""
         return self.config.get("sensors", [])
 
+    def update_ph_config(self, settings: Dict[str, Any]):
+        """Updates the pH sensor with new session settings (setpoint, control status)."""
+        for sensor in self.sensors:
+            if isinstance(sensor, PHSensor):
+                sensor.update_control_settings(settings)
+
 if __name__ == "__main__": 
     from shared.utils.config_loader import load_config
     config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/config/sensors.json"))

@@ -88,6 +88,7 @@ class MQTTClient:
         logger.info(f"\nParsing Message from topic: {topic} - Payload: {payload}\n")
         if topic == "/controller/status/session_config_updated": 
             config_manager.update_config(payload)
+            self.sensor_manager.update_ph_config(payload)
         elif topic == "/controller/commands/start": 
             self.start_session(payload)
         elif topic.startswith(f"/controller/session/"):

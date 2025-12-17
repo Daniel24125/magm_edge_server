@@ -39,6 +39,9 @@ class PHSensor(AbstractSensor):
         self.key = "ph"
         self.config = config
         self.init_read_settings()
+        self.control_enabled = False
+        self.target_ph = 7.0
+        self.last_pump_activation = 0
         if SIMULATION_MODE:
             self.simulator_init(SimulatedPHSensor, "pH")
         else:
@@ -106,6 +109,11 @@ class PHSensor(AbstractSensor):
                 is_stable = False # Not enough history yet
 
         self.last_stable = is_stable
+
+        
+        # Automated Control Loop
+        self.control_loop(avg_ph)
+        
         return SensorReading(
             timestamp=time.time(),
             value=avg_ph,
@@ -123,6 +131,40 @@ class PHSensor(AbstractSensor):
         if mode != "acidic" or mode != "alkaline" or mode != "auto":
             raise NameError("You are trying to set the controller mode to an invalid mode. Available options: acidic | alkaline | auto")
         self.mode = mode
+    
+    def update_control_settings(self, settings: dict):
+        """Updates control parameters from session settings."""
+        self.control_enabled = settings.get("phControl", False)
+        try:
+            self.target_ph = float(settings.get("phSetPoint", 7.0))
+            logger.info(f"pH Sensor Config Updated: Control={self.control_enabled}, Target={self.target_ph}")
+        except (ValueError, TypeError):
+             logger.warning(f"Invalid pH target in settings: {settings.get('phSetPoint')}")
+
+    def control_loop(self, current_ph):
+        """Checks pH against target and activates pumps if needed."""
+        if not self.control_enabled:
+            return
+
+        # Cooldown prevents rapid cycling (e.g. 5 seconds)
+        if time.time() - self.last_pump_activation < 5:
+            return
+            
+        # Hysteresis tolerance
+        tolerance = 0.1
+        
+        pump_type = None
+        if current_ph > (self.target_ph + tolerance):
+             pump_type = "acidic"
+        elif current_ph < (self.target_ph - tolerance):
+             pump_type = "alkaline"
+             
+        if pump_type:
+            logger.info(f"pH Control Trigger: {current_ph:.2f} vs Target {self.target_ph}. Activating {pump_type}.")
+        
+            self.test_pump(pump_type, duration=0.5)
+            self.last_pump_activation = time.time()
+
     
 ####### UTIL METHODS ###########
 
