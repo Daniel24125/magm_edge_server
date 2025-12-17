@@ -50,7 +50,7 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, open, classNam
             },
             sessionDefaultSettings: {
                 dataAcquisitionInterval: 1,
-                temperatureSetPoint: 25,
+                phControl: true,
                 phSetPoint: 7
             },
             alertConfiguration: [
@@ -78,7 +78,7 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, open, classNam
             },
             sessionDefaultSettings: {
                 dataAcquisitionInterval: 1,
-                temperatureSetPoint: 25,
+                phControl: true,
                 phSetPoint: 7
             },
             alertConfiguration: [
@@ -289,7 +289,7 @@ const SessionDetailsForm = () => {
 
 
 const SessionDefaultSettingsForm = () => {
-    const { register } = useProjectFormContext();
+    const { register, control } = useProjectFormContext();
 
     return <FieldSet>
         <FieldGroup>
@@ -299,8 +299,20 @@ const SessionDefaultSettingsForm = () => {
                 <FieldDescription>The data aquisition interval defines how often the data is collected from the reactor. (Min: 1, Max: 120)</FieldDescription>
             </Field>
             <Field>
-                <FieldLabel htmlFor="temperatureSetPoint">Expected Temperature</FieldLabel>
-                <Input {...register("sessionDefaultSettings.temperatureSetPoint")} placeholder="Temperature Set Point" />
+                <div className="flex items-center justify-between">
+                    <FieldLabel htmlFor="phControl">pH Control</FieldLabel>
+                    <Controller
+                        control={control}
+                        name="sessionDefaultSettings.phControl"
+                        render={({ field }) => (
+                            <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                            />
+                        )}
+                    />
+                </div>
+                <FieldDescription>Enable or disable pH control for this session.</FieldDescription>
             </Field>
             <Field>
                 <FieldLabel htmlFor="phSetPoint">PH Set Point</FieldLabel>

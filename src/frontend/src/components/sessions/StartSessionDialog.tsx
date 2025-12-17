@@ -93,12 +93,19 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                                     </Field>
                                     <div className="grid grid-cols-2 gap-4">
                                         <Field>
-                                            <FieldLabel htmlFor="settings.temperatureSetPoint">Temperature Set Point (°C)</FieldLabel>
-                                            <Input
-                                                {...register("settings.temperatureSetPoint", { valueAsNumber: true })}
-                                                type="number"
-                                                placeholder="Temperature"
-                                            />
+                                            <div className="flex flex-col gap-2">
+                                                <FieldLabel htmlFor="settings.phControl">pH Control</FieldLabel>
+                                                <Controller
+                                                    control={control}
+                                                    name="settings.phControl"
+                                                    render={({ field }) => (
+                                                        <Switch
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
                                         </Field>
                                         <Field>
                                             <FieldLabel htmlFor="settings.phSetPoint">pH Set Point</FieldLabel>

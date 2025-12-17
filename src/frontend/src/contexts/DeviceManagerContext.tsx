@@ -117,17 +117,17 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
             }
         };
 
-        subscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
-        subscribe(DEVICE_UPDATE_TOPIC, handleDeviceUpdate);
-        subscribe(DATA_TOPIC, handleSensorData);
+        if (SYSTEM_NOTIF_TOPIC) subscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
+        if (DEVICE_UPDATE_TOPIC) subscribe(DEVICE_UPDATE_TOPIC, handleDeviceUpdate);
+        if (DATA_TOPIC) subscribe(DATA_TOPIC, handleSensorData);
 
         // Initial Ping
         pingDevice();
 
         return () => {
-            unsubscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
-            unsubscribe(DEVICE_UPDATE_TOPIC, handleDeviceUpdate);
-            unsubscribe(DATA_TOPIC, handleSensorData);
+            if (SYSTEM_NOTIF_TOPIC) unsubscribe(SYSTEM_NOTIF_TOPIC, handleSystemNotification);
+            if (DEVICE_UPDATE_TOPIC) unsubscribe(DEVICE_UPDATE_TOPIC, handleDeviceUpdate);
+            if (DATA_TOPIC) unsubscribe(DATA_TOPIC, handleSensorData);
         }
     }, [isConnected, subscribe, unsubscribe, pingDevice, addAlert]);
 

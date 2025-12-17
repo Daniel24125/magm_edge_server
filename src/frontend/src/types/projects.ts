@@ -20,8 +20,8 @@ export type TSessionDetails = {
 
 export type TSessionDefaultSettings = {
     dataAcquisitionInterval: number;
-    temperatureSetPoint: number;
     phSetPoint: number;
+    phControl: boolean;
 }
 
 export type TMeasurementType = "temperature" | "ph" | "od" | "co2";

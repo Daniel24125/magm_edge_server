@@ -143,6 +143,11 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             return;
         }
 
+        if (!topic) {
+            console.warn("MQTTContext: Attempted to subscribe to empty topic");
+            return;
+        }
+
         // Register handler
         if (handler) {
             if (!messageHandlers.current.has(topic)) {
@@ -177,6 +182,10 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     const publish = useCallback(async (topic: string, payload: unknown) => {
         if (!connectionRef.current) {
             addAlert("warning", "No MQTT connection");
+            return;
+        }
+        if (!topic) {
+            console.warn("MQTTContext: Attempted to publish to empty topic");
             return;
         }
         const json = JSON.stringify(payload);
