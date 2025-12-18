@@ -16,6 +16,7 @@ from shared.utils.logger import logger
 from shared.utils.config_loader import load_config
 from edge_server.services.anomaly_detector import AnomalyDetector
 from edge_server.services.alert_service import AlertManager
+from .pump_controller import PumpController
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../", "config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
@@ -39,6 +40,7 @@ class SessionController:
         self.sessions = SessionDAO(self.db)
         self.aggregator = DataAggregator(self.db, timeout=15, on_complete_callback=self.publish_measurement)
         self.alert_manager = AlertManager(self.db, self.aws)
+        self.pump_controller = PumpController(self.device_controller, self.alert_manager)
         
         # State
         self.session_active = False
@@ -49,7 +51,6 @@ class SessionController:
         self.active_session: Dict[str, Any] = {}
         self.read_interval = 30
         self.acquisition_thread: Optional[threading.Thread] = None
-        self.last_pump_activation = 0
 
     # -------------------- Session Management --------------------
 
@@ -315,6 +316,18 @@ class SessionController:
 
         # 3. Live Preview (REMOVED - Aggregator now handles live updates)
         # self._publish_live_preview(source, data)
+
+        # 4. pH Control
+        if self.session_active:
+            self.pump_controller.evaluate_ph_control(
+                device_id, 
+                data, 
+                self.active_session, 
+                self.id, 
+                self.paused
+            )
+
+
 
     def _process_anomalies(self, device_id: str, data: Any, session_id: str, timestamp: str):
         if not isinstance(data, dict):

@@ -22,6 +22,7 @@ export type TSessionDefaultSettings = {
     dataAcquisitionInterval: number;
     phSetPoint: number;
     phControl: boolean;
+    maxPumpTime: number;
 }
 
 export type TMeasurementType = "temperature" | "ph" | "od" | "co2";

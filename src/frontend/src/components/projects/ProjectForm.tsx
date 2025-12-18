@@ -51,7 +51,8 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, open, classNam
             sessionDefaultSettings: {
                 dataAcquisitionInterval: 1,
                 phControl: true,
-                phSetPoint: 7
+                phSetPoint: 7,
+                maxPumpTime: 2
             },
             alertConfiguration: [
                 { alertType: "temperature", enabled: false, threshold: 0, delay: 0 },
@@ -79,7 +80,8 @@ export function ProjectForm({ defaultValues, onSubmit, isLoading, open, classNam
             sessionDefaultSettings: {
                 dataAcquisitionInterval: 1,
                 phControl: true,
-                phSetPoint: 7
+                phSetPoint: 7,
+                maxPumpTime: 2
             },
             alertConfiguration: [
                 { alertType: "temperature", enabled: false, threshold: 0, delay: 0 },
@@ -316,7 +318,22 @@ const SessionDefaultSettingsForm = () => {
             </Field>
             <Field>
                 <FieldLabel htmlFor="phSetPoint">PH Set Point</FieldLabel>
-                <Input {...register("sessionDefaultSettings.phSetPoint")} placeholder="PH Set Point" />
+                <div className="flex gap-2">
+                    <Input {...register("sessionDefaultSettings.phSetPoint")} placeholder="PH Set Point" />
+                    <div className="flex flex-col gap-1 w-full">
+                        <Input
+                            {...register("sessionDefaultSettings.maxPumpTime", {
+                                valueAsNumber: true,
+                                min: 0.1,
+                                max: 10
+                            })}
+                            placeholder="Max Pump Time (s)"
+                            type="number"
+                            step="0.1"
+                        />
+                        <p className="text-[10px] text-text-faded">Max Pump Time (sec)</p>
+                    </div>
+                </div>
             </Field>
         </FieldGroup>
     </FieldSet>

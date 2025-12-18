@@ -102,7 +102,6 @@ class MQTTClient:
             self.publish_sensor_data(all_readings, session_id=payload.get("id", ""))
 
     def parse_device_commands(self, topic, payload): 
-        logger.info("\nParsing a device command:\n")
         if topic.endswith("registration_request"):
             self.register_device()
         elif topic.endswith("start_calibration"):
@@ -118,19 +117,29 @@ class MQTTClient:
             if getattr(self, "ph_calibration"):
                 self.ph_calibration.finalize_from_user()
         elif topic.endswith("pump_control"):
-            # Payload: { sensor_id, pump_type, duration }
+            # Payload: { sensor_id (optional), pump_type, duration }
             sensor_id = payload.get("sensor_id")
-            pump_type = payload.get("pump_type")
+            pump_type = payload.get("pump_type") or payload.get("pump") # Support both keys
+            
             try:
                 duration = float(payload.get("duration", 1.0))
             except:
                 duration = 1.0
-                
-            sensor = self.sensor_manager.get_sensor(sensor_id)
+            
+            sensor = None
+            if sensor_id:
+                sensor = self.sensor_manager.get_sensor(sensor_id)
+            else:
+                # specific sensor_id not provided, try to find a sensor that supports pumping (e.g. pH)
+                for s in self.sensor_manager.sensors:
+                    if hasattr(s, "test_pump"):
+                        sensor = s
+                        break
+            
             if sensor and hasattr(sensor, "test_pump"):
                 sensor.test_pump(pump_type, duration)
             else:
-                logger.warning(f"Sensor {sensor_id} does not support pump control")
+                logger.warning(f"No sensor found that supports pump control (ID: {sensor_id})")
     
     def calibrate_device(self, payload: dict):
         logger.info("Starting device calibration...")
@@ -205,7 +214,7 @@ class MQTTClient:
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning(f"Failed to publish message: {mqtt.error_string(result.rc)}")
         else: 
-            logger.info(f"Published sensor data to topic '{self.publish_measurement_topic}': {message}")
+            logger.info(f"Published sensor data to topic '{self.publish_measurement_topic}'")
 
     def stop(self):
         self.client.loop_stop()
