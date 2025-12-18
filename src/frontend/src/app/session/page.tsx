@@ -9,17 +9,15 @@ import ProjectType from '@/components/projects/ProjectType'
 import { configEnv, configGrowth, formatDate, formatDuration, getAlertIcon } from '@/lib/utils'
 import SessionControls from '@/components/sessions/SessionControls'
 import { TMeasurement } from '@/types/sessions'
-import LineChartComponent from '@/components/LineChartComponent'
-import ChartRenderer, { IData } from '@/components/ChartRenderer'
+import ChartRenderer from '@/components/ChartRenderer'
 import { format } from 'date-fns'
 import AlertTable from '@/components/sessions/AlertTable'
+import { useAlert } from '@/contexts/AlertContext'
+import { useRouter } from 'next/navigation'
+import Loading from '@/components/ui/loading'
 
 const Session = () => {
-    const { activeSession } = useSession()
 
-    if (!activeSession) return <div className='w-full pt-32 flex items-center justify-center'>
-        <NoSession size={300} />
-    </div>
     return (
         <div className='flex flex-col w-full pt-10 gap-10'>
             <SessionHeader />
@@ -28,17 +26,21 @@ const Session = () => {
     )
 }
 
+
+
 const SessionHeader = () => {
     const { activeSession } = useSession()
     const [projectDetails, setProjectDetails] = useState<IProject | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const { addAlert } = useAlert()
+    const router = useRouter()
 
     useEffect(() => {
         const getProjectDetails = async () => {
             setIsLoading(true)
             try {
                 const project = await getProject(activeSession!.projectId)
-                if (!project.data) throw new Error("Project not found")
+                if (!project.data) throw new Error("No active Session")
                 setProjectDetails(project.data)
             } catch (error) {
                 console.error(error)
@@ -46,29 +48,32 @@ const SessionHeader = () => {
                 setIsLoading(false)
             }
         }
-        if (activeSession?.projectId && !projectDetails) {
+        if (activeSession && activeSession.projectId && !projectDetails) {
             getProjectDetails()
+        } else {
+            setIsLoading(false)
         }
     }, [activeSession])
 
-    if (isLoading) return <div className='w-full pt-32 flex items-center justify-center'>
-        <p>Loading project details...</p>
-    </div>
 
-    if (!projectDetails) return <div className='w-full pt-32 flex items-center justify-center'>
-        <p>NO PROJECT FOUND</p>
-    </div>
+    if (isLoading) return <Loading isLoading={isLoading} />
+
+    if (!projectDetails) {
+        addAlert("error", "No active session at the moment. Start a session to access the session details.")
+        router.push("/")
+        return null
+    }
 
     return (
         <div className='flex items-start gap-2 w-full justify-between'>
             <div className='flex flex-col gap-1 '>
-                <h1 className='text-2xl font-bold'>{activeSession!.id}</h1>
-                <p>{projectDetails.projectDetails.projectTitle}</p>
+                <h1 className='text-2xl font-bold'>{activeSession ? activeSession!.id : "Waiting for a session to start..."}</h1>
+                {projectDetails && <p>{projectDetails.projectDetails.projectTitle}</p>}
             </div>
-            <ProjectType
+            {projectDetails && <ProjectType
                 projectType={projectDetails.projectDetails.projectType}
                 info={projectDetails.projectDetails.projectType === "timer" ? formatDuration(projectDetails.projectDetails.timer) : projectDetails.projectDetails.projectType === "target" ? projectDetails.projectDetails.target?.toString() : ""}
-            />
+            />}
         </div>
     )
 }
@@ -82,8 +87,8 @@ const SessionDataDisplay = () => {
                 <div className='w-full lg:w-80 h-80 border rounded-xl flex flex-col items-center justify-evenly p-4'>
                     <SessionControls />
                     <div className='flex flex-col items-center gap-2'>
-                        <p className='text-3xl font-bold'>{formatDuration(activeSession!.time)}</p>
-                        <p className='text-xs text-text-faded font-medium'>Started at {formatDate(activeSession!.createdAt)}</p>
+                        <p className='text-3xl font-bold'>{formatDuration(activeSession ? activeSession!.time : 0)}</p>
+                        <p className='text-xs text-text-faded font-medium'>Started at {formatDate(activeSession ? activeSession!.createdAt : new Date())}</p>
                     </div>
                 </div>
                 <SessionChartMonitor />

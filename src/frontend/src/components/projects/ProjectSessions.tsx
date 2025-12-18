@@ -56,7 +56,7 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
     // Default to the last session
     const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(undefined)
 
-    const effectiveSessionId = selectedSessionId || (sortedSessions.length > 0 ? sortedSessions[sortedSessions.length - 1].id : undefined)
+    const effectiveSessionId = selectedSessionId || (sortedSessions.length > 0 ? sortedSessions[0].id : undefined)
 
     return (
         <div className="w-full space-y-6">
