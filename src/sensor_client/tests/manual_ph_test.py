@@ -2,8 +2,8 @@ import os, sys, time
 
 # Setup Path to import shared modules
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# sensor_client/../../ -> src/
-SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+# sensor_client/tests/../../ -> src/
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
 
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
@@ -20,7 +20,7 @@ def main():
     print(f"--- Manual pH Control Test (Sim Mode: {state_manager.simulation_mode}) ---")
     
     # 1. Load Real Config
-    config_path = os.path.join(CURRENT_DIR, "config", "sensors.json")
+    config_path = os.path.join(CURRENT_DIR, "../config", "sensors.json")
     if not os.path.exists(config_path):
         print(f"Error: Config not found at {config_path}")
         return

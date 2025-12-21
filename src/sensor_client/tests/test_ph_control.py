@@ -7,10 +7,11 @@ from collections import deque
 # We need to add 'src' to sys.path to import 'shared'
 # We are in src/sensor_client
 # ../.. takes us to src
+# ../.. takes us to src
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # shared is in src/shared, so we need to add src to sys.path
-# src is the parent of sensor_client, so we use ".."
-SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+# src is the parent of sensor_client, so we use "../.."
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -27,7 +28,7 @@ def test_ph_control_logic():
     print(f"--- Starting pH Control Logic Test (Sim Mode: {state_manager.simulation_mode}) ---")
 
     # 1. Mock Config
-    config = load_config("src/sensor_client/config/sensors.json").get("sensors")[1]
+    config = load_config(os.path.join(CURRENT_DIR, "../config/sensors.json")).get("sensors")[1]
 
     # 2. Instantiate Sensor
     sensor = PHSensor("Test pH Sensor", "pH", config, "test_sensor_id")

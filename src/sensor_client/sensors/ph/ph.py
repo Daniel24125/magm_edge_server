@@ -222,8 +222,7 @@ class PHSensor(AbstractSensor):
         
         threading.Thread(target=run, daemon=True).start()
 
-
-   
+  
 if __name__ == "__main__": 
     config = {
       "key": "ph",

@@ -3,7 +3,6 @@ import json,  sys, os
 from config.config_manager import ConfigManager
 import time 
 from sensors.manager import SensorManager
-from sensors.ph.calibration_manager import PHCalibrationManager
 
 # Add project root to sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -11,18 +10,21 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from shared.utils.logger import logger
-from edge_server.database.db_manager import DatabaseHelper
+from parsers.device_parser import DeviceCommandParser
+from parsers.session_parser import SessionCommandParser
 
 config_manager = ConfigManager()
-
 
 class MQTTClient:
 
     def __init__(self, config: dict, sensor_manager: SensorManager):
         self.sensor_manager = sensor_manager
         self.init_variables(config)
-        self.define_publish_topics()
         self.init_mqtt_client()
+        
+        # Initialize parsers
+        self.device_parser = DeviceCommandParser(self, self.sensor_manager, self.device_config)
+        self.session_parser = SessionCommandParser(self, self.sensor_manager, config_manager)
 
     def init_variables(self, broker_config): 
         self.device_config = config_manager.get_config().get("device_config", {})
@@ -31,15 +33,6 @@ class MQTTClient:
         self.broker = broker_config.get("mqtt", {}).get("broker", "localhost")
         self.port = broker_config.get("mqtt", {}).get("port", 1883)
         self.keepalive = broker_config.get("mqtt", {}).get("keepalive", 60)
-        self.ph_calibration = None
-        self.db =  DatabaseHelper("src/edge_server/database/models/sessions.db")
-
-    def define_publish_topics(self): 
-        self.publish_measurement_topic = f"/devices/{self.device_id}/data"
-        self.device_registration_topic = f"/devices/{self.device_id}/register"
-        self.device_unregistration_topic = f"/devices/{self.device_id}/unregister"
-        self.device_request_acidic = f"/devices/{self.device_id}/cal/acidic"
-        self.device_request_alkaline = f"/devices/{self.device_id}/cal/alkaline"
 
     def subscribe_to_topics(self):
         self.client.subscribe("/controller/retry")
@@ -69,114 +62,25 @@ class MQTTClient:
             msg =f"Failed to connect (reason={reason_code})"
             logger.error(msg)
             raise Exception(msg)
-        self.register_device()
+        self.device_parser.register_device()
         self.subscribe_to_topics()
-
 
     def on_message(self, client, userdata, msg): 
         try:
             payload = json.loads(msg.payload.decode())
             logger.info(f"Received message in topic {msg.topic}")
-            self.parse_message(msg.topic, payload)
+            
+            # Delegate parsing
+            if msg.topic.startswith("/devices"):
+                self.device_parser.parse(msg.topic, payload)
+            elif msg.topic.startswith("/controller"):
+                self.session_parser.parse(msg.topic, payload)
 
         except json.JSONDecodeError:
             logger.error(f"Error decoding JSON payload: {msg.payload}")
         except Exception as e:
             logger.error(f"An error occurred while processing message: {e}")
     
-    def parse_message(self, topic, payload):
-        logger.info(f"\nParsing Message from topic: {topic} - Payload: {payload}\n")
-        if topic == "/controller/status/session_config_updated": 
-            config_manager.update_config(payload)
-            self.sensor_manager.update_ph_config(payload)
-        elif topic == "/controller/commands/start": 
-            self.start_session(payload)
-        elif topic.startswith(f"/controller/session/"):
-            self.parse_session_commands(topic, payload)
-        elif topic.startswith("/devices"): 
-            self.parse_device_commands(topic, payload)
-  
-    def parse_session_commands(self, topic, payload):
-        if topic.endswith("/measurement"):
-            all_readings = self.sensor_manager.read_all_sensors()
-            self.publish_sensor_data(all_readings, session_id=payload.get("id", ""))
-
-    def parse_device_commands(self, topic, payload): 
-        if topic.endswith("registration_request"):
-            self.register_device()
-        elif topic.endswith("start_calibration"):
-            self.calibrate_device(payload)
-        elif topic.endswith("register_cal_measurement"):
-            if getattr(self, "ph_calibration"):
-                self.ph_calibration.register_measurement_value(payload.get("measurement_type"))
-        elif topic.endswith("cal/cancel"):
-            if getattr(self, "ph_calibration"):
-                self.ph_calibration.reset_calibration()
-                self.ph_calibration = None
-        elif topic.endswith("cal/confirm"):
-            if getattr(self, "ph_calibration"):
-                self.ph_calibration.finalize_from_user()
-        elif topic.endswith("pump_control"):
-            # Payload: { sensor_id (optional), pump_type, duration }
-            sensor_id = payload.get("sensor_id")
-            pump_type = payload.get("pump_type") or payload.get("pump") # Support both keys
-            
-            try:
-                duration = float(payload.get("duration", 1.0))
-            except:
-                duration = 1.0
-            
-            sensor = None
-            if sensor_id:
-                sensor = self.sensor_manager.get_sensor(sensor_id)
-            else:
-                # specific sensor_id not provided, try to find a sensor that supports pumping (e.g. pH)
-                for s in self.sensor_manager.sensors:
-                    if hasattr(s, "test_pump"):
-                        sensor = s
-                        break
-            
-            if sensor and hasattr(sensor, "test_pump"):
-                sensor.test_pump(pump_type, duration)
-            else:
-                logger.warning(f"No sensor found that supports pump control (ID: {sensor_id})")
-    
-    def calibrate_device(self, payload: dict):
-        logger.info("Starting device calibration...")
-        sensor_id =payload.get("sensor_id", "")
-        sensor = self.sensor_manager.get_sensor(sensor_id=sensor_id)
-        self.ph_calibration = PHCalibrationManager(self.client, self.db, sensor.read,sensor.get_last_raw_average, payload)
-        self.ph_calibration.start()
-
-    def start_session(self, payload: str):
-        session_id = payload.get("id")
-        logger.info(f"Starting session with ID: {session_id}")
-        self.client.subscribe(f"/controller/session/{session_id}/#")
-
-    def register_device(self): 
-        payload = {
-            "topic": self.device_registration_topic,
-            "payload": {
-                "device_id": self.device_id,
-                "device_name": self.device_name,
-                "status": "ONLINE",
-                "sensors": self.sensor_manager.get_sensor_config()
-            }
-        }
-        self.client.publish(self.device_registration_topic, json.dumps(payload), qos=1)
-        logger.info("Device registration sent")
-
-    def unregister_device(self): 
-        payload = {
-            "topic": self.device_unregistration_topic,
-            "payload": {
-                "device_id": self.device_id,
-                "device_name": self.device_name,
-                "status": "OFFLINE"
-            }
-        }
-        self.client.publish(self.device_unregistration_topic, json.dumps(payload), qos=1)
-
     def on_disconnect(self, client, userdata, rc):
         logger.warning("Disconnected from MQTT broker")
 
@@ -185,36 +89,11 @@ class MQTTClient:
             self.client.connect(self.broker, self.port, self.keepalive)
             self.client.loop_forever()
         except Exception as err: 
-            self.unregister_device()
+            self.device_parser.unregister_device()
             logger.error(f"The connection failed: {err}")
         except KeyboardInterrupt: 
-            self.unregister_device()
+            self.device_parser.unregister_device()
             logger.error("The connection was interruped by the user")
-
-    def publish_sensor_data(self, readings: dict, session_id: str = None):
-        payload = {
-            "source": "rpi",
-            "device_id": self.device_id,
-            "id": session_id,
-            "timestamp": time.time()*1000,
-            "data": {name: {
-                "value" : r.value,
-                "timestamp": r.timestamp,
-                "unit": r.unit,
-                "is_stable": bool(r.is_stable),
-                "sensor_type": r.sensor_type
-            } if r else None for name, r in readings.items()}
-        }
-        message = json.dumps({
-            "payload": payload, 
-            "topic": self.publish_measurement_topic,
-        })
-
-        result = self.client.publish(self.publish_measurement_topic, message, qos=1)
-        if result.rc != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning(f"Failed to publish message: {mqtt.error_string(result.rc)}")
-        else: 
-            logger.info(f"Published sensor data to topic '{self.publish_measurement_topic}'")
 
     def stop(self):
         self.client.loop_stop()
