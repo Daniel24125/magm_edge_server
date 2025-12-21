@@ -11,6 +11,7 @@ import {
 import { CalibrationDialog } from "./CalibrationDialog";
 import { PumpControlDialog } from "./PumpControlDialog";
 import { Settings2, Thermometer, Droplets, MoreVertical, Pipette, Beaker } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 
 
@@ -44,8 +45,12 @@ const SensorItem = ({ deviceId, sensor }: { deviceId: string, sensor: ISensor })
                 <div className="flex flex-col">
                     <span className="font-medium text-sm">{sensor.name}</span>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        {sensor.type} {sensor.unit ? `(${sensor.unit})` : ""}
                         {!sensor.enabled && <Badge variant="outline" className="text-[10px] h-4 px-1">Disabled</Badge>}
+                        {isPh && sensor.last_calibration_date && (
+                            <span className="opacity-80 border-l border-border/50">
+                                Last Cal: {formatDate(sensor.last_calibration_date)}
+                            </span>
+                        )}
                     </span>
                 </div>
             </div>

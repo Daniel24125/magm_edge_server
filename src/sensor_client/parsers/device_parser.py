@@ -76,13 +76,26 @@ class DeviceCommandParser:
         self.ph_calibration.start()
 
     def register_device(self): 
+        sensor_config = self.sensor_manager.get_sensor_config()
+        
+        # Inject last calibration date for pH sensors
+        for sensor in sensor_config:
+            if sensor.get("type") == "pH":
+                try:
+                    cal_data = self.db.get_last_calibration(sensor.get("type"))
+                    if cal_data:
+                        # cal_data: (sensor_id, slope, intercept, calibration_temp, date, id)
+                        sensor["last_calibration_date"] = cal_data[4]
+                except Exception as e:
+                   logger.warning(f"Failed to fetch calibration data: {e}")
+
         payload = {
             "topic": self.device_registration_topic,
             "payload": {
                 "device_id": self.device_id,
                 "device_name": self.device_name,
                 "status": "ONLINE",
-                "sensors": self.sensor_manager.get_sensor_config()
+                "sensors": sensor_config
             }
         }
         self.mqtt_client.publish(self.device_registration_topic, json.dumps(payload), qos=1)

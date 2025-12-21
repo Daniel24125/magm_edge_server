@@ -26,6 +26,7 @@ export interface ISensor {
     unit?: string;
     enabled: boolean;
     sensor_id?: string;
+    last_calibration_date?: string;
     [key: string]: unknown;
 }
 

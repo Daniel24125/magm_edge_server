@@ -8,7 +8,12 @@ SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-# Also add sensor_client for local imports
+# Add sensor_client to sys.path
+SENSOR_CLIENT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+if SENSOR_CLIENT_DIR not in sys.path:
+    sys.path.insert(0, SENSOR_CLIENT_DIR)
+
+# Also add tests dir for local imports if needed
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
