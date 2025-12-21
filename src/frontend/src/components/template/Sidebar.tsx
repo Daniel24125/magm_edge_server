@@ -244,11 +244,11 @@ const AccountElement = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
                 >
-                    <Link href="/auth/logout">
+                    <a href="/auth/logout">
                         <Button variant="ghost" className='text-text-faded shrink-0'>
                             <LogOut />
                         </Button>
-                    </Link>
+                    </a>
                 </motion.div>
             )}
         </AnimatePresence>
