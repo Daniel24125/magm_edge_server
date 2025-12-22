@@ -71,6 +71,26 @@ class SensorManager:
             if isinstance(sensor, PHSensor):
                 sensor.update_control_settings(settings)
 
+    def on_session_start(self, session_id: str):
+        for sensor in self.sensors:
+            if hasattr(sensor, "on_session_start"):
+                sensor.on_session_start(session_id)
+
+    def on_session_stop(self):
+        for sensor in self.sensors:
+            if hasattr(sensor, "on_session_stop"):
+                sensor.on_session_stop()
+
+    def on_session_pause(self):
+        for sensor in self.sensors:
+            if hasattr(sensor, "on_session_pause"):
+                sensor.on_session_pause()
+
+    def on_session_resume(self):
+        for sensor in self.sensors:
+            if hasattr(sensor, "on_session_resume"):
+                sensor.on_session_resume()
+
 if __name__ == "__main__": 
     from shared.utils.config_loader import load_config
     config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/config/sensors.json"))

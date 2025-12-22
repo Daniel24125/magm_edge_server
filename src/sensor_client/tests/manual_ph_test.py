@@ -17,6 +17,18 @@ if SENSOR_CLIENT_DIR not in sys.path:
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
+# Mock Hardware Libraries if missing (Must be done before importing sensors which import hardware)
+from unittest.mock import MagicMock
+try:
+    import board
+except ImportError:
+    sys.modules["board"] = MagicMock()
+    sys.modules["busio"] = MagicMock()
+    sys.modules["adafruit_ads1x15"] = MagicMock()
+    sys.modules["adafruit_ads1x15.ads1115"] = MagicMock()
+    sys.modules["adafruit_ads1x15.analog_in"] = MagicMock()
+    sys.modules["lgpio"] = MagicMock()
+
 from shared.utils.config_loader import load_config
 from sensors.ph.ph import PHSensor
 from sensors.base import state_manager
@@ -30,12 +42,8 @@ if not os.path.exists(config_path):
 config = load_config(config_path)
  
 # 2. Extract pH Config
-# Assuming 'sensors' is the key in config
 sensors_list = config.get("sensors", [])
 ph_config = next((s for s in sensors_list if s.get("type") == "pH"), None)
-
-
-
 
 def purge_pumps():
     print(f"--- Manual pH Control --- Purging Pumps...")
@@ -47,22 +55,21 @@ def purge_pumps():
 
     # 3. Initialize Sensor+Pumps
     print("Initializing pH Sensor...")
-    # Using a dummy ID for testing
     sensor = PHSensor(
         name=ph_config.get("name", "TestPH"), 
         unit="pH", 
         config=ph_config, 
         sensor_id="manual_test_id"
     )
-
+    pump_controller = sensor.controller
     sensor.test_pump(duration=10, pump_type="acidic")
     time.sleep(10)
-    sensor.turn_off_pumps()
+    pump_controller.stop_pumps()
     
     sensor.test_pump(duration=10, pump_type="alkaline")
     time.sleep(10)
 
-    sensor.turn_off_pumps()
+    pump_controller.stop_pumps()
 
 
 def main():
@@ -74,13 +81,13 @@ def main():
 
     # 3. Initialize Sensor
     print("Initializing pH Sensor...")
-    # Using a dummy ID for testing
     sensor = PHSensor(
         name=ph_config.get("name", "TestPH"), 
         unit="pH", 
         config=ph_config, 
         sensor_id="manual_test_id"
     )
+    pump_controller = sensor.controller
 
     # 4. Enable Control
     print(f"Enabling Control -> Target: {TARGET_PH}, Tolerance: 0.1")
@@ -93,45 +100,35 @@ def main():
     print(f" - < {TARGET_PH - 0.1} should trigger ALKALINE.")
     print(" - Press Ctrl+C to quit.")
     
+    if hasattr(sensor, "start_control_thread"):
+        sensor.start_control_thread()
+    else:
+        print("Warning: start_control_thread not found on sensor object")
+    
     # 5. ADJUST CONFIG FOR TESTING PUMP LOGIC
-    # We want to verify pump control, so we need STABLE readings.
-    # We override the stability settings locally for this test instance.
     if hasattr(sensor, 'simulator_init'):
-         # If simulation is active, we might not be able to change noise easily if it's inside the simulator class
-         # But we can relax the stability threshold on the sensor itself to accept "noisier" values as stable.
          pass
     
-    # Relax stability threshold for testing purposes so noisy simulation is accepted as stable
-    # or ensure simulation provides stable values.
-    # Current config has noise: 0.05, stability_threshold: 0.02. 
-    # Let's increase stability_threshold to 0.1 to accept the noise, enabling pump control.
     sensor.stability_threshold = 0.5 
     sensor.drift_stability_threshold = 0.5
     print(f" - Adjusted Stability Thresholds to {sensor.stability_threshold} to force stable readings for testing.")
 
     while True:
         try:
-            # Continuous loop mimicking session
             sensor.read()
-            
-            # Note: sensor.read() -> get_instrument_read() -> control_loop() -> logging
-            # We don't need to print much here as the sensor logger does it.
-            # But let's print current status for clarity.
             val = sensor.values[-1] if sensor.values else 0
             is_stable = sensor.last_stable
-            print(f"Current: {val:.2f} | Stable: {is_stable} | Pumps should active if needed...")
-            
+            print(f"Current: {val:.2f} | Stable: {is_stable}")
             time.sleep(1)
-
         except KeyboardInterrupt:
-            sensor.turn_off_pumps()
+            pump_controller.stop_pumps()
             break
         except Exception as e:
             print(f"Unexpected error: {e}")
-            sensor.turn_off_pumps()
+            pump_controller.stop_pumps()
 
-    sensor.turn_off_pumps()
+    pump_controller.stop_pumps()
     print("\nExiting...")
 
 if __name__ == "__main__":
-    purge_pumps()
+    main()

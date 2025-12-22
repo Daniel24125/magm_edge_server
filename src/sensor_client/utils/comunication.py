@@ -53,7 +53,7 @@ class AnalogCommunication:
                     analog_values[i] = an_read
 
                 except Exception as err:
-                    logger.error("Error while retrieving analog signal: ",err)
+                    logger.error(f"Error while retrieving analog signal: {err}")
                     pass
 
         mask = np.ma.masked_equal(analog_values,0).compressed()
