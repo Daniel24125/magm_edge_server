@@ -39,13 +39,6 @@ class SensorClient():
         self.session_config = config
         self.read_interval = config["sampling"].get("sensor_interval", 1)
 
-    
-    def display_readings(self, readings):
-        for sensor_name, reading in readings.items():
-            if reading:
-                formatted_value = f"{reading.value:.2f}"
-            else:
-                logger.error(f"{sensor_name}: Failed to read sensor.")
 
 
 

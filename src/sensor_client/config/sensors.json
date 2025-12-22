@@ -37,6 +37,7 @@
       "read_window_size": 10,
       "read_stability_threshold": 0.006,
       "drift_stability_threshold": 0.005,
+      "max_pump_time": 0.3,
       "pin": {
         "acidic": 10,
         "alkaline": 9,

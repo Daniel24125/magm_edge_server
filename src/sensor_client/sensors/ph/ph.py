@@ -52,7 +52,7 @@ class PHSensor(AbstractSensor):
         self.window = self.config.get("read_window_size")
         self.stability_threshold = self.config.get("read_stability_threshold")
         self.drift_stability_threshold = self.config.get("drift_stability_threshold", 0.005)
-
+        self.max_pump_time = self.config.get("max_pump_time", 0.3)
         self.values = deque(maxlen=self.window)
         self.raw_values = deque(maxlen=self.window)
         self.history = deque(maxlen=self.window) # Stores (timestamp, value) tuples
@@ -79,7 +79,10 @@ class PHSensor(AbstractSensor):
             logger.error(err)
 
     def get_instrument_read(self):
-        for i in range(10):
+        # Optimized: Read 1 sample per cycle instead of 10.
+        # This allows the buffer (deque) to fill over time (10s) rather than blocking for ~1s every cycle.
+        # This fixes the blocking issue that prevents real-time updates.
+        for i in range(1):
             raw_val = self.analog_comunicator.get_analog_read()
             self.raw_values.append(raw_val)
             ph_val = self.analog_comunicator.convert_analog(raw_val)
@@ -150,6 +153,10 @@ class PHSensor(AbstractSensor):
         if not self.control_enabled:
             return
 
+        if not self.last_stable:
+             logger.warning(f"pH Unstable ({current_ph:.2f}) - Control Skipped.")
+             return
+
         # Cooldown prevents rapid cycling (e.g. 5 seconds)
         if time.time() - self.last_pump_activation < 5:
             return
@@ -165,8 +172,8 @@ class PHSensor(AbstractSensor):
              
         if pump_type:
             logger.info(f"pH Control Trigger: {current_ph:.2f} vs Target {self.target_ph}. Activating {pump_type}.")
-        
-            self.test_pump(pump_type, duration=0.5)
+            pump_time = self.calculate_pump_time(current_ph)
+            self.test_pump(pump_type, duration=pump_time)
             self.last_pump_activation = time.time()
 
     
@@ -221,6 +228,23 @@ class PHSensor(AbstractSensor):
                     lgpio.gpio_write(chip, pin, 1) # Ensure OFF
         
         threading.Thread(target=run, daemon=True).start()
+
+    def turn_off_pumps(self):
+        """Force turn off both pumps immediately."""
+        logger.info("Force stopping pumps...")
+        if self.acidic_pin is not None: 
+             try:
+                # Active LOW: 1 is OFF
+                lgpio.gpio_write(chip, self.acidic_pin, 1) 
+             except Exception as e:
+                logger.error(f"Error turning off acidic pump: {e}")
+                
+        if self.alkaline_pin is not None:
+             try:
+                # Active LOW: 1 is OFF
+                lgpio.gpio_write(chip, self.alkaline_pin, 1)
+             except Exception as e:
+                logger.error(f"Error turning off alkaline pump: {e}")
 
   
 if __name__ == "__main__": 
