@@ -1,10 +1,26 @@
+import os, sys, time
+
+# Setup Path to import shared modules
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# sensor_client/tests/../../ -> src/
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
+
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
+# Add sensor_client to sys.path
+SENSOR_CLIENT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+if SENSOR_CLIENT_DIR not in sys.path:
+    sys.path.insert(0, SENSOR_CLIENT_DIR)
+
+# Also add tests dir for local imports if needed
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
+
+
 from sensors.ph.ph import PHSensor
 from sensors.ph.calibration_manager import PHCalibrationManager
 from sensors.manager import SensorManager
-import sys, os, time
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../,,"))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
 
 from edge_server.database.db_manager import DatabaseHelper
 from shared.utils.config_loader import load_config
@@ -26,7 +42,11 @@ def get_ph_read():
     import time
     while True:
         read = sensor.read() 
-        print(f"read: {read.value} | is stable? {read.is_stable}")
+        # Access internal raw value from AnalogCommunication for debugging if possible, 
+        # or just print the value. PHSensor doesn't expose raw directly in SensorReading.
+        # But we can access sensor.raw_values[-1] if valid.
+        raw = sensor.raw_values[-1] if sensor.raw_values else "N/A"
+        print(f"ts: {read.timestamp:.2f} | read: {read.value} | raw: {raw} | is stable? {read.is_stable}")
         time.sleep(1)
 
 def test_cal():

@@ -1,6 +1,7 @@
 import numpy as np 
 import sys
 import os 
+import time
 from .ads_utils import ads, ads_lock
 from adafruit_ads1x15.analog_in import AnalogIn
 port_map = [0,1,2,3]
@@ -51,12 +52,17 @@ class AnalogCommunication:
                 try:
                     an_read = self.analog.value
                     analog_values[i] = an_read
-
+                    time.sleep(0.01) # Wait for next sample (assuming <100SPS)
+                    # logger.debug(f"Sample {i}: {an_read}") 
                 except Exception as err:
                     logger.error(f"Error while retrieving analog signal: {err}")
                     pass
-
+        
         mask = np.ma.masked_equal(analog_values,0).compressed()
+        if len(mask) == 0:
+            logger.warning("All analog reads were 0 or failed!")
+            return 0
+            
         analog_avg = np.average(mask)
         self.ready=True
         return analog_avg
