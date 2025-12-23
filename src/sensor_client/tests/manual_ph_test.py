@@ -71,10 +71,10 @@ def purge_pumps(pump_time=10):
     time.sleep(pump_time)
     pump_controller.stop_pumps()
     
-    #sensor.test_pump(duration=pump_time, pump_type="alkaline")
-    #time.sleep(pump_time)
+    sensor.test_pump(duration=pump_time, pump_type="alkaline")
+    time.sleep(pump_time)
 
-    #pump_controller.stop_pumps()
+    pump_controller.stop_pumps()
 
 
 def main():
@@ -136,4 +136,4 @@ def main():
     print("\nExiting...")
 
 if __name__ == "__main__":
-    purge_pumps(3)
+    purge_pumps(10)
