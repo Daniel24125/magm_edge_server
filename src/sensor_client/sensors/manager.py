@@ -91,6 +91,16 @@ class SensorManager:
             if hasattr(sensor, "on_session_resume"):
                 sensor.on_session_resume()
 
+    def set_event_publisher(self, publisher_callback):
+        """
+        Injects the event publisher callback into all sensors.
+        """
+        self.event_publisher = publisher_callback
+        for sensor in self.sensors:
+            if hasattr(sensor, "set_event_publisher"):
+                sensor.set_event_publisher(publisher_callback)
+
+
 if __name__ == "__main__": 
     from shared.utils.config_loader import load_config
     config = load_config(os.path.join(PROJECT_ROOT, "sensor_client/config/sensors.json"))

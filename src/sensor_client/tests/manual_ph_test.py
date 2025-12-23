@@ -45,7 +45,7 @@ config = load_config(config_path)
 sensors_list = config.get("sensors", [])
 ph_config = next((s for s in sensors_list if s.get("type") == "pH"), None)
 
-def purge_pumps():
+def purge_pumps(pump_time=10):
     print(f"--- Manual pH Control --- Purging Pumps...")
 
    
@@ -58,16 +58,21 @@ def purge_pumps():
     sensor = PHSensor(
         name=ph_config.get("name", "TestPH"), 
         unit="pH", 
-        config=ph_config, 
+        config={
+            **ph_config,
+            "max_pump_time": 10
+        }, 
         sensor_id="manual_test_id"
     )
-    pump_controller = sensor.controller
-    sensor.test_pump(duration=10, pump_type="acidic")
-    time.sleep(10)
-    pump_controller.stop_pumps()
     
-    sensor.test_pump(duration=10, pump_type="alkaline")
-    time.sleep(10)
+    pump_controller = sensor.controller
+    
+    #sensor.test_pump(duration=pump_time, pump_type="acidic")
+    #time.sleep(pump_time)
+    #pump_controller.stop_pumps()
+    
+    sensor.test_pump(duration=pump_time, pump_type="alkaline")
+    time.sleep(pump_time)
 
     pump_controller.stop_pumps()
 
@@ -131,4 +136,4 @@ def main():
     print("\nExiting...")
 
 if __name__ == "__main__":
-    main()
+    purge_pumps(10)

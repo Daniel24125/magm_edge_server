@@ -92,9 +92,9 @@ class DeviceCommandParser:
         payload = {
             "topic": self.device_registration_topic,
             "payload": {
-                "device_id": self.device_id,
-                "device_name": self.device_name,
-                "status": "ONLINE",
+            "device_id": self.device_id,
+            "device_name": self.device_name,
+            "status": "ONLINE",
                 "sensors": sensor_config
             }
         }
@@ -105,8 +105,8 @@ class DeviceCommandParser:
         payload = {
             "topic": self.device_unregistration_topic,
             "payload": {
-                "device_id": self.device_id,
-                "device_name": self.device_name,
+             "device_id": self.device_id,
+             "device_name": self.device_name,
                 "status": "OFFLINE"
             }
         }

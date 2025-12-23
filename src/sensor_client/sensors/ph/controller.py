@@ -16,13 +16,14 @@ class PHController:
         self.pins = self.config.get("pin", {})
         
         # Pump Pins
-        self.acidic_pin = self.pins.get("acidic_pump_pin", 10)
-        self.alkaline_pin = self.pins.get("alkaline_pump_pin", 9)
+        self.acidic_pin = self.pins.get("acidic", 10)
+        self.alkaline_pin = self.pins.get("alkaline", 9)
 
         # State
         self.control_enabled = config.get("enabled", True)
         self.target_ph = 7.0 # Default, updated via settings
         self.max_pump_time = config.get("max_pump_time", 0.3)
+        self.safety_max_duration = float(config.get("max_pump_time", 0.3)) # Hard limit from config
         self.last_pump_activation = 0
         
         # Threading state
@@ -31,8 +32,13 @@ class PHController:
         self._pause_control_event = threading.Event()
         self._latest_ph_value = None
         self._latest_stability = False
+        
+        self.on_event_callback = None
 
         self.init_gpio()
+
+    def set_event_callback(self, callback):
+        self.on_event_callback = callback
 
     def init_gpio(self):
         if not lgpio:
@@ -159,6 +165,11 @@ class PHController:
             self.last_pump_activation = time.time()
 
     def test_pump(self, pump_type, duration=1.0):
+        # Enforce safety limit
+        if duration > self.safety_max_duration:
+             logger.warning(f"Requested pump duration {duration:.2f}s exceeds safety limit {self.safety_max_duration:.2f}s. Clamping.")
+             duration = self.safety_max_duration
+
         if not lgpio:
              logger.info(f"[SIMULATION] Pump {pump_type} activated for {duration:.2f}s")
              return
@@ -168,6 +179,14 @@ class PHController:
         def _activate():
             try:
                 logger.info(f"Activating {pump_type} pump (Pin {pin}) for {duration:.2f}s")
+                
+                if self.on_event_callback:
+                    self.on_event_callback("pump_activated", {
+                        "pump_type": pump_type,
+                        "duration": duration,
+                        "pin": pin
+                    })
+
                 lgpio.gpio_write(self.h, pin, 0) # ON (Active LOW)
                 time.sleep(duration)
                 lgpio.gpio_write(self.h, pin, 1) # OFF

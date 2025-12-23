@@ -16,7 +16,7 @@ from shared.utils.logger import logger
 from shared.utils.config_loader import load_config
 from edge_server.services.anomaly_detector import AnomalyDetector
 from edge_server.services.alert_service import AlertManager
-from .pump_controller import PumpController
+
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../", "config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
@@ -26,6 +26,10 @@ ALERTS_CONFIG_PATH = os.path.join(CONFIG_DIR, "alerts.json")
 class SessionController:
     # MQTT Topics
     TOPIC_CMD_START = "/controller/commands/start"
+    TOPIC_CMD_STOP = "/controller/commands/stop"
+    TOPIC_CMD_PAUSE = "/controller/commands/pause"
+    TOPIC_CMD_RESUME = "/controller/commands/resume"
+    
     TOPIC_SESSION_STATUS = "session/status"
     TOPIC_SESSION_LIVE = "session/live"
     TOPIC_SESSION_HISTORY = "session/history"
@@ -40,7 +44,7 @@ class SessionController:
         self.sessions = SessionDAO(self.db)
         self.aggregator = DataAggregator(self.db, timeout=15, on_complete_callback=self.publish_measurement)
         self.alert_manager = AlertManager(self.db, self.aws)
-        self.pump_controller = PumpController(self.device_controller, self.alert_manager)
+
         
         # State
         self.session_active = False
@@ -110,6 +114,9 @@ class SessionController:
                 id_column="id"
             )
             
+            # Persist and Notify Devices
+            self.mqtt.client.publish(self.TOPIC_CMD_STOP, json.dumps({"id": self.id}), qos=1)
+
             # Alert: Session Stopped
             self.alert_manager.send_session_alert(
                 session_id=self.id,
@@ -141,6 +148,9 @@ class SessionController:
                 self.paused = True
                 now_iso = datetime.now(timezone.utc).isoformat()
                 self.db.update_record("sessions", self.id, {"status": "paused", "synced": 0}, id_column="id")
+                
+                # Notify Devices
+                self.mqtt.client.publish(self.TOPIC_CMD_PAUSE, json.dumps({"id": self.id}), qos=1)
                 logger.info(f"Session {self.id} paused")
                 
                 # Alert: Session Paused
@@ -163,6 +173,9 @@ class SessionController:
                 self.paused = False
                 now_iso = datetime.now(timezone.utc).isoformat()
                 self.db.update_record("sessions", self.id, {"status": "running", "synced": 0}, id_column="id")
+                
+                # Notify Devices
+                self.mqtt.client.publish(self.TOPIC_CMD_RESUME, json.dumps({"id": self.id}), qos=1)
                 logger.info(f"Session {self.id} resumed")
 
                 # Alert: Session Resumed
@@ -303,7 +316,36 @@ class SessionController:
 
     # -------------------- Data Handling --------------------
 
+    def _handle_device_event(self, device_id: str, payload: Dict[str, Any]):
+        """
+        Handles explicit events from devices, such as pump activations.
+        """
+        if not self.session_active or not self.id:
+            logger.debug(f"Ignored event from {device_id} (No active session)")
+            return
+
+        event_type = payload.get("type")
+        data = payload.get("payload", {}) # Inner payload from client
+
+        if event_type == "pump_activated":
+            pump_type = data.get("pump_type", "unknown")
+            duration = data.get("duration", 0)
+            
+            logger.info(f"Received pump activation event: {pump_type} for {duration}s")
+            
+            self.alert_manager.send_session_alert(
+                session_id=self.id,
+                device_id=device_id,
+                sensor_type="ph_control",
+                value=duration,
+                message=f"The {pump_type} pump was activated during {duration:.2f} seconds",
+                severity="info",
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                cooldown_seconds=0
+            )
+
     def _handle_session_data(self, device_id: str, payload: Dict[str, Any]):
+
         source = payload.get("source")
         data = payload.get("data", {})
         timestamp = payload.get("timestamp")
@@ -317,15 +359,7 @@ class SessionController:
         # 3. Live Preview (REMOVED - Aggregator now handles live updates)
         # self._publish_live_preview(source, data)
 
-        # 4. pH Control
-        if self.session_active:
-            self.pump_controller.evaluate_ph_control(
-                device_id, 
-                data, 
-                self.active_session, 
-                self.id, 
-                self.paused
-            )
+
 
 
 

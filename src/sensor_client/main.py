@@ -23,7 +23,11 @@ class SensorClient():
     def init_sensor_client(self): 
         self.manager = SensorManager(self.config)
         self.mqtt = MQTTClient(self.mqtt_config, self.manager)
-        self.mqtt.connect()  
+        
+        # Inject event publisher BEFORE starting the blocking loop
+        self.manager.set_event_publisher(self.mqtt.publish_event)
+        
+        self.mqtt.connect()
     
     def init_config(self): 
         self.config = load_config(os.path.join(PROJECT_ROOT, "src/sensor_client/config/sensors.json"))

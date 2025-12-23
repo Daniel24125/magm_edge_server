@@ -48,8 +48,7 @@ class PHSensor(AbstractSensor):
             logger.error(err)
 
     def get_instrument_read(self):
-        # Optimized: Read 1 sample per cycle.
-        for i in range(1):
+        for i in range(10):
             raw_val = self.analog_comunicator.get_analog_read()
             self.raw_values.append(raw_val)
             ph_val = self.analog_comunicator.convert_analog(raw_val)
@@ -117,3 +116,7 @@ class PHSensor(AbstractSensor):
         if not self.raw_values: 
              return 0
         return statistics.mean(self.raw_values)
+        
+    def set_event_publisher(self, publisher_callback):
+        super().set_event_publisher(publisher_callback)
+        self.controller.set_event_callback(publisher_callback)

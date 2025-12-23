@@ -47,6 +47,11 @@ class ManagerController(threading.Thread):
             try:
                 msg = self.in_queue.get(timeout=0.5)
                 topic, payload = msg.get("topic", ""), msg.get("payload", {})
+
+                if topic.endswith("events"):
+                    logger.info(f"DEBUG MANAGER: Received event msg keys: {list(msg.keys())}")
+                    logger.info(f"DEBUG MANAGER: msg payload: {msg}")
+                    
                 if topic.startswith("devices/") or topic.startswith("/devices/"):
                     self.command_handler.handle_device_message(topic, payload)
                 elif topic.startswith("ui/") or topic.startswith("/ui/"):

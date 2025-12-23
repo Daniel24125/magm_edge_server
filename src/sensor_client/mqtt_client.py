@@ -98,3 +98,20 @@ class MQTTClient:
     def stop(self):
         self.client.loop_stop()
         self.client.disconnect()
+
+    def publish_event(self, event_type: str, payload: dict):
+        """
+        Publishes a device event to the edge server.
+        """
+        topic = f"/devices/{self.device_id}/events"
+        full_payload = {
+            "topic": topic,
+            "payload": {
+                "device_id": self.device_id,
+                "type": event_type,
+                "timestamp": time.time(),
+                "payload": payload
+            }
+        }
+        self.client.publish(topic, json.dumps(full_payload), qos=1)
+        logger.info(f"Published event {event_type} to {topic}")

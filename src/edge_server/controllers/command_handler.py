@@ -90,3 +90,5 @@ class CommandHandler:
             self.device_controller._handle_user_prompt( payload, "cal/prompt_user")
         elif topic.endswith("/live_readings"):
             self.device_controller._handle_user_prompt(payload, "cal/live_readings")
+        elif topic.endswith("/events"):
+            self.session_controller._handle_device_event(device_id, payload)

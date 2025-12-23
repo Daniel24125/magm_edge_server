@@ -68,3 +68,6 @@ class AbstractSensor(abc.ABC):
             **params
         )
         
+    def set_event_publisher(self, publisher_callback):
+        self.event_publisher = publisher_callback
+        

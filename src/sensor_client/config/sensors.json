@@ -40,9 +40,7 @@
       "max_pump_time": 0.3,
       "pin": {
         "acidic": 10,
-        "alkaline": 9,
-        "alkaline_pump_pin": 10,
-        "acidic_pump_pin": 10
+        "alkaline": 9
       },
       "simulator_params": {
         "min_val": 6.0,
