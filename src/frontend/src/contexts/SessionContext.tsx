@@ -145,7 +145,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 const history = message.history || [];
                 const historyAlerts = message.alerts || [];
                 console.log("Received Session History:", history.length, "measurements,", historyAlerts.length, "alerts");
-
                 setActiveSession(prev => {
                     if (!prev) return null;
 

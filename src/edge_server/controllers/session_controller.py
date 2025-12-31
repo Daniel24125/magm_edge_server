@@ -198,6 +198,12 @@ class SessionController:
         topic = f"/controller/session/{self.id}/measurement"
         self.mqtt.client.publish(topic, json.dumps({"id": self.id}), qos=1)
 
+    def request_sync_measurements(self):
+        if not self.id:
+            return
+        topic = f"/controller/session/{self.id}/measurement_sync"
+        self.mqtt.client.publish(topic, json.dumps({"id": self.id}), qos=1)
+
     # -------------------- Internal Helpers --------------------
 
     def _create_session_payload(self, payload: Dict[str, Any]) -> SessionPayload:
@@ -251,13 +257,20 @@ class SessionController:
                     time.sleep(1)
                     continue
 
-                # Update expected sources dynamically
-                if self.device_controller:
-                    expected_sources = set(self.device_controller.online_devices.keys())
-                    expected_sources.add("rpi")
+                # Determine trigger type
+                is_sync_loop = (self.time_elapsed % self.read_interval == 0)
+                save_to_db = is_sync_loop # Save to DB only on sync loops
 
-                # Determine if this cycle should be saved to DB (History)
-                save_to_db = (self.time_elapsed % self.read_interval == 0)
+                # Dynamic Expected Sources
+                # Fast Loop: Expect only RPi (assuming external devices are slow/sync-only)
+                # Sync Loop: Expect RPi + All Online Devices
+                expected_sources = set(["rpi"])
+                
+                if is_sync_loop and self.device_controller:
+                     expected_sources.update(self.device_controller.online_devices.keys())
+                
+                # Note: If an external device IS fast, it will be ignored in fast loops with this logic.
+                # However, this safely solves the Spectrometer issue without metadata.
 
                 self.aggregator.start_collection(
                     self.id, 
@@ -269,8 +282,13 @@ class SessionController:
 
                 if save_to_db:
                     logger.info(f"Requests measurements for session {self.id} (Saving to DB)")
+                    # New Sync Trigger (for Slow Devices/Spec)
+                    if not self.paused:
+                        self.request_sync_measurements()
                 
-                # Always request measurements for live view, unless paused (redundant check if we sleep above, but kept for safety if logic changes)
+                # Always request measurements for live view (for Fast Devices/RPi)
+                # The Spectrometer (listening to sync topic) will ignore this.
+                # The Aggegator (expecting only RPi) will not wait for Spectrometer.
                 if not self.paused:
                     self.request_measurements()
 
@@ -349,7 +367,7 @@ class SessionController:
         source = payload.get("source")
         data = payload.get("data", {})
         timestamp = payload.get("timestamp")
-
+        logger.info(f"Received data from {device_id}: {data}")
         # 1. Anomaly Detection
         self._process_anomalies(device_id, data, payload.get("id"), timestamp)
 
