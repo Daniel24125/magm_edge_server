@@ -25,10 +25,10 @@ ALERTS_CONFIG_PATH = os.path.join(CONFIG_DIR, "alerts.json")
 
 class SessionController:
     # MQTT Topics
-    TOPIC_CMD_START = "/controller/commands/start"
-    TOPIC_CMD_STOP = "/controller/commands/stop"
-    TOPIC_CMD_PAUSE = "/controller/commands/pause"
-    TOPIC_CMD_RESUME = "/controller/commands/resume"
+    TOPIC_CMD_START = "controller/commands/start"
+    TOPIC_CMD_STOP = "controller/commands/stop"
+    TOPIC_CMD_PAUSE = "controller/commands/pause"
+    TOPIC_CMD_RESUME = "controller/commands/resume"
     
     TOPIC_SESSION_STATUS = "session/status"
     TOPIC_SESSION_LIVE = "session/live"
@@ -194,13 +194,13 @@ class SessionController:
     def request_measurements(self):
         if not self.id:
             return
-        topic = f"/controller/session/{self.id}/measurement"
-        self.mqtt.client.publish(topic, json.dumps({"id": self.id}), qos=1)
+        topic = f"controller/session/{self.id}/measurement"
+        self.client.publish(topic, json.dumps({"id": self.id}), qos=1)
 
     def request_sync_measurements(self):
         if not self.id:
             return
-        topic = f"/controller/session/{self.id}/measurement_sync"
+        topic = f"controller/session/{self.id}/measurement_sync"
         self.client.publish(topic, json.dumps({"id": self.id}), qos=1)
 
     # -------------------- Internal Helpers --------------------
@@ -511,7 +511,7 @@ class SessionController:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-        self.client.publish(topic, json.dumps(payload))
+        self.client.publish(topic, json.dumps(payload), retain=True)
         logger.info(f"Published session status: {status_payload.get('status')}")
 
     def _map_active_session_to_status(self) -> Dict[str, Any]:

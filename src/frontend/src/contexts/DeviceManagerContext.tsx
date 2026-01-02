@@ -38,7 +38,7 @@ interface IDeviceManagerContext {
 }
 
 const DeviceManagerContext = createContext<IDeviceManagerContext | null>(null);
-const COMMAND_TOPIC = process.env.NEXT_PUBLIC_COMMAND_TOPIC || "";
+const COMMAND_TOPIC = process.env.NEXT_PUBLIC_COMMAND_TOPIC || "ui/commands";
 
 export const DeviceManagerProvider = ({ children }: { children: React.ReactNode }) => {
     const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
@@ -58,7 +58,11 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
 
     // --- Subscriptions ---
     useEffect(() => {
-        if (!isConnected) return;
+        if (!isConnected) {
+            setIsRPIConnected(false);
+            setOnlineDevices({});
+            return;
+        }
 
         // 1. System Notifications (Connection Status)
         // 1. System Notifications (Connection Status - RPi Only)

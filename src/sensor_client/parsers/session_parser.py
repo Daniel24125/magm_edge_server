@@ -12,21 +12,21 @@ class SessionCommandParser:
         
         # We need device_id for publishing
         self.device_id = getattr(mqtt_client_wrapper, 'device_id', '')
-        self.publish_measurement_topic = f"/devices/{self.device_id}/data"
+        self.publish_measurement_topic = f"devices/{self.device_id}/data"
 
     def parse(self, topic, payload):
-        if topic == "/controller/status/session_config_updated": 
+        if topic == "controller/status/session_config_updated": 
             self.config_manager.update_config(payload)
             self.sensor_manager.update_ph_config(payload)
-        elif topic == "/controller/commands/start": 
+        elif topic == "controller/commands/start": 
             self.start_session(payload)
-        elif topic == "/controller/commands/stop":
+        elif topic == "controller/commands/stop":
             self.stop_session(payload)
-        elif topic == "/controller/commands/pause":
+        elif topic == "controller/commands/pause":
             self.pause_session(payload)
-        elif topic == "/controller/commands/resume":
+        elif topic == "controller/commands/resume":
             self.resume_session(payload)
-        elif topic.startswith(f"/controller/session/") and topic.endswith("/measurement"):
+        elif topic.startswith(f"controller/session/") and topic.endswith("/measurement"):
             self._handle_measurement_request(payload)
 
     def _handle_measurement_request(self, payload):
@@ -36,7 +36,7 @@ class SessionCommandParser:
     def start_session(self, payload: dict):
         session_id = payload.get("id")
         logger.info(f"Starting session with ID: {session_id}")
-        self.mqtt_client.subscribe(f"/controller/session/{session_id}/#")
+        self.mqtt_client.subscribe(f"controller/session/{session_id}/#")
         # Notify Sensor Manager to start background tasks (e.g. pH control)
         self.sensor_manager.on_session_start(session_id)
 

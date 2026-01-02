@@ -71,9 +71,9 @@ class MQTTClient:
             logger.info(f"Received message in topic {msg.topic}")
             
             # Delegate parsing
-            if msg.topic.startswith("/devices"):
+            if msg.topic.startswith("devices"):
                 self.device_parser.parse(msg.topic, payload)
-            elif msg.topic.startswith("/controller"):
+            elif msg.topic.startswith("controller"):
                 self.session_parser.parse(msg.topic, payload)
 
         except json.JSONDecodeError:
@@ -81,8 +81,8 @@ class MQTTClient:
         except Exception as e:
             logger.error(f"An error occurred while processing message: {e}")
     
-    def on_disconnect(self, client, userdata, rc):
-        logger.warning("Disconnected from MQTT broker")
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.warning(f"Disconnected from MQTT broker (rc={reason_code})")
 
     def connect(self):
         try: 

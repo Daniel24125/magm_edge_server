@@ -160,11 +160,31 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }, []);
 
+    // Heartbeat / Keepalive
+    useEffect(() => {
+        if (!isConnected || !client) return;
+
+        const heartbeatInterval = setInterval(() => {
+            if (client.connected) {
+                // Publish a lightweight ping to keep the connection active
+                // qos: 0 is sufficient for keepalive
+                client.publish("ui/heartbeat", JSON.stringify({ timestamp: Date.now() }), { qos: 0 }, (err) => {
+                    if (err) console.warn("Heartbeat failed", err);
+                });
+            }
+        }, 10000); // 10 seconds
+
+        return () => clearInterval(heartbeatInterval);
+    }, [isConnected, client]);
+
     // Auto-connect
     useEffect(() => {
         connect();
-        return () => disconnect();
-    }, [connect, disconnect]);
+        return () => {
+            console.warn("⚠️ MQTT Provider Unmounting - Disconnecting...");
+            disconnect();
+        };
+    }, []); // Run once on mount
 
     return (
         <MQTTContext.Provider value={{ client, isConnected, connect, disconnect, subscribe, unsubscribe, publish }}>

@@ -52,6 +52,16 @@ class EdgeMQTTClient(threading.Thread):
         # UI Command Callbacks
         self.on_command_callback: Optional[Callable] = None
 
+        # Set Last Will and Testament (LWT)
+        # This ensures that if the Edge Server disconnects, the broker publishes this message.
+        lwt_payload = json.dumps({
+            "type": "app",
+            "source": "edge",
+            "event": "rpi_disconnected",
+            "message": "Edge Server Disconnected (LWT)"
+        })
+        self.client.will_set("system/notifications", payload=lwt_payload, qos=1, retain=True)
+
     def _on_connect(self, client, userdata, flags, rc, properties): 
         if rc == 0:
             logger.info(f"✅ Connected to Local MQTT Broker at {self.host}:{self.port}")
@@ -66,6 +76,10 @@ class EdgeMQTTClient(threading.Thread):
                 "event": "rpi_connected",
                 "message": "The edge server is connected to local broker"
             }, retain=True)
+
+            # Request all devices to register themselves (in case Edge restarted)
+            self.publish("devices/registration_request", {}, retain=False)
+            logger.info("Published 'devices/registration_request' to sync sensors.")
             logger.info(f"Published 'rpi_connected' notification to 'system/notifications'")
         else:
             logger.error(f"❌ Connection failed with code {rc}.")
@@ -141,5 +155,17 @@ class EdgeMQTTClient(threading.Thread):
 
     def stop_process(self):
         logger.info("Stopping EdgeMQTTClient...")
+        
+        # Publish graceful disconnect message (overwriting the LWT or setting state)
+        try:
+            self.publish("system/notifications", {
+                "type": "app",
+                "source": "edge",
+                "event": "rpi_disconnected",
+                "message": "Edge Server Shutting Down"
+            }, retain=True)
+        except Exception as e:
+            logger.warning(f"Failed to publish disconnect message: {e}")
+
         self.client.loop_stop()
         self.client.disconnect()

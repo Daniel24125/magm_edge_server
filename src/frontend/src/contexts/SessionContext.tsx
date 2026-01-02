@@ -105,7 +105,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const alertsTopic = "session/alerts";
 
         const handleSessionMessage = (topic: string, rawMessage: unknown) => {
-            // console.log("Session Message:", topic, rawMessage);
+            console.log("Session Message Received:", topic, rawMessage);
             const message = rawMessage as { type?: string; payload?: any; history?: any[]; alerts?: any[]; data?: any; severity?: any; message?: string; sensor_type?: string; value?: any; timestamp?: string; session_time?: number };
 
             if (topic === sessionTopic) {

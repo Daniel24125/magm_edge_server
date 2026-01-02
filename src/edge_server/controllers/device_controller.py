@@ -105,7 +105,7 @@ class DeviceController:
         
         while time.time() - start_time < timeout:
             try:
-                self.client.publish(topic, json.dumps(payload))
+                self.client.publish(topic, json.dumps(payload), retain=True)
                 return
             except Exception as e:
                 logger.warning(f"Device update broadcast failed (AWS offline?). Retrying in 1s... ({int(timeout - (time.time() - start_time))}s left)")
