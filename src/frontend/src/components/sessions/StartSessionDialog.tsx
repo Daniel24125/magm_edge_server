@@ -13,6 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TSessionDefaultSettings, TAlertConfiguration } from "@/types/projects";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from "../ui/responsive-dialog";
 import { useSession } from "@/contexts/SessionContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDeviceManager } from "@/contexts/DeviceManagerContext";
 
 interface StartSessionDialogProps {
     open: boolean;
@@ -27,15 +29,27 @@ export interface StartSessionFormData {
     settings: TSessionDefaultSettings;
     alertConfiguration: TAlertConfiguration[];
     notes?: string;
+    spectrometerConfig?: {
+        exposure_time: number;
+        cycle_time: number;
+    }
 }
 
 export function StartSessionDialog({ open, onOpenChange, initialSettings, initialAlerts, onConfirm, isLoading }: StartSessionDialogProps) {
-    const { canPerformSession } = useSession()
+    const { canPerformSession, activeSession } = useSession()
+    // Mock check for spectrometer presence - ideally passed as prop or from context
+    const { onlineDevices } = useDeviceManager();
+    const hasSpectrometer = Object.values(onlineDevices).some(d => d.device_name.toLowerCase().includes("spectrometer") || d.spectrometer_config);
+
     const { register, control, handleSubmit, watch, reset } = useForm<StartSessionFormData>({
         defaultValues: {
             settings: initialSettings,
             alertConfiguration: initialAlerts,
-            notes: ""
+            notes: "",
+            spectrometerConfig: {
+                exposure_time: 20000,
+                cycle_time: 210000
+            }
         }
     });
 
@@ -45,7 +59,11 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
             reset({
                 settings: initialSettings,
                 alertConfiguration: initialAlerts,
-                notes: ""
+                notes: "",
+                spectrometerConfig: {
+                    exposure_time: 20000,
+                    cycle_time: 210000
+                }
             });
         }
     }, [open, initialSettings, initialAlerts, reset]);
@@ -65,68 +83,97 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                 </ResponsiveDialogHeader>
 
                 <ScrollArea className="w-full h-[50vh]">
-                    <form id="start-session-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-4">
+                    <form id="start-session-form" onSubmit={handleSubmit(onSubmit)} className="p-4">
+                        <Tabs defaultValue="general" className="w-full">
+                            <TabsList className="grid w-full grid-cols-3 mb-4">
+                                <TabsTrigger value="general">General</TabsTrigger>
+                                <TabsTrigger value="alerts">Alerts</TabsTrigger>
+                                <TabsTrigger value="spectrometer" disabled={!hasSpectrometer}>Spectrom.</TabsTrigger>
+                            </TabsList>
 
-                        {/* Notes Section */}
-                        <div className="space-y-2">
-                            <h3 className="font-medium text-sm text-muted-foreground">Session Notes</h3>
-                            <Textarea
-                                {...register("notes")}
-                                placeholder="Add any notes for this session..."
-                                className="resize-none"
-                            />
-                        </div>
+                            <TabsContent value="general" className="space-y-6">
+                                {/* Notes Section */}
+                                <div className="space-y-2">
+                                    <h3 className="font-medium text-sm text-muted-foreground">Session Notes</h3>
+                                    <Textarea
+                                        {...register("notes")}
+                                        placeholder="Add any notes for this session..."
+                                        className="resize-none"
+                                    />
+                                </div>
 
-                        {/* Default Settings Section */}
-                        <div className="space-y-4">
-                            <h3 className="font-medium text-sm text-muted-foreground">Default Settings</h3>
-                            <FieldSet>
-                                <FieldGroup>
-                                    <Field>
-                                        <FieldLabel htmlFor="settings.dataAcquisitionInterval">Data Acquisition Interval (minutes)</FieldLabel>
-                                        <Input
-                                            {...register("settings.dataAcquisitionInterval", { valueAsNumber: true, min: 1, max: 120 })}
-                                            type="number"
-                                            placeholder="Interval"
-                                        />
-                                        <FieldDescription>Min: 1, Max: 120 minutes</FieldDescription>
-                                    </Field>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Field>
-                                            <div className="flex flex-col gap-2">
-                                                <FieldLabel htmlFor="settings.phControl">pH Control</FieldLabel>
-                                                <Controller
-                                                    control={control}
-                                                    name="settings.phControl"
-                                                    render={({ field }) => (
-                                                        <Switch
-                                                            checked={field.value}
-                                                            onCheckedChange={field.onChange}
-                                                        />
-                                                    )}
+                                {/* Default Settings Section */}
+                                <div className="space-y-4">
+                                    <h3 className="font-medium text-sm text-muted-foreground">Control Settings</h3>
+                                    <FieldSet>
+                                        <FieldGroup>
+                                            <Field>
+                                                <FieldLabel htmlFor="settings.dataAcquisitionInterval">Data Acquisition Interval (minutes)</FieldLabel>
+                                                <Input
+                                                    {...register("settings.dataAcquisitionInterval", { valueAsNumber: true, min: 1, max: 120 })}
+                                                    type="number"
+                                                    placeholder="Interval"
                                                 />
+                                                <FieldDescription>Min: 1, Max: 120 minutes</FieldDescription>
+                                            </Field>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <Field>
+                                                    <div className="flex flex-col gap-2">
+                                                        <FieldLabel htmlFor="settings.phControl">pH Control</FieldLabel>
+                                                        <Controller
+                                                            control={control}
+                                                            name="settings.phControl"
+                                                            render={({ field }) => (
+                                                                <Switch
+                                                                    checked={field.value}
+                                                                    onCheckedChange={field.onChange}
+                                                                />
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </Field>
+                                                <Field>
+                                                    <FieldLabel htmlFor="settings.phSetPoint">pH Set Point</FieldLabel>
+                                                    <Input
+                                                        {...register("settings.phSetPoint", { valueAsNumber: true })}
+                                                        type="number"
+                                                        step="0.1"
+                                                        placeholder="pH"
+                                                    />
+                                                </Field>
                                             </div>
-                                        </Field>
-                                        <Field>
-                                            <FieldLabel htmlFor="settings.phSetPoint">pH Set Point</FieldLabel>
-                                            <Input
-                                                {...register("settings.phSetPoint", { valueAsNumber: true })}
-                                                type="number"
-                                                step="0.1"
-                                                placeholder="pH"
-                                            />
-                                        </Field>
+                                        </FieldGroup>
+                                    </FieldSet>
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="alerts" className="space-y-4">
+                                <h3 className="font-medium text-sm text-muted-foreground">Alert Configuration</h3>
+                                <AlertConfigurationList control={control} register={register} watch={watch} />
+                            </TabsContent>
+
+                            <TabsContent value="spectrometer" className="space-y-4">
+                                <h3 className="font-medium text-sm text-muted-foreground">Spectrometer Configuration</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-lg p-4">
+                                    <div className="space-y-2">
+                                        <FieldLabel>Exposure Time (µs)</FieldLabel>
+                                        <Input
+                                            {...register("spectrometerConfig.exposure_time", { valueAsNumber: true, min: 100 })}
+                                            type="number"
+                                        />
+                                        <FieldDescription>Default: 20,000 µs</FieldDescription>
                                     </div>
-                                </FieldGroup>
-                            </FieldSet>
-                        </div>
-
-                        {/* Alerts Section */}
-                        <div className="space-y-4">
-                            <h3 className="font-medium text-sm text-muted-foreground">Alert Configuration</h3>
-                            <AlertConfigurationList control={control} register={register} watch={watch} />
-                        </div>
-
+                                    <div className="space-y-2">
+                                        <FieldLabel>Cycle Time (µs)</FieldLabel>
+                                        <Input
+                                            {...register("spectrometerConfig.cycle_time", { valueAsNumber: true, min: 100 })}
+                                            type="number"
+                                        />
+                                        <FieldDescription>Default: 210,000 µs</FieldDescription>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                     </form>
                 </ScrollArea>
 

@@ -34,6 +34,10 @@ export interface IDeviceDetails {
     device_name: string;
     sensors?: ISensor[];
     status: string;
+    spectrometer_config?: {
+        exposure_time: number;
+        cycle_time: number;
+    };
     [key: string]: unknown;
 }
 

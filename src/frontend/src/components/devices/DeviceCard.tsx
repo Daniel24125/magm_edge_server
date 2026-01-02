@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { RPiDeviceContent } from "./RPiDeviceContent"
 import { IDeviceDetails, ISensor } from "@/types"
+import { SpectrometerWidget } from "./SpectrometerWidget"
 
 interface DeviceCardProps {
     deviceId: string;

@@ -50,7 +50,7 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             clean: true,
             reconnectPeriod: 2000, // Auto reconnect every 2s
             connectTimeout: 5000,
-            keepalive: 60,
+            keepalive: 0, // Disable internal PINGREQ to avoid browser/broker timeout mismatch
         });
 
         mqttClient.on("connect", () => {
@@ -113,7 +113,8 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
 
     const disconnect = useCallback(() => {
         if (clientRef.current) {
-            clientRef.current.end();
+            console.warn("🔻 Disconnecting MQTT Client...");
+            clientRef.current.end(true);
             clientRef.current = null;
             setClient(null);
             setIsConnected(false);
