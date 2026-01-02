@@ -1,18 +1,22 @@
 
-from mqtt_server import MqttSubscriber
-from aws import AWSIoTClient
-from edge_server.manager import ManagerController
-import  utils.thread_handler as t
 import sys
+import os
 
+# Add 'src' to sys.path to allow absolute imports of 'edge_server'
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_dir)
+if src_dir not in sys.path:
+    sys.path.append(src_dir)
+
+from edge_server.edge_mqtt_client import EdgeMQTTClient
+from edge_server.manager import ManagerController
+import  edge_server.utils.thread_handler as t
 
 def main():
-    mqtt = MqttSubscriber(t.data_queue)    
-    aws = AWSIoTClient(t.data_queue)
-    manager = ManagerController(mqtt, aws)
+    mqtt_client = EdgeMQTTClient(t.data_queue)    
+    manager = ManagerController(mqtt_client)
 
-    aws.start()
-    mqtt.start()
+    mqtt_client.start()
     manager.start()
 
     try:
@@ -20,10 +24,9 @@ def main():
             t.stop_event.wait(timeout=0.5)
     finally:
         print("🧹 Cleaning up resources...")
-        mqtt.join(timeout=5)
         manager.join(timeout=5)
-        aws._notify_user("rpi_disconnected", "The edge server is disconnected")
-        aws.join(timeout=5)
+        mqtt_client.stop_process()
+        mqtt_client.join(timeout=5)
 
         print("✅ Edge Server shut down cleanly.")
         sys.exit(0)

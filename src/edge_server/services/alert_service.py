@@ -7,9 +7,9 @@ class AlertManager:
     Centralized service for handling system and session alerts.
     ensures consistency between database persistence and frontend notifications.
     """
-    def __init__(self, db_helper: Any, aws_client: Any):
+    def __init__(self, db_helper: Any, client: Any):
         self.db = db_helper
-        self.aws = aws_client
+        self.client = client
         # Track last alert times: Key = "session_id:sensor_type", Value = timestamp (float)
         self._last_alert_times = {}
 
@@ -26,7 +26,7 @@ class AlertManager:
         Handles a session-specific alert (e.g. sensor anomaly).
         1. Checks cooldown to prevent flooding.
         2. Saves to Database (alerts table).
-        3. Publishes to AWS 'ui/alerts'.
+        3. Publishes to 'session/alerts'.
         """
         
         # Check cooldown
@@ -67,29 +67,30 @@ class AlertManager:
                 "severity": severity,
                 "timestamp": timestamp
             }
-            # Uses new aws.publish_session_alert method which handles topic 'session/alerts'
-            self.aws.publish_session_alert(payload) 
+            # Publish to local broker
+            self.client.publish("session/alerts", payload) 
         except Exception as e:
-            logger.error(f"Failed to publish session alert to AWS: {e}")
+            logger.error(f"Failed to publish session alert: {e}")
 
     def send_system_alert(self, event: str, message: str, severity: str = "info", extra_data: Optional[dict] = None):
         """
         Handles a system-wide alert (e.g. device connection).
         1. Publishes to 'system/notifications'.
-        (System alerts are currently not persisted to DB, per existing logic)
         """
         try:
-            # Uses existing aws._notify_user method which handles topic 'system/notifications'
-            # Note: _notify_user might be private, considering making it public or wrapping.
-            
-            # Inject severity into extra_data or payload
-            if extra_data is None:
-                extra_data = {}
-            extra_data["severity"] = severity
+            timestamp = datetime.now(timezone.utc).isoformat()
+            payload = {
+                "type": "app",
+                "source": "edge",
+                "event": event,
+                "timestamp": timestamp,
+                "message": message,
+                "severity": severity
+            }
+            if extra_data:
+                payload.update(extra_data)
 
-            if hasattr(self.aws, '_notify_user'):
-                self.aws._notify_user(event, message, extra_data)
-            else:
-                 logger.warning("AWS client does not have _notify_user method")
+            self.client.publish("system/notifications", payload)
+
         except Exception as e:
              logger.error(f"Failed to send system alert: {e}")

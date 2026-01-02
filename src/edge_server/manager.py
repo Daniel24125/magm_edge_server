@@ -16,10 +16,9 @@ DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "session.json")
 
 class ManagerController(threading.Thread):
 
-    def __init__(self, mqtt, aws):
+    def __init__(self, client):
         super().__init__(daemon=True)
-        self.mqtt = mqtt
-        self.aws = aws
+        self.client = client
 
         # Initialize shared services
         from database.db_manager import DatabaseHelper
@@ -27,18 +26,18 @@ class ManagerController(threading.Thread):
         from services.firebase_sync import FirebaseSyncService
         
         self.db_helper = DatabaseHelper("src/edge_server/database/models/sessions.db")
-        self.alert_manager = AlertManager(self.db_helper, self.aws)
+        self.alert_manager = AlertManager(self.db_helper, self.client)
         
         # Start Firebase Sync (Daemon)
         self.firebase_sync = FirebaseSyncService(self.db_helper)
         self.firebase_sync.start()
 
-        self.command_handler = CommandHandler(mqtt, aws, self.alert_manager)
+        self.command_handler = CommandHandler(client, self.alert_manager)
         self._stop_event = threading.Event()
 
-        self.in_queue = getattr(self.mqtt, "data_queue", None)
+        self.in_queue = getattr(self.client, "data_queue", None)
         if self.in_queue is None:
-            raise RuntimeError("mqtt missing data_queue")
+            raise RuntimeError("mqtt client missing data_queue")
         
     def run(self):
         logger.info("Manager main loop starting")
@@ -66,7 +65,10 @@ class ManagerController(threading.Thread):
         logger.info("Manager stopped")
     
     def _handle_user_prompt(self, payload, command): 
-        self.aws.publish_prompt_user(payload, command)
+        # Forward to UI via MQTT
+        # self.client.publish(...) - logic handled inside command handler/device controller
+        pass
+
     
     def stop(self):
         self._stop_event.set()

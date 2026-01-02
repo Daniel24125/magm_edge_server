@@ -3,150 +3,126 @@
  *
  * Responsibilities:
  * - Exposes a global MQTT state (e.g., MQTT connection, messages, responses, subscriptions).
- * 
- * Usage:
- * Wrap the root layout with <MQTTProvider> and use useMQTT()
- * in child components to access or update global state.
+ * - Connects to local Mosquitto broker via WebSockets.
  */
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { mqtt, iot } from "aws-iot-device-sdk-v2";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import mqtt, { MqttClient } from "mqtt";
 import { useAlert } from "./AlertContext";
 
-// --- Configuration Constants ---
-// TODO: Move these to a config file or environment variables
-const AWS_REGION = "eu-west-3";
-const IDENTITY_POOL_ID = "eu-west-3:390b2bb4-3f18-4d96-a51e-0943eeda80fd";
-const IOT_ENDPOINT = "a11r358gjcsqpj-ats.iot.eu-west-3.amazonaws.com";
+// --- Configuration ---
+// For self-hosted, we use the local broker over WebSockets.
+// Ensure your Mosquitto is configured with 'listener 9001 protocol websockets'
+const BROKER_URL = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || "ws://localhost:9001";
 
 type TMessageHandler = (topic: string, payload: unknown) => void;
 
 interface MQTTContextType {
-    connection: mqtt.MqttClientConnection | null;
+    client: MqttClient | null;
     isConnected: boolean;
-    connect: () => Promise<void>;
-    disconnect: () => Promise<void>;
-    subscribe: (topic: string, handler?: TMessageHandler) => Promise<void>;
-    unsubscribe: (topic: string, handler?: TMessageHandler) => Promise<void>;
-    publish: (topic: string, payload: unknown) => Promise<void>;
+    connect: () => void;
+    disconnect: () => void;
+    subscribe: (topic: string, handler?: TMessageHandler) => void;
+    unsubscribe: (topic: string, handler?: TMessageHandler) => void;
+    publish: (topic: string, payload: unknown) => void;
 }
 
 const MQTTContext = createContext<MQTTContextType | null>(null);
 
 export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     const { addAlert } = useAlert();
-    const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
+    const [client, setClient] = useState<MqttClient | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    const messageHandlers = useRef<Map<string, Set<TMessageHandler>>>(new Map());
 
-    // Refs to track connection state independent of React renders
-    const connectionRef = useRef<mqtt.MqttClientConnection | null>(null);
-    const isConnecting = useRef(false);
+    // Map of topic -> Set of handlers
+    const messageHandlers = useRef<Map<string, Set<TMessageHandler>>>(new Map());
+    const clientRef = useRef<MqttClient | null>(null);
 
     // 1. Connection Logic
-    const connect = useCallback(async () => {
-        if (isConnecting.current || connectionRef.current) return;
+    const connect = useCallback(() => {
+        if (clientRef.current?.connected) return;
 
-        isConnecting.current = true;
+        console.log(`Connecting to MQTT broker at ${BROKER_URL}...`);
 
-        try {
-            const provider = fromCognitoIdentityPool({
-                clientConfig: { region: AWS_REGION },
-                identityPoolId: IDENTITY_POOL_ID,
-            });
-            const credentials = await provider();
+        const mqttClient = mqtt.connect(BROKER_URL, {
+            clientId: "webclient-" + Math.floor(Math.random() * 100000),
+            clean: true,
+            reconnectPeriod: 2000, // Auto reconnect every 2s
+            connectTimeout: 5000,
+            keepalive: 60,
+        });
 
-            const client = new mqtt.MqttClient();
-            const configBuilder = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
-                .with_clean_session(true)
-                .with_client_id("webclient-" + Math.floor(Math.random() * 100000))
-                .with_endpoint(IOT_ENDPOINT)
-                .with_credentials(
-                    AWS_REGION,
-                    credentials.accessKeyId,
-                    credentials.secretAccessKey,
-                    credentials.sessionToken
-                )
-                .with_keep_alive_seconds(60);
+        mqttClient.on("connect", () => {
+            console.log("✅ Connected to Local MQTT Broker");
+            setIsConnected(true);
 
-            const newConnection = client.new_connection(configBuilder.build());
-
-            // Event Listeners
-            newConnection.on("connect", (sessionPresent) => {
-                console.log("✅ Connected to AWS IoT Core");
-                setIsConnected(true);
-            });
-
-            newConnection.on("disconnect", () => {
-                addAlert("warning", "Disconnected from AWS IoT Core");
-                setIsConnected(false);
-            });
-
-            newConnection.on("interrupt", (error) => {
-                console.warn("⚠️ MQTT Connection Interrupted:", error);
-                setIsConnected(false);
-            });
-
-            newConnection.on("resume", (return_code, session_present) => {
-                console.log("♻️ MQTT Connection Resumed", { return_code, session_present });
-                setIsConnected(true);
-
-                // Re-subscribe to all topics since we use clean_session=true
-                messageHandlers.current.forEach((_, topic) => {
-                    newConnection.subscribe(topic, mqtt.QoS.AtLeastOnce)
-                        .then(() => console.log(`Resubscribed to ${topic}`))
-                        .catch(e => console.error(`Failed to resubscribe to ${topic}`, e));
+            // Re-subscribe to all topics
+            messageHandlers.current.forEach((_, topic) => {
+                mqttClient.subscribe(topic, (err) => {
+                    if (err) console.error(`Failed to resubscribe to ${topic}`, err);
+                    else console.log(`Resubscribed to ${topic}`);
                 });
             });
+        });
 
-            newConnection.on("message", (topic, payload) => {
-                const payloadStr = new TextDecoder().decode(payload);
-                try {
-                    const parsed = JSON.parse(payloadStr);
-                    // Dispatch to handlers
-                    const handlers = messageHandlers.current.get(topic);
-                    if (handlers) {
-                        handlers.forEach(h => h(topic, parsed));
-                    }
-                } catch (e: unknown) {
-                    const error = e instanceof Error ? e : new Error(String(e));
-                    addAlert("error", "Failed to parse MQTT message " + error.message, "app");
+        mqttClient.on("reconnect", () => {
+            console.log("🔄 Reconnecting to MQTT Broker...");
+        });
+
+        mqttClient.on("close", () => {
+            console.warn("🔌 Disconnected from MQTT Broker");
+            setIsConnected(false);
+        });
+
+        mqttClient.on("offline", () => {
+            console.warn("⚠️ MQTT Client Offline");
+            setIsConnected(false);
+        });
+
+        mqttClient.on("error", (err) => {
+            console.error("❌ MQTT Connection Error:", err);
+            // Do not call end() here, let the client try to reconnect
+        });
+
+        mqttClient.on("message", (topic, payload) => {
+            try {
+                const payloadStr = payload.toString();
+                // console.log(`📩 Received on ${topic}:`, payloadStr);
+                const parsed = JSON.parse(payloadStr);
+
+                // Dispatch to handlers
+                // Support wildcards/regex in future if needed, currently exact match + basic routing
+                // Simple exact match for now as per previous implementation
+                const handlers = messageHandlers.current.get(topic);
+                if (handlers) {
+                    handlers.forEach(h => h(topic, parsed));
                 }
-            });
 
-            await newConnection.connect();
-            connectionRef.current = newConnection;
-            setConnection(newConnection);
+                // Also support simple wildcard matching (e.g. users subscribing to /#)
+                // (Not fully implemented here for simplicity unless needed)
+            } catch (e: unknown) {
+                console.error("Failed to parse message", e);
+            }
+        });
 
-        } catch (error) {
-            console.error("❌ MQTT Connection Failed:", error);
-        } finally {
-            isConnecting.current = false;
-        }
+        clientRef.current = mqttClient;
+        setClient(mqttClient);
+
     }, []);
 
-    const disconnect = useCallback(async () => {
-        if (connectionRef.current) {
-            await connectionRef.current.disconnect();
-            connectionRef.current = null;
-            setConnection(null);
+    const disconnect = useCallback(() => {
+        if (clientRef.current) {
+            clientRef.current.end();
+            clientRef.current = null;
+            setClient(null);
             setIsConnected(false);
         }
     }, []);
 
     // 2. Subscribe Logic
-    const subscribe = useCallback(async (topic: string, handler?: TMessageHandler) => {
-        if (!connectionRef.current) {
-            addAlert("warning", "No MQTT connection");
-            return;
-        }
-
-        if (!topic) {
-            console.warn("MQTTContext: Attempted to subscribe to empty topic");
-            return;
-        }
+    const subscribe = useCallback((topic: string, handler?: TMessageHandler) => {
+        if (!topic) return;
 
         // Register handler
         if (handler) {
@@ -156,62 +132,42 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             messageHandlers.current.get(topic)?.add(handler);
         }
 
-        // // Perform MQTT subscription (idempotent-ish)
-        // // We always subscribe at least once. 
-        // // Optimization: check if already subscribed to this topic at MQTT level? 
-        // // For now, just sending subscribe is safe.
-
-        // console.log("MQTTContext: Subscribing...", { topic, qos: mqtt.QoS.AtLeastOnce, connection: !!connectionRef.current });
-        try {
-            await connectionRef.current.subscribe(topic, mqtt.QoS.AtLeastOnce);
-        } catch (e) {
-            console.error("MQTT Subscribe Error:", e);
+        // Perform Subscription
+        if (clientRef.current?.connected) {
+            clientRef.current.subscribe(topic, { qos: 1 }, (err) => {
+                if (err) console.error(`Subscribe error for ${topic}:`, err);
+                // else console.log(`Subscribed to ${topic}`);
+            });
         }
-        // console.log(`Subscribed to ${topic}`);
     }, []);
 
-    const unsubscribe = useCallback(async (topic: string, handler?: TMessageHandler) => {
+    const unsubscribe = useCallback((topic: string, handler?: TMessageHandler) => {
         if (handler) {
             messageHandlers.current.get(topic)?.delete(handler);
         }
-        // Only unsubscribe from MQTT if no handlers left? 
-        // For simplicity, we might keep the subscription open or logic here can be enhanced.
+        // Optional: Unsubscribe from broker if no handlers left
     }, []);
 
     // 3. Publish Logic
-    const publish = useCallback(async (topic: string, payload: unknown) => {
-        if (!connectionRef.current) {
-            addAlert("warning", "No MQTT connection");
+    const publish = useCallback((topic: string, payload: unknown) => {
+        if (!clientRef.current?.connected) {
+            console.warn("Cannot publish: No info connection");
             return;
         }
-        if (!topic) {
-            console.warn("MQTTContext: Attempted to publish to empty topic");
-            return;
-        }
-        const json = JSON.stringify(payload);
-        await connectionRef.current.publish(topic, json, mqtt.QoS.AtLeastOnce);
-        console.log(`📤 Published to ${topic}`);
+        const msg = typeof payload === 'string' ? payload : JSON.stringify(payload);
+        clientRef.current.publish(topic, msg, { qos: 1 }, (err) => {
+            if (err) console.error("Publish error:", err);
+        });
     }, []);
 
-    // Auto-connect on mount and handle window events
+    // Auto-connect
     useEffect(() => {
         connect();
-
-        const handleOnline = () => {
-            console.log("🌐 Browser is online, attempting reconnect...");
-            connect();
-        };
-
-        window.addEventListener('online', handleOnline);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            disconnect();
-        };
-    }, []);
+        return () => disconnect();
+    }, [connect, disconnect]);
 
     return (
-        <MQTTContext.Provider value={{ connection, isConnected, connect, disconnect, subscribe, unsubscribe, publish }}>
+        <MQTTContext.Provider value={{ client, isConnected, connect, disconnect, subscribe, unsubscribe, publish }}>
             {children}
         </MQTTContext.Provider>
     );

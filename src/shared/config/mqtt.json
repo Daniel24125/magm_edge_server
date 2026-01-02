@@ -6,14 +6,14 @@
     "client_id": "rpi_edge_server",
     "keepalive": 60,
     "topics": [
-      "/ui/commands/#",
-      "/devices/+/register",
-      "/devices/+/cal/#",
-      "/devices/+/unregister",
-      "/devices/+/status",
-      "/devices/+/data",
-      "/devices/+/config",
-      "/devices/+/events"
+      "ui/commands/#",
+      "devices/+/register",
+      "devices/+/cal/#",
+      "devices/+/unregister",
+      "devices/+/status",
+      "devices/+/data",
+      "devices/+/config",
+      "devices/+/events"
     ]
   }
 }

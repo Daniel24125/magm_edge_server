@@ -66,7 +66,7 @@ const MobileBottomBar = () => {
             {/* In the design, they look like status indicators. Let's make them trigger the drawer to show details? */}
             {/* Or just static indicators. Given the request, let's make them static for now but perhaps clickable to open drawer */}
             <div className="flex gap-4">
-                <StatusIconType type="aws" />
+                <StatusIconType type="broker" />
                 <StatusIconType type="device" />
             </div>
         </div>
@@ -86,12 +86,12 @@ const BottomNavIcon = ({ href, icon, activeMatch }: { href: string, icon: React.
     )
 }
 
-const StatusIconType = ({ type }: { type: 'aws' | 'device' }) => {
+const StatusIconType = ({ type }: { type: 'broker' | 'device' }) => {
     const { isConnected } = useMQTT()
     const { isRPIConnected } = useDeviceManager()
 
-    const active = type === 'aws' ? isConnected : isRPIConnected
-    const Icon = type === 'aws' ? Cloud : Server
+    const active = type === 'broker' ? isConnected : isRPIConnected
+    const Icon = type === 'broker' ? Cloud : Server
 
     // Use DrawerTrigger to open menu when clicking status? 
     // Or just show status color. Design shows green if connected.
@@ -124,7 +124,7 @@ const MobileDrawerContent = () => {
             </div>
 
             <div className="mt-auto flex flex-col gap-4">
-                <StatusRow type="aws" />
+                <StatusRow type="broker" />
                 <StatusRow type="device" />
 
                 <Separator className="my-2" />
@@ -162,13 +162,13 @@ const MenuLink = ({ href, icon, label, badge }: { href: string, icon: React.Reac
     )
 }
 
-const StatusRow = ({ type }: { type: 'aws' | 'device' }) => {
+const StatusRow = ({ type }: { type: 'broker' | 'device' }) => {
     const { isConnected } = useMQTT()
     const { isRPIConnected } = useDeviceManager()
 
-    const active = type === 'aws' ? isConnected : isRPIConnected
-    const Icon = type === 'aws' ? Cloud : Server
-    const label = type === 'aws' ? "AWS Connection" : "Device Connection"
+    const active = type === 'broker' ? isConnected : isRPIConnected
+    const Icon = type === 'broker' ? Cloud : Server
+    const label = type === 'broker' ? "Broker Connection" : "Device Connection"
 
     return (
         <div className="flex items-center justify-between py-2">

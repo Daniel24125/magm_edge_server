@@ -34,16 +34,15 @@ class SessionController:
     TOPIC_SESSION_LIVE = "session/live"
     TOPIC_SESSION_HISTORY = "session/history"
 
-    def __init__(self, mqtt, aws, device_controller=None):
-        self.mqtt = mqtt
-        self.aws = aws
+    def __init__(self, client, device_controller=None):
+        self.client = client
         self.device_controller = device_controller
         self.config = load_config(DEFAULT_CONFIG_PATH)
         self.detector = AnomalyDetector(ALERTS_CONFIG_PATH)
         self.db = DatabaseHelper("src/edge_server/database/models/sessions.db")
         self.sessions = SessionDAO(self.db)
         self.aggregator = DataAggregator(self.db, timeout=15, on_complete_callback=self.publish_measurement)
-        self.alert_manager = AlertManager(self.db, self.aws)
+        self.alert_manager = AlertManager(self.db, self.client)
 
         
         # State
@@ -75,7 +74,7 @@ class SessionController:
         self.active_session = db_record
 
         # Persist and Notify
-        self.mqtt.client.publish(self.TOPIC_CMD_START, sess_payload.model_dump_json(), qos=1)
+        self.client.publish(self.TOPIC_CMD_START, sess_payload.model_dump_json(), qos=1)
         self.db.add_record("sessions", db_record)
         logger.info(f"Session {self.id} is now ACTIVE")
 
@@ -115,7 +114,7 @@ class SessionController:
             )
             
             # Persist and Notify Devices
-            self.mqtt.client.publish(self.TOPIC_CMD_STOP, json.dumps({"id": self.id}), qos=1)
+            self.client.publish(self.TOPIC_CMD_STOP, json.dumps({"id": self.id}), qos=1)
 
             # Alert: Session Stopped
             self.alert_manager.send_session_alert(
@@ -150,7 +149,7 @@ class SessionController:
                 self.db.update_record("sessions", self.id, {"status": "paused", "synced": 0}, id_column="id")
                 
                 # Notify Devices
-                self.mqtt.client.publish(self.TOPIC_CMD_PAUSE, json.dumps({"id": self.id}), qos=1)
+                self.client.publish(self.TOPIC_CMD_PAUSE, json.dumps({"id": self.id}), qos=1)
                 logger.info(f"Session {self.id} paused")
                 
                 # Alert: Session Paused
@@ -175,7 +174,7 @@ class SessionController:
                 self.db.update_record("sessions", self.id, {"status": "running", "synced": 0}, id_column="id")
                 
                 # Notify Devices
-                self.mqtt.client.publish(self.TOPIC_CMD_RESUME, json.dumps({"id": self.id}), qos=1)
+                self.client.publish(self.TOPIC_CMD_RESUME, json.dumps({"id": self.id}), qos=1)
                 logger.info(f"Session {self.id} resumed")
 
                 # Alert: Session Resumed
@@ -202,7 +201,7 @@ class SessionController:
         if not self.id:
             return
         topic = f"/controller/session/{self.id}/measurement_sync"
-        self.mqtt.client.publish(topic, json.dumps({"id": self.id}), qos=1)
+        self.client.publish(topic, json.dumps({"id": self.id}), qos=1)
 
     # -------------------- Internal Helpers --------------------
 
@@ -330,7 +329,7 @@ class SessionController:
             },
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-        self.aws.client.publish(self.TOPIC_SESSION_STATUS, json.dumps(payload))
+        self.client.publish(self.TOPIC_SESSION_STATUS, json.dumps(payload))
 
     # -------------------- Data Handling --------------------
 
@@ -477,7 +476,7 @@ class SessionController:
                 "session_time": payload.get("session_time"),
                 "is_recorded": payload.get("is_recorded")
             }
-            self.aws.client.publish(self.TOPIC_SESSION_LIVE, json.dumps(live_payload))
+            self.client.publish(self.TOPIC_SESSION_LIVE, json.dumps(live_payload))
 
             # 2. Publish History ONLY if recorded (saved to DB)
             if payload.get("is_recorded"):
@@ -495,7 +494,7 @@ class SessionController:
             "alerts": alerts,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-        self.aws.client.publish(self.TOPIC_SESSION_HISTORY, json.dumps(payload))
+        self.client.publish(self.TOPIC_SESSION_HISTORY, json.dumps(payload))
         logger.info(f"Published history for {session_id} ({len(history)} records)")
 
     def publish_status(self):
@@ -512,7 +511,7 @@ class SessionController:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-        self.aws.client.publish(topic, json.dumps(payload))
+        self.client.publish(topic, json.dumps(payload))
         logger.info(f"Published session status: {status_payload.get('status')}")
 
     def _map_active_session_to_status(self) -> Dict[str, Any]:

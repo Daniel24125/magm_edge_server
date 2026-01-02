@@ -48,7 +48,7 @@ const SidebarContent = () => {
             <NavigationList />
         </section>
         <section className='flex flex-col gap-5'>
-            <AWSConnectionStatus />
+            <CloudConnectionStatus />
             <DeviceConnectionStatus />
             <Separator />
             <AccountElement />
@@ -202,9 +202,9 @@ const ConnectionElement = ({ icon, label, isConnected }: TConnectionItem) => {
     </div>
 }
 
-const AWSConnectionStatus = () => {
+const CloudConnectionStatus = () => {
     const { isConnected } = useMQTT();
-    return <ConnectionElement icon={<Cloud />} label="AWS Connection" isConnected={isConnected} />
+    return <ConnectionElement icon={<Cloud />} label="Cloud Connection" isConnected={isConnected} />
 }
 
 const DeviceConnectionStatus = () => {

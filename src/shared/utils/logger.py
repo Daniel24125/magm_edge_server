@@ -18,7 +18,7 @@ LOG_FILE_PATH = os.path.join(LOG_DIR, "system_warnings.log")
 
 # Console handler — INFO and above
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 console_formatter = logging.Formatter(
     "%(module)s %(asctime)s [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S"
 )

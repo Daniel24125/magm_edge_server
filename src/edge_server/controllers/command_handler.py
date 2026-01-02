@@ -1,4 +1,5 @@
 import os, sys, json
+from datetime import datetime, timezone
 from .session_controller import SessionController
 from .device_controller import DeviceController
 
@@ -12,11 +13,10 @@ from edge_server.models.schemas import CommandPayload
 class CommandHandler:
     """Responsible for parsing commands and dispatching them to the controller."""
 
-    def __init__(self, mqtt, aws, alert_manager=None):
-        self.aws = aws
-        self.mqtt = mqtt
-        self.device_controller = DeviceController(mqtt, aws, alert_manager)
-        self.session_controller = SessionController(mqtt, aws, device_controller=self.device_controller)
+    def __init__(self, client, alert_manager=None):
+        self.client = client
+        self.device_controller = DeviceController(client, alert_manager)
+        self.session_controller = SessionController(client, device_controller=self.device_controller)
 
     def handle_ui_command(self, payload: dict):
         if type(payload) == str:
@@ -33,7 +33,15 @@ class CommandHandler:
             case "start_session":
                 self.session_controller.start_session(cmd.params)
             case "ping_device":
-                self.aws._notify_user("rpi_connected", f"The edge server is connected")
+                # self.aws._notify_user("rpi_connected", f"The edge server is connected")
+                # Using alert manager would be cleaner but let's direct publish for now to match behavior
+                self.client.publish("system/notifications", json.dumps({
+                    "type": "app",
+                    "source": "edge",
+                    "event": "rpi_connected",
+                    "timestamp": json.dumps(datetime.now(timezone.utc).isoformat()).strip('"'),
+                    "message": "The edge server is connected"
+                }))
                 self.device_controller.broadcast_all_devices()
             case "stop_session":
                 self.session_controller.stop_session()
@@ -53,13 +61,13 @@ class CommandHandler:
                 self.session_controller.resume_session()
             case "confirm_calibration":
                 device_id = cmd.params.get("device_id")
-                topic = f"/devices/{device_id}/cal/confirm"
+                topic = f"devices/{device_id}/cal/confirm"
                 
-                self.mqtt.client.publish(topic, json.dumps(cmd.params))
+                self.client.publish(topic, json.dumps(cmd.params))
             case "cancel_calibration":
                 device_id = cmd.params.get("device_id")
-                topic = f"/devices/{device_id}/cal/cancel"
-                self.mqtt.client.publish(topic, json.dumps({
+                topic = f"devices/{device_id}/cal/cancel"
+                self.client.publish(topic, json.dumps({
                    "topic": topic, 
                    "payload": {
                     **cmd.params,

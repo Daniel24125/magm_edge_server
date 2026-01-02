@@ -18,8 +18,8 @@ class DeviceCommandParser:
         self.device_id = self.device_config.get("device_id", "")
         self.device_name = self.device_config.get("device_name", "")
         
-        self.device_registration_topic = f"/devices/{self.device_id}/register"
-        self.device_unregistration_topic = f"/devices/{self.device_id}/unregister"
+        self.device_registration_topic = f"devices/{self.device_id}/register"
+        self.device_unregistration_topic = f"devices/{self.device_id}/unregister"
         
         self.ph_calibration = None
         # Using the relative path as in original code, assuming running from correct cwd or path setup

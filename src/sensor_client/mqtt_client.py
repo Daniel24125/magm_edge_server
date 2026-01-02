@@ -35,13 +35,13 @@ class MQTTClient:
         self.keepalive = broker_config.get("mqtt", {}).get("keepalive", 60)
 
     def subscribe_to_topics(self):
-        self.client.subscribe("/controller/retry")
-        self.client.subscribe("/controller/status/session_config_updated")
-        self.client.subscribe("/controller/commands/#")
-        self.client.subscribe(f"/devices/{self.device_id}/commands/#")
-        self.client.subscribe("/devices/registration_request")
-        self.client.subscribe(f"/devices/{self.device_id}/cal/confirm")
-        self.client.subscribe(f"/devices/{self.device_id}/cal/cancel")
+        self.client.subscribe("controller/retry")
+        self.client.subscribe("controller/status/session_config_updated")
+        self.client.subscribe("controller/commands/#")
+        self.client.subscribe(f"devices/{self.device_id}/commands/#")
+        self.client.subscribe("devices/registration_request")
+        self.client.subscribe(f"devices/{self.device_id}/cal/confirm")
+        self.client.subscribe(f"devices/{self.device_id}/cal/cancel")
 
     def init_mqtt_client(self):
         self.client = mqtt.Client(
@@ -103,7 +103,7 @@ class MQTTClient:
         """
         Publishes a device event to the edge server.
         """
-        topic = f"/devices/{self.device_id}/events"
+        topic = f"devices/{self.device_id}/events"
         full_payload = {
             "topic": topic,
             "payload": {

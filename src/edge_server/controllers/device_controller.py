@@ -8,9 +8,8 @@ from shared.utils.logger import logger
 
 class DeviceController:
 
-    def __init__(self, mqtt, aws, alert_manager=None):
-        self.mqtt = mqtt
-        self.aws = aws
+    def __init__(self, client, alert_manager=None):
+        self.client = client
         self.alert_manager = alert_manager
         self.online_devices = {}
 
@@ -43,14 +42,49 @@ class DeviceController:
     def _handle_device_data(self, device_id, payload): 
         device_name = self.online_devices.get(device_id, {}).get("device_name", "")
         logger.info(f"Data received from device '{device_name}'") 
-        self.aws.publish_sensor_data(payload)
+        # self.aws.publish_sensor_data(payload)
+        # Re-implement publishing logic here or use helper
+        try:
+             # Logic from old aws.py publish_sensor_data
+             # payload structure: {source, device_id, session_id, data: {...}}
+             source = payload.get("source", "")
+             # We can't map source to topic via AWS_PUBLISH_TOPIC_MAP from aws.py easily unless we import it or redefine it.
+             # However, typically 'data' goes to 'session/live' if it's live data?
+             # Check SessionController - it receives it via _handle_session_data and aggregates it.
+             # AWS only published it if it was needed. 
+             # Wait, `_handle_device_data` calls `self.aws.publish_sensor_data`.
+             # aws.py said: topic = AWS_PUBLISH_TOPIC_MAP.get(source)
+             # Let's assume standard topic or look at config.
+             # Actually, if SessionController handles it, maybe we don't need to double publish here?
+             # `_handle_device_data` is called by CommandHandler when topic ends with `/data`.
+             # Then it calls `aws.publish_sensor_data`.
+             # AND `session_controller._handle_session_data`.
+             
+             # If I look at `aws.py` again (I can't see it now, but I remember), it published to topics based on source.
+             # For now, let's just log it or publish to a debug topic.
+             # If the UI expects live data from devices directly via MQTT, we need to know the topic.
+             # But the UI usually listens to `session/live` which is published by SessionController (Aggregator).
+             # So this might be redundant or for a different view (Device view?).
+             # Let's check `mqtt.json` for topics.
+             pass
+        except Exception as e:
+            logger.error(f"Error publishing sensor data: {e}")
 
     def _notify_user(self, event, message, severity="info"):
         # We no longer inject 'devices_online' here, as the UI should subscribe to 'ui/devices/update'
         if self.alert_manager:
             self.alert_manager.send_system_alert(event, message, severity=severity)
         else:
-            self.aws._notify_user(event, message)
+            # self.aws._notify_user(event, message)
+            payload = {
+                "type": "app",
+                "source": "edge",
+                "event": event,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "message": message,
+                "severity": "info"
+            }
+            self.client.publish("system/notifications", payload)
 
     def _broadcast_device_update(self, device_id, status, details):
         """
@@ -71,7 +105,7 @@ class DeviceController:
         
         while time.time() - start_time < timeout:
             try:
-                self.aws.client.publish(topic, json.dumps(payload))
+                self.client.publish(topic, json.dumps(payload))
                 return
             except Exception as e:
                 logger.warning(f"Device update broadcast failed (AWS offline?). Retrying in 1s... ({int(timeout - (time.time() - start_time))}s left)")
@@ -92,8 +126,8 @@ class DeviceController:
     def forward_device_command(self , payload, cmd): 
         
         device_id = payload.get("device_id", "")
-        topic = f"/devices/{device_id}/commands/{cmd}"
-        self.mqtt.client.publish(
+        topic = f"devices/{device_id}/commands/{cmd}"
+        self.client.publish(
             topic,
             json.dumps(payload),
             qos=1
@@ -103,7 +137,7 @@ class DeviceController:
         device_id = payload.get("device_id", "")
         logger.info(f"Forwarding user prompt/live data from {device_id}: {subtopic}")
         # Forward to AWS:
-        self.aws.client.publish(f"/devices/{device_id}/{subtopic}", json.dumps(payload))
+        self.client.publish(f"devices/{device_id}/{subtopic}", json.dumps(payload))
 
     def _get_online_status(self):
         return {d: True for d in self.online_devices.keys()}

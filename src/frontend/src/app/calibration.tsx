@@ -1,11 +1,9 @@
-import { mqtt } from 'aws-iot-device-sdk-v2';
 import React from 'react'
 import { TCalibrationStatus } from "@/types";
-
-
+import { MqttClient } from 'mqtt'; // Assuming mqtt is installed
 
 type Props = {
-    connection: mqtt.MqttClientConnection | null;
+    connection: MqttClient | null;
     calibrationStatus: TCalibrationStatus;
     calibrationData?: any;
     liveReading?: { ph?: number; stability?: number } | null;
@@ -23,7 +21,7 @@ const Calibration = ({
 }: Props) => {
     const publishCommand = (command: string, params: Record<string, any> = {}) => {
         if (!connection) {
-            alert("Not connected to AWS IoT yet");
+            alert("Not connected to Broker yet");
             return;
         }
         const topic = `ui/commands/${command}`;
@@ -31,7 +29,9 @@ const Calibration = ({
             command,
             params: { device_id: DEVICE_ID, sensor_id: SENSOR_ID, ...params },
         });
-        connection.publish(topic, payload, mqtt.QoS.AtLeastOnce);
+
+        // MQTT.js publish signature: publish(topic, message, [opts], [callback])
+        connection.publish(topic, payload, { qos: 1 });
         console.log("📤 Sent command:", command, payload);
     };
 
