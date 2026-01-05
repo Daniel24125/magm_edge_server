@@ -19,6 +19,12 @@ class SpectrometerController:
         Forwards the configuration to the actual device via MQTT.
         """
         logger.debug(f"SpectrometerController: Forwarding Config to {device_id}")
+        # Normalize keys (device might send "wavelength" but frontend expects "wavelengths")
+        if isinstance(payload, dict):
+            if "wavelength" in payload and "wavelengths" not in payload:
+                payload["wavelengths"] = payload["wavelength"]
+                del payload["wavelength"] # Remove the old key if it's been mapped
+        
         topic = f"devices/{device_id}/commands/configure"
         self.client.publish(topic, json.dumps(payload))
         logger.debug(f"SpectrometerController: Published config to {topic}")

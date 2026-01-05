@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle } from "@/components/ui/responsive-dialog";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { useMQTT } from "@/contexts/MQTTContext";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -23,10 +23,6 @@ export function SpectrometerPreviewDialog({ open, onOpenChange, deviceId }: Spec
     const [data, setData] = useState<{ wavelength: number; intensity: number }[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-
-    // Topic to listen for ONE-SHOT preview data
-    // Assuming the device publishes to 'devices/{id}/data' or a specific preview topic
-    // Given the user request "ask for a read on demand", we should listen to the standard data topic
     const dataTopic = `devices/${deviceId}/data`;
 
     useEffect(() => {
@@ -85,28 +81,32 @@ export function SpectrometerPreviewDialog({ open, onOpenChange, deviceId }: Spec
                     )}
 
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="colorIntensity" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
+                        <LineChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 50 }}>
+                            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                             <XAxis
                                 dataKey="wavelength"
                                 type="number"
                                 domain={['dataMin', 'dataMax']}
                                 tickFormatter={(val) => Math.round(val).toString()}
-                                label={{ value: 'Wavelength (nm)', position: 'insideBottomRight', offset: -5 }}
+                                label={{ value: 'Wavelength (nm)', position: 'insideBottom', offset: -10 }}
                             />
-                            <YAxis label={{ value: 'Intensity', angle: -90, position: 'insideLeft' }} />
-                            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                            <YAxis
+                                label={{ value: 'Intensity', angle: -90, position: 'insideLeft' }}
+                                domain={['auto', 'auto']}
+                            />
                             <Tooltip
                                 labelFormatter={(label) => `Wavelength: ${Number(label).toFixed(1)} nm`}
                                 formatter={(value) => [Number(value).toFixed(2), "Intensity"]}
                             />
-                            <Area type="monotone" dataKey="intensity" stroke="#8884d8" fillOpacity={1} fill="url(#colorIntensity)" isAnimationActive={false} />
-                        </AreaChart>
+                            <Line
+                                type="monotone"
+                                dataKey="intensity"
+                                stroke="#8884d8"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4 }}
+                            />
+                        </LineChart>
                     </ResponsiveContainer>
                 </div>
 
