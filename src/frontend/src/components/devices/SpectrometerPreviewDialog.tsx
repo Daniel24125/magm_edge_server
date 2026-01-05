@@ -60,7 +60,10 @@ export function SpectrometerPreviewDialog({ open, onOpenChange, deviceId }: Spec
     const handleRequestRead = () => {
         setIsLoading(true);
         // Command to trigger a measurement
-        publish(`devices/${deviceId}/commands/measure`, JSON.stringify({ command: "measure" }));
+        publish(`devices/${deviceId}/commands/measure`, JSON.stringify({
+            command: "measure",
+            deviceId: deviceId
+        }));
     };
 
     return (

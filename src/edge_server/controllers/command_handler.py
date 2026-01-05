@@ -2,6 +2,7 @@ import os, sys, json
 from datetime import datetime, timezone
 from .session_controller import SessionController
 from .device_controller import DeviceController
+from .spectrometer_controller import SpectrometerController
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
@@ -17,6 +18,7 @@ class CommandHandler:
         self.client = client
         self.device_controller = DeviceController(client, alert_manager)
         self.session_controller = SessionController(client, device_controller=self.device_controller)
+        self.spectrometer_controller = SpectrometerController(client)
 
     def handle_ui_command(self, payload: dict):
         if type(payload) == str:
@@ -64,6 +66,8 @@ class CommandHandler:
                 topic = f"devices/{device_id}/cal/confirm"
                 
                 self.client.publish(topic, json.dumps(cmd.params))
+            case "configure":
+                self.spectrometer_controller.handle_configure(cmd.params.get("device_id"), cmd.params)
             case "cancel_calibration":
                 device_id = cmd.params.get("device_id")
                 topic = f"devices/{device_id}/cal/cancel"
@@ -100,3 +104,7 @@ class CommandHandler:
             self.device_controller._handle_user_prompt(payload, "cal/live_readings")
         elif topic.endswith("/events"):
             self.session_controller._handle_device_event(device_id, payload)
+        elif topic.endswith("/commands/measure"):
+            self.spectrometer_controller.handle_measure(device_id, payload)
+        elif topic.endswith("/commands/configure"):
+            self.spectrometer_controller.handle_configure(device_id, payload)
