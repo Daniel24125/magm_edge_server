@@ -14,7 +14,28 @@ import { useAlert } from "./AlertContext";
 // --- Configuration ---
 // For self-hosted, we use the local broker over WebSockets.
 // Ensure your Mosquitto is configured with 'listener 9001 protocol websockets'
-const BROKER_URL = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || "ws://localhost:9001";
+// For self-hosted, we use the local broker over WebSockets.
+// Ensure your Mosquitto is configured with 'listener 9001 protocol websockets'
+// For self-hosted, we use the local broker over WebSockets.
+// Ensure your Mosquitto is configured with 'listener 9001 protocol websockets'
+const getBrokerUrl = () => {
+    // 1. Environment Variable Override (e.g. for ngrok)
+    if (process.env.NEXT_PUBLIC_MQTT_BROKER_URL) return process.env.NEXT_PUBLIC_MQTT_BROKER_URL;
+
+    // 2. Dynamic Browser-based detection
+    if (typeof window !== "undefined") {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        // If we are on HTTPS, we MUST use WSS.
+        // However, local mosquitto usually lacks SSL certs, so WSS to localhost fails.
+        // But if we are on ngrok (https), we provided the env var.
+        // If we serve locally via HTTPS (unlikely without setup), this might fail without certs.
+        return `${protocol}//${hostname}:9001`;
+    }
+
+    // 3. SSR fallback
+    return "ws://localhost:9001";
+};
 
 type TMessageHandler = (topic: string, payload: unknown) => void;
 
@@ -43,9 +64,10 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     const connect = useCallback(() => {
         if (clientRef.current?.connected) return;
 
-        console.log(`Connecting to MQTT broker at ${BROKER_URL}...`);
+        const url = getBrokerUrl();
+        console.log(`Connecting to MQTT broker at ${url}...`);
 
-        const mqttClient = mqtt.connect(BROKER_URL, {
+        const mqttClient = mqtt.connect(url, {
             clientId: "webclient-" + Math.floor(Math.random() * 100000),
             clean: true,
             reconnectPeriod: 2000, // Auto reconnect every 2s

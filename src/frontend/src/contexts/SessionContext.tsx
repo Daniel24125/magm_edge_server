@@ -308,7 +308,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 createdAt: now,
                 updatedAt: now,
                 sessionDetails: pendingSessionStart.sessionDetails,
-                settings: data.settings,
+                settings: {
+                    ...data.settings,
+                    ...(data.spectrometerConfig ? { spectrometer: data.spectrometerConfig } : {})
+                },
                 alertConfiguration: data.alertConfiguration,
                 status: 'running',
                 notes: data.notes,
