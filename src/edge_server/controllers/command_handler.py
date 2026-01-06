@@ -84,10 +84,21 @@ class CommandHandler:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 
     def handle_device_message(self, topic: str, payload: dict):
-        if not payload.get("device_id"):
-            logger.error(f"Missing device_id in payload: {payload}")
+        device_id = payload.get("device_id")
+        
+        # Fallback: Extract device_id from topic (devices/{id}/...)
+        if not device_id and topic.startswith("devices/"):
+            parts = topic.split("/")
+            if len(parts) > 1:
+                device_id = parts[1]
+                
+        if not device_id:
+            logger.error(f"Missing device_id in payload or topic: {payload} (Topic: {topic})")
             return
-        device_id = payload["device_id"]
+            
+        # Ensure payload has device_id for downstream controllers
+        if "device_id" not in payload:
+            payload["device_id"] = device_id
         
         if topic.endswith("/status"):
             self.device_controller._handle_device_status(device_id, payload)
