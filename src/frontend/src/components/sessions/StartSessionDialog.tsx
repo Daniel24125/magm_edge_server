@@ -40,7 +40,7 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
     const { onlineDevices } = useDeviceManager();
     const hasSpectrometer = Object.values(onlineDevices).some(d => d.device_name.toLowerCase().includes("spectrometer") || d.spectrometer_config);
 
-    const { register, control, handleSubmit, watch, reset } = useForm<StartSessionFormData>({
+    const { register, control, handleSubmit, watch, reset, trigger, getValues, formState: { errors } } = useForm<StartSessionFormData>({
         defaultValues: {
             settings: initialSettings,
             alertConfiguration: initialAlerts,
@@ -49,7 +49,8 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                 exposure_time: 20000,
                 cycle_time: 210000
             }
-        }
+        },
+        mode: "onChange"
     });
 
     // Reset form when opening with new initial values
@@ -157,17 +158,37 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
                                     <div className="space-y-2">
                                         <FieldLabel>Exposure Time (µs)</FieldLabel>
                                         <Input
-                                            {...register("spectrometerConfig.exposure_time", { valueAsNumber: true, min: 100 })}
+                                            {...register("spectrometerConfig.exposure_time", {
+                                                valueAsNumber: true,
+                                                min: { value: 1, message: "Must be positive" },
+                                                required: "Required",
+                                                onChange: () => trigger("spectrometerConfig.cycle_time")
+                                            })}
                                             type="number"
                                         />
+                                        {errors.spectrometerConfig?.exposure_time && (
+                                            <p className="text-xs text-destructive">{errors.spectrometerConfig.exposure_time.message}</p>
+                                        )}
                                         <FieldDescription>Default: 20,000 µs</FieldDescription>
                                     </div>
                                     <div className="space-y-2">
                                         <FieldLabel>Cycle Time (µs)</FieldLabel>
                                         <Input
-                                            {...register("spectrometerConfig.cycle_time", { valueAsNumber: true, min: 100 })}
+                                            {...register("spectrometerConfig.cycle_time", {
+                                                valueAsNumber: true,
+                                                min: { value: 1, message: "Must be positive" },
+                                                required: "Required",
+                                                validate: (val) => {
+                                                    if (val === undefined) return true;
+                                                    const exposure = getValues("spectrometerConfig.exposure_time") || 0;
+                                                    return val >= exposure || "Must be ≥ Exposure Time";
+                                                }
+                                            })}
                                             type="number"
                                         />
+                                        {errors.spectrometerConfig?.cycle_time && (
+                                            <p className="text-xs text-destructive">{errors.spectrometerConfig.cycle_time.message}</p>
+                                        )}
                                         <FieldDescription>Default: 210,000 µs</FieldDescription>
                                     </div>
                                 </div>
