@@ -38,6 +38,7 @@ class DataAggregator:
                 self._stop_timer()
 
             self._reset_state(session_id, timestamp_iso, expected_sources, save_to_db, session_time)
+            logger.debug(f"Aggregator started: expected={self.expected_sources}")
             self._start_timer()
             
 
@@ -91,12 +92,18 @@ class DataAggregator:
         Handles nested {"value": x} format.
         """
         result = {}
+        ignored_keys = {'spectra', 'wavelengths', 'wavelength', 'id', 'source', 'type'}
+        
         for key, val in data.items():
+            if key in ignored_keys:
+                continue
+                
             parsed_val = self._parse_value(val)
             if parsed_val is not None:
                 result[key] = parsed_val
             else:
-                logger.warning(f"Could not parse value for {key}: {val}")
+                # Log debug instead of warning to reduce noise for unparsable types
+                logger.debug(f"Skipping unparsable value for {key}: {type(val)}")
         return result
 
     def _parse_value(self, val: Any) -> Optional[float]:

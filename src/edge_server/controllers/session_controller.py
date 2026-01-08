@@ -43,6 +43,15 @@ class SessionController:
         self.sessions = SessionDAO(self.db)
         self.aggregator = DataAggregator(self.db, timeout=15, on_complete_callback=self.publish_measurement)
         self.alert_manager = AlertManager(self.db, self.client)
+        
+        # Initialize ML Service
+        try:
+            from edge_server.services.ml_service import MLService
+            self.ml_service = MLService()
+        except ImportError as e:
+            logger.error(f"Failed to import MLService: {e}")
+            self.ml_service = None
+
 
         
         # State
@@ -263,7 +272,8 @@ class SessionController:
                 # Dynamic Expected Sources
                 # Fast Loop: Expect only RPi (assuming external devices are slow/sync-only)
                 # Sync Loop: Expect RPi + All Online Devices
-                expected_sources = set(["rpi"])
+                expected_sources = set(["rpi", "nir"])
+                logger.debug(f"Acquisition Loop: exp_sources={expected_sources}")
                 
                 if is_sync_loop and self.device_controller:
                      expected_sources.update(self.device_controller.online_devices.keys())
@@ -367,6 +377,38 @@ class SessionController:
         data = payload.get("data", {})
         timestamp = payload.get("timestamp")
         logger.info(f"Received data from {device_id}: {data}")
+
+        # 0. ML Prediction (Spectrometer only)
+        # Check for both "wavelengths" (plural) and "wavelength" (singular)
+        has_spectra = "spectra" in data
+        
+        # Normalize if singular is present but plural is missing
+        if "wavelength" in data and "wavelengths" not in data:
+             data["wavelengths"] = data["wavelength"]
+        
+        # Check for wavelengths presence AFTER normalization
+        has_wavelengths = "wavelengths" in data
+
+        logger.debug(f"ML Check [{device_id}]: Service={self.ml_service is not None}, Spectra={has_spectra}, WL={has_wavelengths}")
+
+        if self.ml_service and has_spectra and has_wavelengths:
+            try:
+                logger.debug("Calling MLService.predict...")
+                predictions = self.ml_service.predict(data)
+                logger.debug(f"Received predictions: {predictions}")
+                
+                # Inject predictions into data so they are aggregated and saved
+                if predictions.get("od") is not None:
+                    data["od"] = {"value": predictions["od"], "unit": "OD", "sensor_type": "od"}
+                
+                if predictions.get("dissolved_co2") is not None:
+                    data["co2"] = {"value": predictions["dissolved_co2"], "unit": "mg/L", "sensor_type": "co2"}
+                    
+            except Exception as e:
+                logger.error(f"Failed to run ML prediction: {e}")
+        else:
+             logger.debug("Skipping ML prediction.")
+
         # 1. Anomaly Detection
         self._process_anomalies(device_id, data, payload.get("id"), timestamp)
 
