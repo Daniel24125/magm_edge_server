@@ -64,8 +64,7 @@ export const DeviceManagerProvider = ({ children }: { children: React.ReactNode 
             return;
         }
 
-        // 1. System Notifications (Connection Status)
-        // 1. System Notifications (Connection Status - RPi Only)
+
         const handleSystemNotification = (topic: string, rawPayload: unknown) => {
             const payload = rawPayload as { event: string;[key: string]: unknown };
             console.log("🔔 System Notification:", payload);
