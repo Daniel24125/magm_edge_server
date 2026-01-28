@@ -56,28 +56,40 @@ class TemperatureSensor(AbstractSensor):
 
     def read(self) -> SensorReading:
         if SIMULATION_MODE and self.simulated_sensor:
-            return self.simulated_sensor.read()
+            reading = self.simulated_sensor.read()
+            if not reading:
+                return None
+            temp_c = reading.value
         else:
             lines = self.read_temp_raw()
             if not lines:
                 return None
                 
             # Parse the W1-GPIO output
-            # Line 1: ... YES
-            # Line 2: ... t=23123
             if lines[0].strip()[-3:] != 'YES':
-                 # CRC check failed
                  return None
             
             equals_pos = lines[1].find('t=')
             if equals_pos != -1:
                 temp_string = lines[1][equals_pos+2:]
                 temp_c = float(temp_string) / 1000.0
-                return SensorReading(
-                    timestamp=time.time(),
-                    value=temp_c,
-                    unit=self.unit,
-                    sensor_type="Temperature",
-                    is_stable=True
-                )
+            else:
+                return None
+
+        # Check for 85.0 power-on reset error (DS18B20 specific)
+        if not SIMULATION_MODE and temp_c == 85.0:
+            logger.warning("DS18B20 returned 85.0°C. This is a power-on reset value. Check wiring or pull-up resistor.")
             return None
+
+        # Apply Unit Conversion
+        final_val = temp_c
+        if self.unit.lower() in ["fahrenheit", "f"]:
+            final_val = (temp_c * 9/5) + 32
+        
+        return SensorReading(
+            timestamp=time.time(),
+            value=final_val,
+            unit=self.unit,
+            sensor_type="Temperature",
+            is_stable=True
+        )
