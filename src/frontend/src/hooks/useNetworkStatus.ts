@@ -41,7 +41,6 @@ export function useNetworkStatus() {
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
-<<<<<<< HEAD
         // Optional: Periodic check every 30s to detect silent dropouts
         const interval = setInterval(checkConnection, 30000);
 
@@ -53,13 +52,4 @@ export function useNetworkStatus() {
     }, []);
 
     return status;
-=======
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
-
-    return isOnline;
->>>>>>> 4e5954f72a9528d81bf385e4c12e118474b95548
 }
