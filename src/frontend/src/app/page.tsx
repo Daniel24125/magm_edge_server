@@ -1,19 +1,21 @@
 "use client";
 
-import { useUser } from "@auth0/nextjs-auth0";
-import { useRouter } from 'next/navigation'
+import { useUserContext } from "@/contexts/UserContext";
 import SessionWidget from "@/components/dashboard/SessionWidget";
 import ProjectDetailsWidget from "@/components/dashboard/ProjectDetailsWidget";
 import ConnectedDevicesWidget from "@/components/dashboard/ConnectedDevicesWidget";
 import { SessionChartWidget } from "@/components/dashboard/SessionChartWidget";
 
 export default function Page() {
-  const { user, error, isLoading } = useUser();
-  const router = useRouter()
+  const { user, error, isLoading } = useUserContext();
 
 
   if (isLoading) return <div>Loading...</div>;
-  if (!user) return router.push('/auth/login');
+  if (!user) {
+    // UserContext manages redirects (online) and login dialogs (offline).
+    // We just wait here.
+    return <div>Loading...</div>;
+  }
   if (error) return <div>Error: {(error as Error).message}</div>;
 
 

@@ -217,10 +217,12 @@ const AccountElement = () => {
     const { user, isLoading, error } = useUserContext();
     const { isSidebarOpen } = useApplication();
 
+    if (!user) return null;
+
     return <div className='w-full flex items-center justify-between overflow-hidden h-12'>
         <div className='flex items-center gap-3 text-text-faded'>
             <Avatar className="shrink-0 rounded-lg">
-                <AvatarImage src={user!.picture} />
+                <AvatarImage src={user.picture} />
                 <AvatarFallback>JD</AvatarFallback>
             </Avatar>
             <AnimatePresence>
@@ -231,8 +233,8 @@ const AccountElement = () => {
                         exit={{ opacity: 0, width: 0 }}
                         className='flex flex-col whitespace-nowrap'
                     >
-                        <span className='text-sm font-bold'>{user!.name}</span>
-                        <span className='text-xs text-text-faded'>{user!.email}</span>
+                        <span className='text-sm font-bold'>{user.name}</span>
+                        <span className='text-xs text-text-faded'>{user.email}</span>
                     </motion.div>
                 )}
             </AnimatePresence>

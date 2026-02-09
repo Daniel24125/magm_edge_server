@@ -13,14 +13,33 @@ import { getAlertIcon, getFormartedTimeWithLetters } from '@/lib/utils'
 import { NoMeasurementsIlustration } from '@/components/ilustrations'
 import Loading from '@/components/ui/loading'
 
+import { UnsyncedSessionsBanner } from '@/components/projects/UnsyncedSessionsBanner';
+
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { WifiOff } from 'lucide-react';
+
 const ProjectsPage = () => {
     const { projects } = useProjects()
-    if (projects.length === 0) return <NoProjects className='pt-10' />
+    const { isOnline } = useNetworkStatus();
+
+    if (!isOnline) {
+        return (
+            <div className='flex flex-col gap-4 items-center justify-center h-full w-full pt-20 text-muted-foreground'>
+                <WifiOff size={48} />
+                <h2 className='text-xl font-semibold'>Projects Unavailable Offline</h2>
+                <p>Please connect to the internet to access your projects.</p>
+            </div>
+        )
+    }
 
     return (
         <div className='flex flex-col gap-10 h-full w-full pt-20'>
-            {/* <SearchProjects /> */}
-            <ProjectListCards />
+            <UnsyncedSessionsBanner />
+            {projects.length === 0 ? (
+                <NoProjects className='pt-10' />
+            ) : (
+                <ProjectListCards />
+            )}
         </div>
     )
 }

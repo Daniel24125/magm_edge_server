@@ -1,34 +1,32 @@
 "use server";
 
-import { getEffectiveSession } from "@/lib/session"; // Uses local mock if offline
-import db from "@/lib/db";
+import { auth0 } from "@/lib/auth0";
+import { db } from "@/services/firebase";
 import { IProject } from "@/types/projects";
 import { revalidatePath } from "next/cache";
-import { v4 as uuidv4 } from 'uuid';
+
+const COLLECTION_NAME = "projects";
 
 export async function getProjects(): Promise<{ success: boolean; data?: IProject[]; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
+        // Filter by user ID (sub) to ensure data isolation
+        // Assuming we store a 'userId' field in the document or check ownership
+        // For now, let's assume we filter by a 'userId' field.
+        const snapshot = await db.collection(COLLECTION_NAME)
+            .where("userId", "==", session.user.sub)
+            .get();
 
-        const userId = session.user.sub;
-
-        const stmt = db.prepare('SELECT * FROM projects WHERE user_id = ? ORDER BY created_at DESC');
-        const rows = stmt.all(userId) as any[];
-
-        const projects: IProject[] = rows.map(row => ({
-            id: row.id,
-            userId: row.user_id,
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-            projectDetails: row.project_details ? JSON.parse(row.project_details) : undefined,
-            sessionDetails: row.session_details ? JSON.parse(row.session_details) : undefined,
-            sessionDefaultSettings: row.session_default_settings ? JSON.parse(row.session_default_settings) : undefined,
-            sessions: [],
-            alertConfiguration: []
-        }));
+        const projects: IProject[] = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data
+            } as IProject;
+        });
 
         return { success: true, data: projects };
     } catch (error) {
@@ -39,32 +37,28 @@ export async function getProjects(): Promise<{ success: boolean; data?: IProject
 
 export async function getProject(id: string): Promise<{ success: boolean; data?: IProject; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        const stmt = db.prepare('SELECT * FROM projects WHERE id = ?');
-        const row = stmt.get(id) as any;
+        const docRef = db.collection(COLLECTION_NAME).doc(id);
+        const doc = await docRef.get();
 
-        if (!row) {
+        if (!doc.exists) {
             return { success: false, error: "Project not found" };
         }
 
-        if (row.user_id !== session.user.sub) {
+        const data = doc.data();
+
+        if (data?.userId !== session.user.sub) {
             return { success: false, error: "Unauthorized" };
         }
 
         const project: IProject = {
-            id: row.id,
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-            projectDetails: row.project_details ? JSON.parse(row.project_details) : undefined,
-            sessionDetails: row.session_details ? JSON.parse(row.session_details) : undefined,
-            sessionDefaultSettings: row.session_default_settings ? JSON.parse(row.session_default_settings) : undefined,
-            sessions: [],
-            alertConfiguration: []
-        };
+            id: doc.id,
+            ...data
+        } as IProject;
 
         return { success: true, data: project };
     } catch (error) {
@@ -75,40 +69,27 @@ export async function getProject(id: string): Promise<{ success: boolean; data?:
 
 export async function createProject(projectData: Omit<IProject, "id" | "createdAt" | "updatedAt">): Promise<{ success: boolean; data?: IProject; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
         const now = new Date().toISOString();
-        const id = uuidv4();
-        const userId = session.user.sub;
-
-        const stmt = db.prepare(`
-            INSERT INTO projects (
-                id, user_id, created_at, updated_at, 
-                project_details, session_details, session_default_settings, synced
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 0)
-        `);
-
-        stmt.run(
-            id,
-            userId,
-            now,
-            now,
-            JSON.stringify(projectData.projectDetails),
-            JSON.stringify(projectData.sessionDetails),
-            JSON.stringify(projectData.sessionDefaultSettings)
-        );
-
-        const createdProject: IProject = {
-            id,
+        const newProject = {
+            ...projectData,
+            userId: session.user.sub, // Associate with user
             createdAt: now,
             updatedAt: now,
-            ...projectData
         };
 
-        revalidatePath("/");
+        const docRef = await db.collection(COLLECTION_NAME).add(newProject);
+
+        const createdProject: IProject = {
+            id: docRef.id,
+            ...newProject,
+        } as unknown as IProject; // Cast because newProject has userId which isn't in IProject interface explicitly, but that's fine for Firestore
+
+        revalidatePath("/"); // Revalidate relevant paths
         return { success: true, data: createdProject };
     } catch (error) {
         console.error("Error creating project:", error);
@@ -118,41 +99,27 @@ export async function createProject(projectData: Omit<IProject, "id" | "createdA
 
 export async function updateProject(id: string, projectData: Partial<IProject>): Promise<{ success: boolean; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        // Verify ownership first
-        const checkStmt = db.prepare('SELECT user_id FROM projects WHERE id = ?');
-        const row = checkStmt.get(id) as any;
+        // Verify ownership
+        const docRef = db.collection(COLLECTION_NAME).doc(id);
+        const doc = await docRef.get();
 
-        if (!row) return { success: false, error: "Project not found" };
-        if (row.user_id !== session.user.sub) return { success: false, error: "Unauthorized" };
-
-        const now = new Date().toISOString();
-
-        // Dynamic update query construction
-        const updates: string[] = ["updated_at = ?, synced = 0"];
-        const values: any[] = [now];
-
-        if (projectData.projectDetails) {
-            updates.push("project_details = ?");
-            values.push(JSON.stringify(projectData.projectDetails));
-        }
-        if (projectData.sessionDetails) {
-            updates.push("session_details = ?");
-            values.push(JSON.stringify(projectData.sessionDetails));
-        }
-        if (projectData.sessionDefaultSettings) {
-            updates.push("session_default_settings = ?");
-            values.push(JSON.stringify(projectData.sessionDefaultSettings));
+        if (!doc.exists) {
+            return { success: false, error: "Project not found" };
         }
 
-        values.push(id);
+        if (doc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
 
-        const updateStmt = db.prepare(`UPDATE projects SET ${updates.join(", ")} WHERE id = ?`);
-        updateStmt.run(...values);
+        await docRef.update({
+            ...projectData,
+            updatedAt: new Date().toISOString(),
+        });
 
         revalidatePath("/");
         return { success: true };
@@ -164,20 +131,23 @@ export async function updateProject(id: string, projectData: Partial<IProject>):
 
 export async function deleteProject(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        const checkStmt = db.prepare('SELECT user_id FROM projects WHERE id = ?');
-        const row = checkStmt.get(id) as any;
+        const docRef = db.collection(COLLECTION_NAME).doc(id);
+        const doc = await docRef.get();
 
-        if (!row) return { success: false, error: "Project not found" };
-        if (row.user_id !== session.user.sub) return { success: false, error: "Unauthorized" };
+        if (!doc.exists) {
+            return { success: false, error: "Project not found" };
+        }
 
-        const deleteStmt = db.prepare('DELETE FROM projects WHERE id = ?');
-        deleteStmt.run(id);
+        if (doc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
 
+        await docRef.delete();
         revalidatePath("/");
         return { success: true };
     } catch (error) {

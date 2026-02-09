@@ -18,13 +18,14 @@ const getBrokerUrl = () => {
 
     // 2. Dynamic Browser-based detection
     if (typeof window !== "undefined") {
-        // If offline, default to localhost
+        // If offline, default to 127.0.0.1
         if (!navigator.onLine) {
-            return "ws://localhost:9001";
+            return "ws://127.0.0.1:9001";
         }
-        return `ws://${window.location.hostname}:9001`;
+        const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+        return `ws://${hostname}:9001`;
     }
-    return "ws://localhost:9001";
+    return "ws://127.0.0.1:9001";
 };
 
 type TMessageHandler = (topic: string, payload: unknown) => void;
@@ -62,7 +63,9 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             clean: true,
             reconnectPeriod: 2000, // Auto reconnect every 2s
             connectTimeout: 5000,
-            keepalive: 0, // Disable internal PINGREQ to avoid browser/broker timeout mismatch
+            keepalive: 60, // Keepalive 60s
+            protocol: 'ws',
+            path: '/mqtt' // Default mosquitto websockets path often needs this or empty, let's try standard
         });
 
         mqttClient.on("connect", () => {
