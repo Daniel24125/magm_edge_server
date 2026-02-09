@@ -31,25 +31,44 @@ interface SessionContextType {
     isLoading: boolean;
     initiateSession: (projectId?: string) => void;
     startSession: (projectId: string, sessionDetails: TSessionDetails, settings: TSessionDefaultSettings, alertConfiguration: TAlertConfiguration[], notes?: string) => Promise<void>;
-    stopSession: () => Promise<void>;
-    pauseSession: () => Promise<void>;
-    resumeSession: () => Promise<void>;
+    stopSession: () => void;
+    pauseSession: () => void;
+    resumeSession: () => void;
     addMeasurement: (measurement: TMeasurement) => void;
     addSessionAlert: (type: TAlert['type'], message: string, details?: Record<string, unknown>) => void;
     isSessionVerified: boolean;
     latestLiveMeasurement: TMeasurement | null;
     canPerformSession: boolean;
+    offlineSessions: any[];
+    checkOfflineSessions: () => void;
+    assignProjectToSession: (sessionId: string, projectId: string) => Promise<void>;
 }
 
-const SessionContext = createContext<SessionContextType | null>(null);
+export const SessionContext = createContext<SessionContextType>({
+    activeSession: null,
+    isLoading: false,
+    initiateSession: () => { },
+    startSession: async () => { },
+    stopSession: () => { },
+    pauseSession: () => { },
+    resumeSession: () => { },
+    addMeasurement: () => { },
+    addSessionAlert: () => { },
+    isSessionVerified: false,
+    latestLiveMeasurement: null,
+    canPerformSession: false,
+    offlineSessions: [],
+    checkOfflineSessions: () => { },
+    assignProjectToSession: async () => { }
+});
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
     const { user } = useUser()
-    const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
+    const { subscribe, unsubscribe, publish, isConnected, latestMessage } = useMQTT();
     const { addAlert } = useAlert();
     const { projects } = useProjects();
     const { sendCommand, isRPIConnected, onlineDevices } = useDeviceManager();
-    const isOnline = useNetworkStatus(); // 1. Network Status
+    const { isOnline } = useNetworkStatus(); // 1. Network Status
 
     const [activeSession, setActiveSession] = useState<ISession | null>(null);
     const [latestLiveMeasurement, setLatestLiveMeasurement] = useState<TMeasurement | null>(null);
@@ -57,6 +76,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const [isSessionVerified, setIsSessionVerified] = useState(false);
     const [isProjectSelectionOpen, setIsProjectSelectionOpen] = useState(false);
     const [isStartSessionDialogOpen, setIsStartSessionDialogOpen] = useState(false);
+    const [offlineSessions, setOfflineSessions] = useState<any[]>([]);
 
 
     const [pendingSessionStart, setPendingSessionStart] = useState<{
@@ -97,9 +117,40 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
     }, [addAlert]);
 
-    // Verify Connection via Device Status (Received via DeviceManager)
-    // Subscription Effect - Dedicated Session Topic
+    const checkOfflineSessions = () => {
+        if (isOnline && user?.email) {
+            sendCommand("get_offline_sessions", { userEmail: user.email });
+        }
+    };
+
+    const assignProjectToSession = async (sessionId: string, projectId: string) => {
+        sendCommand("assign_session_project", { sessionId, projectId });
+        // Optimistically remove from list
+        setOfflineSessions(prev => prev.filter(s => s.id !== sessionId));
+    };
+
+    // 5. Check offline sessions when coming online
     useEffect(() => {
+        if (isOnline) {
+            checkOfflineSessions();
+        }
+    }, [isOnline, user]);
+
+
+    // 4. MQTT Message Handling
+    useEffect(() => {
+        if (!latestMessage) return;
+
+        const { topic, payload } = latestMessage;
+
+        if (topic === "ui/responses/get_offline_sessions") {
+            if (payload && payload.payload) {
+                setOfflineSessions(payload.payload);
+            }
+        }
+
+        // Verify Connection via Device Status (Received via DeviceManager)
+        // Subscription Effect - Dedicated Session Topic
         if (!isConnected) return;
 
         const sessionTopic = process.env.NEXT_PUBLIC_SESSION_TOPIC || "session/status";
@@ -451,7 +502,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         [activeSession, isLoading, isConnected, isSessionVerified, isRPIConnected, onlineDevices])
 
     return (
-        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, addSessionAlert, isSessionVerified, latestLiveMeasurement, canPerformSession }}>
+        <SessionContext.Provider value={{ activeSession, isLoading, initiateSession, startSession, stopSession, pauseSession, resumeSession, addMeasurement, addSessionAlert, isSessionVerified, latestLiveMeasurement, canPerformSession, offlineSessions, checkOfflineSessions, assignProjectToSession }}>
             {children}
             <ProjectSelectionDialog
                 open={isProjectSelectionOpen}

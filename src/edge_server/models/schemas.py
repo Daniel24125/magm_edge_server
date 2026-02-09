@@ -16,6 +16,7 @@ class SessionPayload(BaseModel):
     time: Optional[int] = None # Duration so far? Backend tracks this as time_elapsed?
     duration: Optional[int] = None
     target: Optional[float] = None
+    userEmail: Optional[str] = None
     
 class SensorData(BaseModel):
     device_id: str

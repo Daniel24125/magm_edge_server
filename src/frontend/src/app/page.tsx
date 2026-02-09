@@ -6,8 +6,20 @@ import ProjectDetailsWidget from "@/components/dashboard/ProjectDetailsWidget";
 import ConnectedDevicesWidget from "@/components/dashboard/ConnectedDevicesWidget";
 import { SessionChartWidget } from "@/components/dashboard/SessionChartWidget";
 
+import { useRouter } from 'next/navigation';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useEffect } from 'react';
+
 export default function Page() {
   const { user, error, isLoading } = useUserContext();
+  const { isOnline } = useNetworkStatus();
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   if (!isOnline && user) {
+  //     router.push('/session');
+  //   }
+  // }, [isOnline, user, router]);
 
 
   if (isLoading) return <div>Loading...</div>;
@@ -16,7 +28,9 @@ export default function Page() {
     // We just wait here.
     return <div>Loading...</div>;
   }
-  if (error) return <div>Error: {(error as Error).message}</div>;
+
+  // Only show Auth0 errors if we are online. Offline "errors" are expected.
+  if (error && isOnline) return <div>Error: {(error as Error).message}</div>;
 
 
   return (

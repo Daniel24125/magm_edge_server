@@ -94,7 +94,7 @@ class FirebaseSyncService(threading.Thread):
         for session in sessions:
             # Skip offline sessions (no project_id)
             if not session.get('project_id'):
-                logger.debug(f"Skipping sync for offline session {session['id']}")
+                # logger.debug(f"Skipping sync for offline session {session['id']}")
                 continue
 
             doc_ref = self.db_ref.collection('sessions').document(session['id'])
@@ -147,13 +147,14 @@ class FirebaseSyncService(threading.Thread):
             batch.set(doc_ref, firebase_payload, merge=True)
             synced_ids.append(session['id'])
 
-        batch.commit()
-        
-        # Mark as synced locally
-        for sid in synced_ids:
-            self.db_helper.mark_session_synced(sid)
-        
-        logger.info(f"Firebase Sync: Synced {len(synced_ids)} sessions.")
+        if synced_ids:
+            batch.commit()
+            
+            # Mark as synced locally
+            for sid in synced_ids:
+                self.db_helper.mark_session_synced(sid)
+            
+            logger.info(f"Firebase Sync: Synced {len(synced_ids)} sessions.")
 
     def _sync_measurements(self):
         # Fetch unsynced measurements

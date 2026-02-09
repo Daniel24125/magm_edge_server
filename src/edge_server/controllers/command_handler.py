@@ -80,6 +80,24 @@ class CommandHandler:
                 }))
             case "pump_control":
                 self.device_controller.forward_device_command(cmd.params, "pump_control")
+            case "get_offline_sessions":
+               user_email = cmd.params.get("userEmail")
+               sessions = self.session_controller.get_offline_sessions(user_email)
+               
+               payload = {
+                   "type": "offline_sessions",
+                   "payload": sessions,
+                   "timestamp": datetime.now(timezone.utc).isoformat()
+               }
+               self.client.publish("ui/responses/get_offline_sessions", json.dumps(payload))
+
+            case "assign_session_project":
+                self.session_controller.assign_session_project(cmd.params)
+                self.client.publish("ui/responses/assign_session_project", json.dumps({
+                    "status": "success",
+                    "sessionId": cmd.params.get("sessionId"),
+                    "projectId": cmd.params.get("projectId")
+                }))
             case _:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 

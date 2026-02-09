@@ -497,7 +497,42 @@ class DatabaseHelper:
                 "alert_configuration": r[7], "user_id": r[8], "notes": r[9],
                 "duration": r[10], "target": r[11]
             })
+    def get_offline_sessions(self, user_email: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Retrieves sessions that are marked as offline (no project_id).
+        Optionally filters by user_email.
+        """
+        query = "SELECT id, start_time, duration, notes, user_email, session_details FROM sessions WHERE (project_id IS NULL OR project_id = '')"
+        params = []
+        if user_email:
+            query += " AND user_email = ?"
+            params.append(user_email)
+        
+        rows = self.fetch_records_raw(query, tuple(params))
+        results = []
+        for r in rows:
+            results.append({
+                "id": r[0],
+                "start_time": r[1],
+                "duration": r[2],
+                "notes": r[3],
+                "user_email": r[4],
+                "session_details": r[5]
+            })
         return results
+
+    def update_session_project(self, session_id: str, project_id: str, project_details: Dict[str, Any]) -> None:
+        """
+        Updates an offline session with a project ID and details, marking it as ready for sync.
+        """
+        # We also set synced=0 to ensure it gets picked up by the sync service
+        # We clear is_offline flag (set to 0)
+        data = {
+            "project_id": project_id,
+            "is_offline": 0,
+            "synced": 0
+        }
+        self.update_record("sessions", session_id, data, id_column="id")
 
     def get_unsynced_measurements(self, limit: int = 100) -> List[Dict[str, Any]]:
         """

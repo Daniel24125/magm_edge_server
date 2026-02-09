@@ -212,6 +212,20 @@ class SessionController:
         topic = f"controller/session/{self.id}/measurement_sync"
         self.client.publish(topic, json.dumps({"id": self.id}), qos=1)
 
+    def get_offline_sessions(self, user_email: Optional[str] = None) -> List[Dict[str, Any]]:
+        return self.db.get_offline_sessions(user_email)
+
+    def assign_session_project(self, payload: Dict[str, Any]) -> None:
+        session_id = payload.get("sessionId")
+        project_id = payload.get("projectId")
+        
+        if not session_id or not project_id:
+            logger.error("Missing sessionId or projectId in assign_session_project")
+            return
+            
+        logger.info(f"Assigning session {session_id} to project {project_id}")
+        self.db.update_session_project(session_id, project_id, {})
+
     # -------------------- Internal Helpers --------------------
 
     def _create_session_payload(self, payload: Dict[str, Any]) -> SessionPayload:
@@ -226,7 +240,8 @@ class SessionController:
             alertConfiguration=payload.get("alertConfiguration", []),
             notes=payload.get("notes", None),
             duration=payload.get("duration"),
-            target=payload.get("target")
+            target=payload.get("target"),
+            userEmail=payload.get("userEmail")
         )
 
     def _prepare_db_record(self, sess_payload: SessionPayload) -> Dict[str, Any]:

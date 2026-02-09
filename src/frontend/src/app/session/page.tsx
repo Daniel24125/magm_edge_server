@@ -59,9 +59,16 @@ const SessionHeader = () => {
     if (isLoading) return <Loading isLoading={isLoading} />
 
     if (!projectDetails) {
-        addAlert("error", "No active session at the moment. Start a session to access the session details.")
-        router.push("/")
-        return null
+        // If no project details (e.g. offline session or no active session), just show generic header
+        // Do NOT redirect.
+        return (
+            <div className='flex items-start gap-2 w-full justify-between'>
+                <div className='flex flex-col gap-1 '>
+                    <h1 className='text-2xl font-bold'>{activeSession ? (activeSession.id || "Offline Session") : "No Active Session"}</h1>
+                    <p className='text-muted-foreground'>{activeSession ? "Offline / Manual Session" : "Ready to start"}</p>
+                </div>
+            </div>
+        )
     }
 
     return (

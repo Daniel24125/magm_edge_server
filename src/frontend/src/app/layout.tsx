@@ -11,6 +11,7 @@ import Sidebar from "@/components/template/Sidebar";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProjectsProvider } from "@/contexts/ProjectsContext";
 import { SessionProvider } from "@/contexts/SessionContext";
+import SessionSyncWrapper from "@/components/sessions/SessionSyncWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
               <MQTTProvider>
                 <DeviceManagerProvider>
                   <SessionProvider>
+                    <SessionSyncWrapper />
                     <ApplicationProvider>
                       <section className="flex w-screen">
                         <Sidebar />

@@ -38,6 +38,7 @@ interface MQTTContextType {
     subscribe: (topic: string, handler?: TMessageHandler) => void;
     unsubscribe: (topic: string, handler?: TMessageHandler) => void;
     publish: (topic: string, payload: unknown) => void;
+    latestMessage: { topic: string; payload: any; timestamp: Date } | null;
 }
 
 const MQTTContext = createContext<MQTTContextType | null>(null);
@@ -46,6 +47,7 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     const { addAlert } = useAlert();
     const [client, setClient] = useState<MqttClient | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [latestMessage, setLatestMessage] = useState<{ topic: string; payload: any; timestamp: Date } | null>(null);
 
     // Map of topic -> Set of handlers
     const messageHandlers = useRef<Map<string, Set<TMessageHandler>>>(new Map());
@@ -107,12 +109,12 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
                 const parsed = JSON.parse(payloadStr);
 
                 // Dispatch to handlers
-                // Support wildcards/regex in future if needed, currently exact match + basic routing
-                // Simple exact match for now as per previous implementation
                 const handlers = messageHandlers.current.get(topic);
                 if (handlers) {
                     handlers.forEach(h => h(topic, parsed));
                 }
+
+                setLatestMessage({ topic, payload: parsed, timestamp: new Date() });
 
                 // Also support simple wildcard matching (e.g. users subscribing to /#)
                 // (Not fully implemented here for simplicity unless needed)
@@ -203,7 +205,7 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
     }, []); // Run once on mount
 
     return (
-        <MQTTContext.Provider value={{ client, isConnected, connect, disconnect, subscribe, unsubscribe, publish }}>
+        <MQTTContext.Provider value={{ client, isConnected, connect, disconnect, subscribe, unsubscribe, publish, latestMessage }}>
             {children}
         </MQTTContext.Provider>
     );
