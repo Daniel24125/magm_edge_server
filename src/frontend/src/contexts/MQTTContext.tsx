@@ -18,6 +18,10 @@ const getBrokerUrl = () => {
 
     // 2. Dynamic Browser-based detection
     if (typeof window !== "undefined") {
+        // If offline, default to localhost
+        if (!navigator.onLine) {
+            return "ws://localhost:9001";
+        }
         return `ws://${window.location.hostname}:9001`;
     }
     return "ws://localhost:9001";

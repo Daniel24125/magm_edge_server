@@ -3,7 +3,11 @@ import sys
 import os 
 import time
 from .ads_utils import ads, ads_lock
-from adafruit_ads1x15.analog_in import AnalogIn
+try:
+    from adafruit_ads1x15.analog_in import AnalogIn
+except ImportError:
+    AnalogIn = None
+
 port_map = [0,1,2,3]
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -34,7 +38,12 @@ class AnalogCommunication:
         self.sensor_config = sensor_config
         self.cal_data = self.db.get_last_calibration("pH")
         self.probe = self.sensor_config.get("probe")
-        self.analog = AnalogIn(ads, port_map[self.probe])
+        
+        if ads is not None and AnalogIn is not None:
+            self.analog = AnalogIn(ads, port_map[self.probe])
+        else:
+            self.analog = None
+            logger.warning(f"AnalogCommunication initialized without hardware for probe {self.probe}. Ensure simulation mode is active if this is expected.")
 
     # This method is responsible for getting an analog read of the sensors. The read value corresponds to an average of 20 reads (i.e., 20 by default)
     def get_read(self, NUM_MEAS_FOR_AVG=20):
@@ -48,6 +57,10 @@ class AnalogCommunication:
         
 
         with ads_lock:
+            if self.analog is None:
+                logger.warning("Attempted to read from None analog source. Check hardware/library status.")
+                return 0
+
             for i in range(NUM_MEAS_FOR_AVG):
                 try:
                     an_read = self.analog.value
