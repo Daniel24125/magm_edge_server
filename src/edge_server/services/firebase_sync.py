@@ -69,6 +69,7 @@ class FirebaseSyncService(threading.Thread):
         while not self.stop_event.is_set():
             if self.db_ref:
                 try:
+                    self._sync_projects()
                     self._sync_sessions()
                     self._sync_measurements()
                     self._sync_alerts()
@@ -81,6 +82,42 @@ class FirebaseSyncService(threading.Thread):
     def stop(self):
         self.stop_event.set()
         logger.info("Firebase Sync Service stopping...")
+
+    def _sync_projects(self):
+        projects = self.db_helper.get_unsynced_projects(limit=5)
+        if not projects:
+            return
+
+        batch = self.db_ref.batch()
+        synced_ids = []
+
+        for p in projects:
+            doc_ref = self.db_ref.collection('projects').document(p['id'])
+            
+            payload = {
+                "id": p['id'],
+                "userId": p['user_id'],
+                "createdAt": p['created_at'],
+                "updatedAt": p['updated_at'],
+            }
+
+            try:
+                if p['project_details']:
+                    payload['projectDetails'] = json.loads(p['project_details'])
+                if p['session_details']:
+                    payload['sessionDetails'] = json.loads(p['session_details'])
+                if p['session_default_settings']:
+                    payload['sessionDefaultSettings'] = json.loads(p['session_default_settings'])
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON decode error for project {p['id']}: {e}")
+                
+            batch.set(doc_ref, payload, merge=True)
+            synced_ids.append(p['id'])
+
+        batch.commit()
+        
+        self.db_helper.mark_projects_synced(synced_ids)
+        logger.info(f"Firebase Sync: Synced {len(synced_ids)} projects.")
 
     def _sync_sessions(self):
         # Fetch unsynced sessions

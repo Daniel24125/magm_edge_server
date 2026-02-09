@@ -7,7 +7,9 @@ export type TMeasurement = {
     ph?: number;
     od?: number;
     co2?: number;
-    session_time?: number;
+    status?: string;
+    sessionTime?: number; // mapped from session_time
+    session_time?: number; // some parts might use snake_case
 }
 
 export interface ISession {
@@ -16,6 +18,8 @@ export interface ISession {
     projectId: string;
     createdAt: string;
     updatedAt: string;
+    startTime?: string;
+    endTime?: string;
     status: 'running' | 'paused' | 'completed' | 'failed';
     notes?: string;
     time?: number; // Duration in seconds
@@ -26,4 +30,5 @@ export interface ISession {
     alertConfiguration: TAlertConfiguration[];
     measurements: TMeasurement[];
     alerts?: TAlert[];
+    synced?: number;
 }

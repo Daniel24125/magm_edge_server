@@ -83,6 +83,17 @@ class DatabaseHelper:
                     synced INTEGER DEFAULT 0
                 );
 
+                CREATE TABLE IF NOT EXISTS projects (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    project_details TEXT, -- JSON
+                    session_details TEXT, -- JSON
+                    session_default_settings TEXT, -- JSON
+                    synced INTEGER DEFAULT 0
+                );
+
                 CREATE TABLE IF NOT EXISTS ph_calibration (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     sensor_id TEXT NOT NULL,
@@ -551,6 +562,46 @@ class DatabaseHelper:
             
         placeholders = ",".join("?" for _ in ids)
         sql = f"UPDATE alerts SET synced = 1 WHERE id IN ({placeholders})"
+        
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            cur.execute(sql, ids)
+            self._conn.commit()
+
+    def get_unsynced_projects(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieves projects that haven't been synced yet.
+        """
+        rows = self.fetch_records_raw(
+            "SELECT id, user_id, created_at, updated_at, project_details, session_details, session_default_settings "
+            "FROM projects WHERE synced = 0 LIMIT ?",
+            (limit,)
+        )
+        results = []
+        for r in rows:
+            results.append({
+                "id": r[0],
+                "user_id": r[1],
+                "created_at": r[2],
+                "updated_at": r[3],
+                "project_details": r[4],
+                "session_details": r[5],
+                "session_default_settings": r[6]
+            })
+        return results
+
+    def mark_projects_synced(self, ids: List[str]) -> None:
+        """
+        Marks projects as synced.
+        """
+        if not ids:
+            return
+            
+        if self._conn is None:
+            self.connect()
+            
+        placeholders = ",".join("?" for _ in ids)
+        sql = f"UPDATE projects SET synced = 1 WHERE id IN ({placeholders})"
         
         with self._locked_cursor() as cur:
             self._begin_immediate(cur)
