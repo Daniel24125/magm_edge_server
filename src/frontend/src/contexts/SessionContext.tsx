@@ -24,6 +24,7 @@ import { useProjects } from "./ProjectsContext";
 import { IProject } from "@/types/projects";
 import { useDeviceManager } from "./DeviceManagerContext";
 import { useUser } from "@auth0/nextjs-auth0";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface SessionContextType {
     activeSession: ISession | null;
@@ -48,6 +49,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { addAlert } = useAlert();
     const { projects } = useProjects();
     const { sendCommand, isRPIConnected, onlineDevices } = useDeviceManager();
+    const isOnline = useNetworkStatus(); // 1. Network Status
+
     const [activeSession, setActiveSession] = useState<ISession | null>(null);
     const [latestLiveMeasurement, setLatestLiveMeasurement] = useState<TMeasurement | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -109,7 +112,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             const message = rawMessage as { type?: string; payload?: any; history?: any[]; alerts?: any[]; data?: any; severity?: any; message?: string; sensor_type?: string; value?: any; timestamp?: string; session_time?: number };
 
             if (topic === sessionTopic) {
-                // ... (existing logic)
                 if (message.type === 'session') {
                     const payload = message.payload;
                     if (payload.active) {
@@ -192,9 +194,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                         session_time: message.session_time
                     } as TMeasurement
                 });
-
-
-
             } else if (topic === alertsTopic) {
                 addSessionAlert(
                     message.severity || "info",
@@ -222,10 +221,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             unsubscribe(liveTopic, handleSessionMessage);
             unsubscribe(alertsTopic, handleSessionMessage);
         }
-    }, [isConnected, subscribe, unsubscribe, publish, addSessionAlert]); // Added addSessionAlert dependency
-
+    }, [isConnected, subscribe, unsubscribe, publish, addSessionAlert]);
 
     const initiateSession = (projectId?: string) => {
+        if (!isOnline) {
+            // Offline: Skip project selection, start generic session
+            prepareStartSession(null);
+            return;
+        }
+
         if (projectId) {
             const project = projects.find(p => p.id === projectId);
             if (project) {
@@ -243,14 +247,40 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         prepareStartSession(project);
     };
 
-    const prepareStartSession = (project: IProject) => {
-        setPendingSessionStart({
-            projectId: project.id,
-            sessionDetails: project.sessionDetails,
-            projectDetails: project.projectDetails,
-            settings: project.sessionDefaultSettings,
-            alertConfiguration: project.alertConfiguration
-        });
+    const prepareStartSession = (project: IProject | null) => {
+        if (project) {
+            setPendingSessionStart({
+                projectId: project.id,
+                sessionDetails: project.sessionDetails,
+                projectDetails: project.projectDetails,
+                settings: project.sessionDefaultSettings,
+                alertConfiguration: project.alertConfiguration
+            });
+        } else {
+            // Offline / Generic Defaults matches types/projects.ts
+            setPendingSessionStart({
+                projectId: "", // No Project ID
+                sessionDetails: {
+                    sessionId: "Offline-" + new Date().getTime(),
+                    reactorName: "Offline Reactor",
+                    sampleName: "Offline Sample",
+                    cultureMedium: "Standard",
+                    co2Pressure: 0
+                },
+                projectDetails: {
+                    projectTitle: "Offline Project",
+                    projectType: "manual",
+                    description: "Created while offline",
+                },
+                settings: {
+                    dataAcquisitionInterval: 30,
+                    phControl: false,
+                    phSetPoint: 7.0,
+                    maxPumpTime: 10
+                },
+                alertConfiguration: []
+            });
+        }
         setIsStartSessionDialogOpen(true);
     };
 
@@ -261,11 +291,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             // Generate ID locally (Offline-First)
             const sessionId = crypto.randomUUID();
 
-            // Construct payload WITHOUT hitting Firebase
             const newSession: ISession = {
                 id: sessionId,
                 projectId,
-                userId: user?.sub || "local-user", // Placeholder, will be overwritten by backend or ignored
+                userId: user?.sub || "local-user",
                 createdAt: now,
                 updatedAt: now,
                 sessionDetails,
@@ -277,11 +306,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 measurements: []
             };
 
-            // Optimistic Update
             setActiveSession(newSession);
 
+            // Prepare payload
+            const payload: any = newSession;
+            if (!isOnline && user?.email) {
+                payload.userEmail = user.email;
+            }
+
             console.log("Sending start session command to device (Offline-First)...");
-            sendCommand("start_session", newSession as unknown as Record<string, unknown>);
+            sendCommand("start_session", payload);
 
             addSessionAlert("success", "Session started", { source: "User" });
         } catch (error) {
@@ -303,7 +337,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
             const newSession: ISession = {
                 id: sessionId,
-                projectId: pendingSessionStart.projectId,
+                projectId: pendingSessionStart.projectId, // Empty string if offline
                 userId: user?.sub || "local-user",
                 createdAt: now,
                 updatedAt: now,
@@ -323,7 +357,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             setActiveSession(newSession);
 
             console.log("Sending start session command to device (Offline-First)...");
-            sendCommand("start_session", newSession as unknown as Record<string, unknown>);
+
+            // Prepare payload
+            const payload: any = newSession;
+            // Inject user email for offline tracking if available (and if offline)
+            if (!isOnline && user?.email) {
+                payload.userEmail = user.email;
+            }
+
+            sendCommand("start_session", payload);
 
             addSessionAlert("success", "Session started", { source: "User" });
             setIsStartSessionDialogOpen(false);

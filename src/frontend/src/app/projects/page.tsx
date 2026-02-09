@@ -13,14 +13,19 @@ import { getAlertIcon, getFormartedTimeWithLetters } from '@/lib/utils'
 import { NoMeasurementsIlustration } from '@/components/ilustrations'
 import Loading from '@/components/ui/loading'
 
+import { UnsyncedSessionsBanner } from '@/components/projects/UnsyncedSessionsBanner';
+
 const ProjectsPage = () => {
     const { projects } = useProjects()
-    if (projects.length === 0) return <NoProjects className='pt-10' />
 
     return (
         <div className='flex flex-col gap-10 h-full w-full pt-20'>
-            {/* <SearchProjects /> */}
-            <ProjectListCards />
+            <UnsyncedSessionsBanner />
+            {projects.length === 0 ? (
+                <NoProjects className='pt-10' />
+            ) : (
+                <ProjectListCards />
+            )}
         </div>
     )
 }

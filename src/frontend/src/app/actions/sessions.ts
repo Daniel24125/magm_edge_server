@@ -1,52 +1,36 @@
 "use server";
 
-import { getEffectiveSession } from "@/lib/session";
-import db from "@/lib/db";
+import { auth0 } from "@/lib/auth0";
+import { db } from "@/services/firebase";
 import { ISession, TMeasurement } from "@/types/sessions";
 import { TAlert } from "@/types";
 import { revalidatePath } from "next/cache";
 import * as XLSX from "xlsx";
-import { v4 as uuidv4 } from 'uuid';
+
+const COLLECTION_NAME = "sessions";
 
 export async function getSessions(projectId?: string): Promise<{ success: boolean; data?: ISession[]; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
-            // TODO: Offline Auth fallback
             return { success: false, error: "Unauthorized" };
         }
 
-        let query = 'SELECT * FROM sessions WHERE user_id = ?';
-        const params: any[] = [session.user.sub];
+        let query = db.collection(COLLECTION_NAME).where("userId", "==", session.user.sub);
 
         if (projectId) {
-            query += ' AND project_id = ?';
-            params.push(projectId);
+            query = query.where("projectId", "==", projectId);
         }
 
-        query += ' ORDER BY start_time DESC';
+        const snapshot = await query.get();
 
-        const stmt = db.prepare(query);
-        const rows = stmt.all(...params) as any[];
-
-        const sessions: ISession[] = rows.map(row => ({
-            id: row.id,
-            projectId: row.project_id,
-            userId: row.user_id,
-            createdAt: row.start_time, // Mapping start_time to createdAt as legacy schema implied
-            updatedAt: row.end_time || row.start_time,
-            startTime: row.start_time,
-            endTime: row.end_time,
-            status: row.status,
-            notes: row.notes,
-            duration: row.duration,
-            target: row.target,
-            time: row.duration, // 'time' often used alias for duration in some views
-            sessionDetails: row.session_details ? JSON.parse(row.session_details) : undefined,
-            settings: row.settings ? JSON.parse(row.settings) : undefined,
-            alertConfiguration: row.alert_configuration ? JSON.parse(row.alert_configuration) : undefined,
-            measurements: [] // Lazy load or empty for list
-        }));
+        const sessions: ISession[] = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data
+            } as ISession;
+        });
 
         return { success: true, data: sessions };
     } catch (error) {
@@ -57,54 +41,28 @@ export async function getSessions(projectId?: string): Promise<{ success: boolea
 
 export async function createSession(sessionData: Omit<ISession, "id" | "createdAt" | "updatedAt" | "userId" | "measurements">): Promise<{ success: boolean; data?: ISession; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
         const now = new Date().toISOString();
-        const id = uuidv4();
-
-        // Ensure defaults
         const newSession = {
-            id,
-            projectId: sessionData.projectId,
-            userId: session.user.sub,
-            start_time: now,
-            end_time: null,
-            status: sessionData.status || 'running',
-            session_details: JSON.stringify(sessionData.sessionDetails || {}),
-            settings: JSON.stringify(sessionData.settings || {}),
-            alert_configuration: JSON.stringify(sessionData.alertConfiguration || []),
-            notes: sessionData.notes || '',
-            duration: 0,
-            target: sessionData.target || 0,
-            synced: 0
-        };
-
-        const stmt = db.prepare(`
-            INSERT INTO sessions (
-                id, project_id, user_id, start_time, end_time, status, 
-                session_details, settings, alert_configuration, notes, duration, target, synced
-            ) VALUES (
-                @id, @projectId, @userId, @start_time, @end_time, @status,
-                @session_details, @settings, @alert_configuration, @notes, @duration, @target, @synced
-            )
-        `);
-
-        stmt.run(newSession);
-
-        const createdSession: ISession = {
-            id,
+            ...sessionData,
             userId: session.user.sub,
             createdAt: now,
             updatedAt: now,
-            startTime: now,
-            measurements: [],
-            ...sessionData
+            measurements: []
+        };
+
+        const docRef = await db.collection(COLLECTION_NAME).add(newSession);
+
+        const createdSession: ISession = {
+            id: docRef.id,
+            ...newSession,
         } as ISession;
 
-        revalidatePath("/projects");
+        revalidatePath("/projects"); // Revalidate projects page as sessions might be listed there
         return { success: true, data: createdSession };
     } catch (error) {
         console.error("Error creating session:", error);
@@ -114,35 +72,27 @@ export async function createSession(sessionData: Omit<ISession, "id" | "createdA
 
 export async function updateSession(id: string, sessionData: Partial<ISession>): Promise<{ success: boolean; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        const checkStmt = db.prepare('SELECT user_id FROM sessions WHERE id = ?');
-        const row = checkStmt.get(id) as any;
+        console.log(id)
+        const docRef = db.collection(COLLECTION_NAME).doc(id);
+        const doc = await docRef.get();
 
-        if (!row) return { success: false, error: "Session not found" };
-        if (row.user_id !== session.user.sub) return { success: false, error: "Unauthorized" };
+        if (!doc.exists) {
+            return { success: false, error: "Session not found" };
+        }
 
-        const updates: string[] = ["synced = 0"]; // Always mark unsynced on update
-        const values: any[] = [];
+        if (doc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
 
-        // Map frontend fields to DB columns
-        if (sessionData.status) { updates.push("status = ?"); values.push(sessionData.status); }
-        if (sessionData.endTime) { updates.push("end_time = ?"); values.push(sessionData.endTime); }
-        if (sessionData.notes) { updates.push("notes = ?"); values.push(sessionData.notes); }
-        if (sessionData.duration !== undefined) { updates.push("duration = ?"); values.push(sessionData.duration); }
-
-        // JSON fields
-        if (sessionData.settings) { updates.push("settings = ?"); values.push(JSON.stringify(sessionData.settings)); }
-        if (sessionData.alertConfiguration) { updates.push("alert_configuration = ?"); values.push(JSON.stringify(sessionData.alertConfiguration)); }
-
-        if (values.length === 0) return { success: true }; // Nothing to update
-
-        values.push(id);
-        const updateStmt = db.prepare(`UPDATE sessions SET ${updates.join(", ")} WHERE id = ?`);
-        updateStmt.run(...values);
+        await docRef.update({
+            ...sessionData,
+            updatedAt: new Date().toISOString(),
+        });
 
         revalidatePath("/projects");
         return { success: true };
@@ -154,20 +104,23 @@ export async function updateSession(id: string, sessionData: Partial<ISession>):
 
 export async function deleteSession(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        const checkStmt = db.prepare('SELECT user_id FROM sessions WHERE id = ?');
-        const row = checkStmt.get(id) as any;
+        const docRef = db.collection(COLLECTION_NAME).doc(id);
+        const doc = await docRef.get();
 
-        if (!row) return { success: false, error: "Session not found" };
-        if (row.user_id !== session.user.sub) return { success: false, error: "Unauthorized" };
+        if (!doc.exists) {
+            return { success: false, error: "Session not found" };
+        }
 
-        const deleteStmt = db.prepare('DELETE FROM sessions WHERE id = ?');
-        deleteStmt.run(id);
+        if (doc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
 
+        await docRef.delete();
         revalidatePath("/projects");
         return { success: true };
     } catch (error) {
@@ -178,35 +131,43 @@ export async function deleteSession(id: string): Promise<{ success: boolean; err
 
 export async function getSessionMeasurements(sessionId: string): Promise<{ success: boolean; data?: TMeasurement[]; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        // Verify session access
-        const checkStmt = db.prepare('SELECT user_id FROM sessions WHERE id = ?');
-        const row = checkStmt.get(sessionId) as any;
-        if (!row) return { success: false, error: "Session not found" };
-        if (row.user_id !== session.user.sub) return { success: false, error: "Unauthorized" };
+        const sessionDocRef = db.collection(COLLECTION_NAME).doc(sessionId);
+        const sessionDoc = await sessionDocRef.get();
 
-        // Fetch unified measurements
-        const stmt = db.prepare(`
-            SELECT timestamp, ph, temp, od, co2, status, session_time
-            FROM unified_measurements
-            WHERE session_id = ?
-            ORDER BY timestamp DESC
-        `);
-        const measRows = stmt.all(sessionId) as any[];
+        if (!sessionDoc.exists) {
+            return { success: false, error: "Session not found" };
+        }
 
-        const measurements: TMeasurement[] = measRows.map(r => ({
-            timestamp: r.timestamp,
-            ph: r.ph,
-            temperature: r.temp,
-            od: r.od,
-            co2: r.co2,
-            status: r.status,
-            sessionTime: r.session_time
-        } as TMeasurement)); // Cast to TMeasurement, ensures compatibility
+        if (sessionDoc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const measurementsSnapshot = await sessionDocRef.collection("measurements").orderBy("timestamp", "desc").get();
+
+        const measurements: TMeasurement[] = measurementsSnapshot.docs.map(doc => {
+            const docData = doc.data();
+            let finalData: any = { ...docData };
+
+            // Consolidate data if nested
+            if (docData.data && typeof docData.data === 'object') {
+                finalData = {
+                    ...finalData,
+                    ...docData.data // flattened
+                };
+            }
+
+            // Standardize Keys: 'temp' -> 'temperature'
+            if (finalData.temp !== undefined && finalData.temperature === undefined) {
+                finalData.temperature = finalData.temp;
+            }
+
+            return finalData as TMeasurement;
+        });
 
         return { success: true, data: measurements };
     } catch (error) {
@@ -217,31 +178,31 @@ export async function getSessionMeasurements(sessionId: string): Promise<{ succe
 
 export async function getSessionAlerts(sessionId: string): Promise<{ success: boolean; data?: TAlert[]; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        const stmt = db.prepare(`
-            SELECT id, timestamp, sensor_type, value, message, severity, acknowledged
-            FROM alerts
-            WHERE session_id = ?
-            ORDER BY timestamp DESC
-        `);
-        const rows = stmt.all(sessionId) as any[];
+        const sessionDocRef = db.collection(COLLECTION_NAME).doc(sessionId);
+        const sessionDoc = await sessionDocRef.get();
 
-        const alerts: TAlert[] = rows.map(r => ({
-            id: r.id.toString(),
-            timestamp: r.timestamp,
-            type: r.severity,
-            category: 'session',
-            message: r.message,
-            details: {
-                sensorType: r.sensor_type,
-                value: r.value
-            },
-            read: !!r.acknowledged
-        }));
+        if (!sessionDoc.exists) {
+            return { success: false, error: "Session not found" };
+        }
+
+        if (sessionDoc.data()?.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        // Fetch alerts from subcollection
+        const alertsSnapshot = await sessionDocRef.collection("alerts").orderBy("timestamp", "desc").get();
+
+        const alerts: TAlert[] = alertsSnapshot.docs.map(doc => {
+            return {
+                id: doc.id,
+                ...doc.data()
+            } as TAlert;
+        });
 
         return { success: true, data: alerts };
     } catch (error) {
@@ -252,47 +213,34 @@ export async function getSessionAlerts(sessionId: string): Promise<{ success: bo
 
 export async function exportSessionToExcel(sessionId: string): Promise<{ success: boolean; data?: string; error?: string }> {
     try {
-        const session = await getEffectiveSession();
+        const session = await auth0.getSession();
         if (!session?.user) {
             return { success: false, error: "Unauthorized" };
         }
 
-        // Fetch Session
-        const sessionStmt = db.prepare('SELECT * FROM sessions WHERE id = ?');
-        const sessionRow = sessionStmt.get(sessionId) as any;
+        const sessionDocRef = db.collection(COLLECTION_NAME).doc(sessionId);
+        const sessionDoc = await sessionDocRef.get();
 
-        if (!sessionRow) return { success: false, error: "Session not found" };
-        if (sessionRow.user_id !== session.user.sub) return { success: false, error: "Unauthorized" };
+        if (!sessionDoc.exists) {
+            return { success: false, error: "Session not found" };
+        }
 
-        const sessionData: ISession = {
-            id: sessionRow.id,
-            projectId: sessionRow.project_id,
-            userId: sessionRow.user_id,
-            createdAt: sessionRow.start_time,
-            updatedAt: sessionRow.end_time || sessionRow.start_time,
-            status: sessionRow.status,
-            notes: sessionRow.notes,
-            duration: sessionRow.duration,
-            time: sessionRow.duration,
-            measurements: [],
-            // details...
-        } as unknown as ISession;
+        const sessionData = { id: sessionDoc.id, ...sessionDoc.data() } as ISession;
 
-        // Fetch Project
-        const projectStmt = db.prepare('SELECT * FROM projects WHERE id = ?');
-        const projectRow = projectStmt.get(sessionRow.project_id) as any;
-        const projectData = projectRow ? {
-            id: projectRow.id,
-            projectDetails: projectRow.project_details ? JSON.parse(projectRow.project_details) : {},
-            sessionDetails: projectRow.session_details ? JSON.parse(projectRow.session_details) : {},
-            sessionDefaultSettings: projectRow.session_default_settings ? JSON.parse(projectRow.session_default_settings) : {}
-        } : {};
+        if (sessionData.userId !== session.user.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
 
-        // Fetch Measurements & Alerts
-        const measRes = await getSessionMeasurements(sessionId);
-        const alertsRes = await getSessionAlerts(sessionId);
-        const measurements = measRes.data || [];
+        // Fetch subcollections and Project info concurrently
+        const [measurementsRes, alertsRes, projectDoc] = await Promise.all([
+            getSessionMeasurements(sessionId),
+            getSessionAlerts(sessionId),
+            db.collection("projects").doc(sessionData.projectId).get()
+        ]);
+
+        const measurements = measurementsRes.data || [];
         const alerts = alertsRes.data || [];
+        const projectData = projectDoc.exists ? projectDoc.data() : {};
 
         // --- Create Workbook ---
         const wb = XLSX.utils.book_new();
@@ -315,27 +263,25 @@ export async function exportSessionToExcel(sessionId: string): Promise<{ success
 
         // 2. Project Sheet
         if (projectData) {
-            const pd = projectData.projectDetails || {};
-            const sd = projectData.sessionDetails || {};
-            const sds = projectData.sessionDefaultSettings || {};
-
             const projectRows = [
                 ["Field", "Value"],
                 ["ID", projectData.id],
+                ["Created At", projectData.createdAt],
+                ["Updated At", projectData.updatedAt],
                 // Project Details
-                ["Project Title", pd.projectTitle || ""],
-                ["Description", pd.description || ""],
-                ["Type", pd.projectType || ""],
-                ["Timer", pd.timer || ""],
-                ["Target", pd.target || ""],
+                ["Project Title", projectData.projectDetails?.projectTitle || ""],
+                ["Description", projectData.projectDetails?.description || ""],
+                ["Type", projectData.projectDetails?.projectType || ""],
+                ["Timer", projectData.projectDetails?.timer || ""],
+                ["Target", projectData.projectDetails?.target || ""],
                 // Session Defaults
-                ["Default Interval", sds.dataAcquisitionInterval || ""],
-                ["Default Temp SetPoint", sds.temperatureSetPoint || ""],
-                ["Default pH SetPoint", sds.phSetPoint || ""],
+                ["Default Interval", projectData.sessionDefaultSettings?.dataAcquisitionInterval || ""],
+                ["Default Temp SetPoint", projectData.sessionDefaultSettings?.temperatureSetPoint || ""],
+                ["Default pH SetPoint", projectData.sessionDefaultSettings?.phSetPoint || ""],
                 // Session Details (Template)
-                ["Reactor Name", sd.reactorName || ""],
-                ["Sample Name", sd.sampleName || ""],
-                ["Culture Medium", sd.cultureMedium || ""],
+                ["Reactor Name", projectData.sessionDetails?.reactorName || ""],
+                ["Sample Name", projectData.sessionDetails?.sampleName || ""],
+                ["Culture Medium", projectData.sessionDetails?.cultureMedium || ""],
             ];
             const wsProject = XLSX.utils.aoa_to_sheet(projectRows);
             XLSX.utils.book_append_sheet(wb, wsProject, "Project");
@@ -343,19 +289,20 @@ export async function exportSessionToExcel(sessionId: string): Promise<{ success
 
         // 3. Measurements Sheet
         if (measurements.length > 0) {
+            // Flatten measurements for Excel
             const flatMeasurements = measurements.map(m => ({
                 Timestamp: m.timestamp,
                 pH: m.ph,
                 Temperature: m.temperature,
                 OD: m.od,
                 CO2: m.co2,
-                Status: m.status
+                ...m // Include any other dynamic keys
             }));
             const wsMeasurements = XLSX.utils.json_to_sheet(flatMeasurements);
             XLSX.utils.book_append_sheet(wb, wsMeasurements, "Measurements");
         }
 
-        // 4. Alerts Sheet
+        // 3. Alerts Sheet
         if (alerts.length > 0) {
             const flatAlerts = alerts.map(a => ({
                 ID: a.id,

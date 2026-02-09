@@ -241,7 +241,11 @@ class SessionController:
             "alert_configuration": json.dumps(sess_payload.alertConfiguration),
             "notes": sess_payload.notes,
             "duration": sess_payload.duration,
-            "target": sess_payload.target
+            "target": sess_payload.target,
+            # Offline Support
+            # If payload has 'userEmail', store it. If projectId is missing, mark offline.
+            "user_email": payload.get("userEmail"), 
+            "is_offline": 1 if not sess_payload.projectId else 0
         }
 
     def _start_acquisition_thread(self, settings: Dict[str, Any]):

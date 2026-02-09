@@ -16,6 +16,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/ui/loading";
+import { OfflineLoginDialog } from "@/components/auth/OfflineLoginDialog";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface UserContextType {
     user: any;
@@ -26,19 +28,68 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user, isLoading, error } = useUser();
+    const { user, isLoading: isAuth0Loading, error: auth0Error } = useUser();
     const router = useRouter();
+    const isOnline = useNetworkStatus();
+
+    // Offline User State
+    const [offlineUser, setOfflineUser] = useState<any>(null);
+    const [showOfflineLogin, setShowOfflineLogin] = useState(false);
 
     useEffect(() => {
-        if (isLoading) return;
-        if (!user) router.push('/auth/login');
-    }, [isLoading, user, router]);
+        // If Auth0 is loading, wait.
+        if (isAuth0Loading) return;
 
-    if (isLoading) return <Loading isLoading={isLoading} />
-    if (error) return <div>Error: {(error as Error).message}</div>;
+        // If we have an Auth0 user, we are good.
+        if (user) return;
+
+        // If no Auth0 user:
+        if (isOnline) {
+            // Online but not authenticated -> Redirect to login
+            // (Unless we want to allow offline user to persist even when online for syncing?)
+            // For now, simple logic: Online = Require Auth0.
+            router.push('/auth/login');
+        } else {
+            // Offline -> Check for offline user
+            const stored = localStorage.getItem("offline_user");
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Mock an Auth0-like user structure
+                setOfflineUser({
+                    sub: `offline|${parsed.email}`,
+                    name: parsed.name,
+                    email: parsed.email,
+                    isOfflineUser: true
+                });
+            } else {
+                setShowOfflineLogin(true);
+            }
+        }
+
+    }, [isAuth0Loading, user, router, isOnline]);
+
+    const handleOfflineLogin = (userData: { name: string; email: string }) => {
+        setOfflineUser({
+            sub: `offline|${userData.email}`,
+            name: userData.name,
+            email: userData.email,
+            isOfflineUser: true
+        });
+        setShowOfflineLogin(false);
+    };
+
+    const finalUser = user || offlineUser;
+    // We stop loading if Auth0 is done, AND (we have a user OR we are showing offline login)
+    // Actually simplicity: if we are waiting for offline interaction? 
+    // Let's just pass `finalUser`.
+
+    if (isAuth0Loading) return <Loading isLoading={true} />
+
+    // Return children but render dialog if needed
     return (
-        <UserContext.Provider value={{ user, isLoading, error }}>
+        <UserContext.Provider value={{ user: finalUser, isLoading: isAuth0Loading, error: auth0Error }}>
             {children}
+            <OfflineLoginDialog open={showOfflineLogin} onLogin={handleOfflineLogin} />
         </UserContext.Provider>
     );
 };
