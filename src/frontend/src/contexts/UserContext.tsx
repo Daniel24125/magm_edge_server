@@ -30,7 +30,11 @@ const UserContext = createContext<UserContextType | null>(null);
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const { user, isLoading: isAuth0Loading, error: auth0Error } = useUser();
     const router = useRouter();
+<<<<<<< HEAD
     const { isOnline, isChecking } = useNetworkStatus();
+=======
+    const isOnline = useNetworkStatus();
+>>>>>>> 4e5954f72a9528d81bf385e4c12e118474b95548
 
     // Offline User State
     const [offlineUser, setOfflineUser] = useState<any>(null);
@@ -40,18 +44,27 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         // If Auth0 is loading, wait.
         if (isAuth0Loading) return;
 
+<<<<<<< HEAD
         // If network status is still being verified, wait.
         if (isChecking) return;
 
+=======
+>>>>>>> 4e5954f72a9528d81bf385e4c12e118474b95548
         // If we have an Auth0 user, we are good.
         if (user) return;
 
         // If no Auth0 user:
         if (isOnline) {
             // Online but not authenticated -> Redirect to login
+<<<<<<< HEAD
             // We restore the standard Auth0 flow here.
             console.log("Redirecting to login");
             // window.location.href = '/auth/login';
+=======
+            // (Unless we want to allow offline user to persist even when online for syncing?)
+            // For now, simple logic: Online = Require Auth0.
+            router.push('/auth/login');
+>>>>>>> 4e5954f72a9528d81bf385e4c12e118474b95548
         } else {
             // Offline -> Check for offline user
             const stored = localStorage.getItem("offline_user");
