@@ -13,7 +13,9 @@ from shared.utils.state_manager import StateManager
 from shared.utils.config_loader import save_config
 
 state_manager = StateManager()
-state_manager.update_simulation_mode(platform.system() == "Windows")
+# Simulation mode if explicitly set, or if not on Linux (e.g. Windows/macOS)
+sim_env = os.environ.get("MAGM_SIMULATION", "false").lower() == "true"
+state_manager.update_simulation_mode(sim_env or (platform.system() != "Linux"))
  
 try: 
     import lgpio
