@@ -13,16 +13,25 @@ import mqtt, { MqttClient } from "mqtt";
 
 const getBrokerUrl = () => {
     // 1. Environment Variable Override (e.g. for ngrok)
-    if (process.env.NEXT_PUBLIC_MQTT_BROKER_URL) return process.env.NEXT_PUBLIC_MQTT_BROKER_URL;
+    let envUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL;
+    if (envUrl) {
+        envUrl = envUrl.trim();
+        // Normalize protocol
+        if (envUrl.startsWith('http://')) envUrl = envUrl.replace('http://', 'ws://');
+        if (envUrl.startsWith('https://')) envUrl = envUrl.replace('https://', 'wss://');
+        return envUrl;
+    }
 
     // 2. Dynamic Browser-based detection
     if (typeof window !== "undefined") {
+        const isSecure = window.location.protocol === 'https:';
         // If offline, default to 127.0.0.1
         if (!navigator.onLine) {
-            return "ws://127.0.0.1:9001";
+            return isSecure ? "wss://127.0.0.1:9001" : "ws://127.0.0.1:9001";
         }
         const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-        return `ws://${hostname}:9001`;
+        const protocol = isSecure ? 'wss' : 'ws';
+        return `${protocol}://${hostname}:9001`;
     }
     return "ws://127.0.0.1:9001";
 };
@@ -64,7 +73,6 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
             reconnectPeriod: 2000, // Auto reconnect every 2s
             connectTimeout: 5000,
             keepalive: 60, // Keepalive 60s
-            protocol: 'ws',
             path: '/mqtt' // Default mosquitto websockets path often needs this or empty, let's try standard
         });
 
