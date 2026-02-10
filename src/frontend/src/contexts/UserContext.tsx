@@ -50,7 +50,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if (isOnline) {
             // Online but not authenticated -> Redirect to login
             // We restore the standard Auth0 flow here.
-            console.log("Redirecting to login");
             window.location.href = '/auth/login';
         } else {
             // Offline -> Check for offline user

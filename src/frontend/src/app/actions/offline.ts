@@ -3,7 +3,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { ISession } from '@/types/sessions';
 
 // Helper to get DB path
 const getDbPath = () => {

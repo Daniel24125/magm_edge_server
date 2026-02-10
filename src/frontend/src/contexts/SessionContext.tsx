@@ -272,7 +272,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             unsubscribe(liveTopic, handleSessionMessage);
             unsubscribe(alertsTopic, handleSessionMessage);
         }
-    }, [isConnected, subscribe, unsubscribe, publish, addSessionAlert]);
+    }, [isConnected, isRPIConnected, subscribe, unsubscribe, publish, addSessionAlert]);
 
     const initiateSession = (projectId?: string) => {
         if (!isOnline) {
