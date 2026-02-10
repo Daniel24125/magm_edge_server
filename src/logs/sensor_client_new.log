@@ -1,0 +1,61 @@
+state_manager 2026-02-10 13:49:01 [INFO] Simulation Mode: False
+db_manager 2026-02-10 13:49:02 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:49:02 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+temperature 2026-02-10 13:49:02 [INFO] DS18B20 Sensor found at /sys/bus/w1/devices/28-01192e010a91/w1_slave
+controller 2026-02-10 13:49:02 [INFO] pH Controller GPIO Initialized
+ph 2026-02-10 13:49:02 [INFO] pH Sensor Sampling Loop started
+db_manager 2026-02-10 13:49:02 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:49:02 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+mqtt_client 2026-02-10 13:49:02 [INFO] Connected to MQTT broker at localhost:1883
+device_parser 2026-02-10 13:49:02 [INFO] Device registration sent
+mqtt_client 2026-02-10 13:49:05 [INFO] Received message in topic devices/registration_request
+device_parser 2026-02-10 13:49:05 [INFO] Device registration sent
+mqtt_client 2026-02-10 13:49:07 [INFO] Received message in topic controller/commands/start
+session_parser 2026-02-10 13:49:07 [INFO] Starting session with ID: test_session_1770731347
+controller 2026-02-10 13:49:07 [INFO] pH Control Loop running...
+controller 2026-02-10 13:49:07 [INFO] pH Control Thread started.
+mqtt_client 2026-02-10 13:49:08 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:08 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+controller 2026-02-10 13:49:08 [INFO] pH Control Trigger: 11.56 vs Target 7.0. Activating acidic.
+controller 2026-02-10 13:49:08 [INFO] Activating acidic pump (Pin 10) for 0.30s
+mqtt_client 2026-02-10 13:49:08 [INFO] Published event pump_activated to devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events
+session_parser 2026-02-10 13:49:09 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:09 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:09 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+session_parser 2026-02-10 13:49:11 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:11 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:11 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+session_parser 2026-02-10 13:49:12 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:12 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:12 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+controller 2026-02-10 13:49:13 [INFO] pH Control Trigger: 11.56 vs Target 7.0. Activating acidic.
+controller 2026-02-10 13:49:13 [INFO] Activating acidic pump (Pin 10) for 0.30s
+mqtt_client 2026-02-10 13:49:13 [INFO] Published event pump_activated to devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events
+session_parser 2026-02-10 13:49:14 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:14 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:14 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+temperature 2026-02-10 13:49:16 [WARNING] DS18B20 returned 85.0°C. This is a power-on reset value. Check wiring or pull-up resistor.
+session_parser 2026-02-10 13:49:16 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:16 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:16 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+session_parser 2026-02-10 13:49:17 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:17 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:17 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+controller 2026-02-10 13:49:18 [INFO] pH Control Trigger: 11.55 vs Target 7.0. Activating acidic.
+controller 2026-02-10 13:49:18 [INFO] Activating acidic pump (Pin 10) for 0.30s
+mqtt_client 2026-02-10 13:49:18 [INFO] Published event pump_activated to devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events
+session_parser 2026-02-10 13:49:19 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:19 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:19 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+temperature 2026-02-10 13:49:21 [WARNING] DS18B20 returned 85.0°C. This is a power-on reset value. Check wiring or pull-up resistor.
+session_parser 2026-02-10 13:49:21 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:21 [INFO] Received message in topic controller/session/test_session_1770731347/measurement_sync
+mqtt_client 2026-02-10 13:49:21 [INFO] Received message in topic controller/session/test_session_1770731347/measurement
+session_parser 2026-02-10 13:49:22 [INFO] Published sensor data to topic 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/data'
+mqtt_client 2026-02-10 13:49:22 [INFO] Received message in topic controller/commands/stop
+session_parser 2026-02-10 13:49:22 [INFO] Stopping session...
+controller 2026-02-10 13:49:23 [INFO] pH Control Trigger: 11.55 vs Target 7.0. Activating acidic.
+controller 2026-02-10 13:49:23 [INFO] Activating acidic pump (Pin 10) for 0.30s
+mqtt_client 2026-02-10 13:49:23 [INFO] Published event pump_activated to devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events
+controller 2026-02-10 13:49:23 [WARNING] Pump activation aborted: stop/pause/disabled state detected.
+controller 2026-02-10 13:49:23 [INFO] pH Control Thread stopped.

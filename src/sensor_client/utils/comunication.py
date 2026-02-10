@@ -37,6 +37,11 @@ class AnalogCommunication:
     def __init__(self, sensor_config):
         self.sensor_config = sensor_config
         self.cal_data = self.db.get_last_calibration("pH")
+        if not self.cal_data:
+            logger.warning("No calibration data found for pH sensor. Using defaults (linear, m=1, b=0).")
+            # Format: (id, m, b, reference, timestamp, session_id)
+            self.cal_data = (0, -0.015, 7.0, 7.0, time.time(), "default") 
+
         self.probe = self.sensor_config.get("probe")
         
         if ads is not None and AnalogIn is not None:

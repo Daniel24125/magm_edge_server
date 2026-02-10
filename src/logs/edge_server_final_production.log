@@ -1,0 +1,29 @@
+db_manager 2026-02-10 14:01:07 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 14:01:07 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+firebase_sync 2026-02-10 14:01:08 [INFO] Firebase Sync: Successfully initialized Firestore client.
+firebase_sync 2026-02-10 14:01:08 [INFO] Firebase Sync Service started.
+db_manager 2026-02-10 14:01:08 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 14:01:08 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+ml_service 2026-02-10 14:01:08 [INFO] Loaded OD model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/od_model.pkl
+ml_service 2026-02-10 14:01:08 [INFO] Loaded CO2 model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/co2_model.pkl
+ml_service 2026-02-10 14:01:08 [DEBUG] MLService initialized
+edge_mqtt_client 2026-02-10 14:01:08 [INFO] Connecting to localhost...
+manager 2026-02-10 14:01:08 [INFO] Manager main loop starting
+edge_mqtt_client 2026-02-10 14:01:08 [INFO] ✅ Connected to Local MQTT Broker at localhost:1883
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'ui/commands/#'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/register'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/cal/#'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/unregister'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/status'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/data'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/config'...
+edge_mqtt_client 2026-02-10 14:01:08 [DEBUG] Subscribing to 'devices/+/events'...
+edge_mqtt_client 2026-02-10 14:01:08 [INFO] Published 'devices/registration_request' to sync sensors.
+edge_mqtt_client 2026-02-10 14:01:08 [INFO] Published 'rpi_connected' notification to 'system/notifications'
+edge_mqtt_client 2026-02-10 14:01:10 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 14:01:10 [INFO] Published session status: idle
+device_controller 2026-02-10 14:01:29 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de registered
+edge_mqtt_client 2026-02-10 14:01:59 [INFO] Received UI Command on ui/commands/ping_device
+device_controller 2026-02-10 14:01:59 [INFO] Broadcasting status for 1 devices.
+edge_mqtt_client 2026-02-10 14:01:59 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 14:01:59 [INFO] Published session status: idle

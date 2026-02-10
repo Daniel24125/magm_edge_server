@@ -1,0 +1,168 @@
+db_manager 2026-02-10 13:49:02 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:49:02 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+firebase_sync 2026-02-10 13:49:02 [INFO] Firebase Sync: Successfully initialized Firestore client.
+firebase_sync 2026-02-10 13:49:02 [INFO] Firebase Sync Service started.
+db_manager 2026-02-10 13:49:02 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:49:02 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+ml_service 2026-02-10 13:49:05 [INFO] Loaded OD model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/od_model.pkl
+ml_service 2026-02-10 13:49:05 [INFO] Loaded CO2 model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/co2_model.pkl
+ml_service 2026-02-10 13:49:05 [DEBUG] MLService initialized
+edge_mqtt_client 2026-02-10 13:49:05 [INFO] Connecting to localhost...
+manager 2026-02-10 13:49:05 [INFO] Manager main loop starting
+edge_mqtt_client 2026-02-10 13:49:05 [INFO] ✅ Connected to Local MQTT Broker at localhost:1883
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'ui/commands/#'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/register'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/cal/#'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/unregister'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/status'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/data'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/config'...
+edge_mqtt_client 2026-02-10 13:49:05 [DEBUG] Subscribing to 'devices/+/events'...
+edge_mqtt_client 2026-02-10 13:49:05 [INFO] Published 'devices/registration_request' to sync sensors.
+edge_mqtt_client 2026-02-10 13:49:05 [INFO] Published 'rpi_connected' notification to 'system/notifications'
+device_controller 2026-02-10 13:49:05 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de registered
+edge_mqtt_client 2026-02-10 13:49:05 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 13:49:05 [INFO] Published session status: idle
+edge_mqtt_client 2026-02-10 13:49:07 [INFO] Received UI Command on ui/commands/start
+session_controller 2026-02-10 13:49:07 [INFO] Session test_session_1770731347 is now ACTIVE
+session_controller 2026-02-10 13:49:07 [INFO] Data acquisition started. Interval: 1s
+session_controller 2026-02-10 13:49:07 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:07 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:07 [INFO] Published session status: running
+session_controller 2026-02-10 13:49:07 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+edge_mqtt_client 2026-02-10 13:49:07 [INFO] Received UI Command on ui/commands/get_session_history
+session_controller 2026-02-10 13:49:07 [INFO] Published history for test_session_1770731347 (0 records)
+connectionpool 2026-02-10 13:49:07 [DEBUG] Starting new HTTPS connection (1): oauth2.googleapis.com:443
+connectionpool 2026-02-10 13:49:08 [DEBUG] https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+session_controller 2026-02-10 13:49:08 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:08 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:08 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:08 [INFO] Published history for test_session_1770731347 (1 records)
+aggregator 2026-02-10 13:49:08 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:08 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+firebase_sync 2026-02-10 13:49:08 [INFO] Firebase Sync: Synced 1 alerts.
+session_controller 2026-02-10 13:49:09 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:09 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:09 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:09 [INFO] Published history for test_session_1770731347 (2 records)
+aggregator 2026-02-10 13:49:09 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:09 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+session_controller 2026-02-10 13:49:10 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:10 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:10 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:10 [INFO] Published history for test_session_1770731347 (3 records)
+aggregator 2026-02-10 13:49:10 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:10 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+session_controller 2026-02-10 13:49:11 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:11 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:11 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:11 [INFO] Published history for test_session_1770731347 (4 records)
+aggregator 2026-02-10 13:49:11 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:11 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+manager 2026-02-10 13:49:11 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:49:11 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731348.201437, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:49:11 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:49:11 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731349.7835686, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.535, 'timestamp': 1770731349.225934, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:11 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:11 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:11 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.535}
+device_controller 2026-02-10 13:49:11 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:49:11 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731351.4050782, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.551, 'timestamp': 1770731350.7197955, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:11 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:11 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:11 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.551}
+device_controller 2026-02-10 13:49:11 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:49:12 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:12 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:12 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:12 [INFO] Published history for test_session_1770731347 (5 records)
+aggregator 2026-02-10 13:49:12 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:12 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+session_controller 2026-02-10 13:49:13 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:13 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:13 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:13 [INFO] Published history for test_session_1770731347 (6 records)
+aggregator 2026-02-10 13:49:13 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:13 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+firebase_sync 2026-02-10 13:49:13 [INFO] Firebase Sync: Synced 6 measurements.
+firebase_sync 2026-02-10 13:49:13 [INFO] Firebase Sync: Synced 2 alerts.
+session_controller 2026-02-10 13:49:14 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:14 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:14 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:14 [INFO] Published history for test_session_1770731347 (7 records)
+aggregator 2026-02-10 13:49:14 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:14 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+session_controller 2026-02-10 13:49:14 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731352.991528, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.565, 'timestamp': 1770731352.9813936, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:14 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:14 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:14 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.565}
+device_controller 2026-02-10 13:49:14 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:49:14 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:49:14 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731353.2037628, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:49:14 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:49:14 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.545, 'timestamp': 1770731354.5109727, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:14 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:14 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:14 [DEBUG] Skipping unparsable value for temp: <class 'NoneType'>
+aggregator 2026-02-10 13:49:14 [DEBUG] Added reading from rpi: {'ph': 11.545}
+device_controller 2026-02-10 13:49:14 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:49:15 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:15 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:15 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:15 [INFO] Published history for test_session_1770731347 (8 records)
+aggregator 2026-02-10 13:49:15 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:15 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+session_controller 2026-02-10 13:49:16 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:49:16 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:49:16 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:49:16 [INFO] Published history for test_session_1770731347 (9 records)
+aggregator 2026-02-10 13:49:16 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:49:16 [INFO] Requests measurements for session test_session_1770731347 (Saving to DB)
+edge_mqtt_client 2026-02-10 13:49:17 [INFO] Received UI Command on ui/commands/stop
+session_controller 2026-02-10 13:49:17 [INFO] Published session status: idle
+session_controller 2026-02-10 13:49:17 [INFO] Acquisition thread stopped successfully.
+firebase_sync 2026-02-10 13:49:18 [INFO] Firebase Sync: Synced 3 measurements.
+firebase_sync 2026-02-10 13:49:18 [INFO] Firebase Sync: Synced 2 alerts.
+session_controller 2026-02-10 13:49:19 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.568999999999999, 'timestamp': 1770731356.0156176, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:19 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:19 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:19 [DEBUG] Skipping unparsable value for temp: <class 'NoneType'>
+aggregator 2026-02-10 13:49:19 [DEBUG] Added reading from rpi: {'ph': 11.568999999999999}
+device_controller 2026-02-10 13:49:19 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:49:19 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.562, 'timestamp': 1770731357.98368, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.553, 'timestamp': 1770731357.545808, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:19 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:19 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:19 [DEBUG] Added reading from rpi: {'temp': 35.562, 'ph': 11.553}
+device_controller 2026-02-10 13:49:19 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:49:19 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:49:19 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731358.2084286, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:49:19 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+session_controller 2026-02-10 13:49:19 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.062, 'timestamp': 1770731359.575803, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.541, 'timestamp': 1770731359.0470665, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:19 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:19 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:19 [DEBUG] Added reading from rpi: {'temp': 36.062, 'ph': 11.541}
+device_controller 2026-02-10 13:49:19 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:49:23 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.541, 'timestamp': 1770731360.5804434, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:23 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:23 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:23 [DEBUG] Skipping unparsable value for temp: <class 'NoneType'>
+aggregator 2026-02-10 13:49:23 [DEBUG] Added reading from rpi: {'ph': 11.541}
+device_controller 2026-02-10 13:49:23 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:49:23 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.375, 'timestamp': 1770731362.7395358, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.553, 'timestamp': 1770731362.0798962, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:49:23 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:49:23 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:49:23 [DEBUG] Added reading from rpi: {'temp': 36.375, 'ph': 11.553}
+device_controller 2026-02-10 13:49:23 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:49:23 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:49:23 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731363.2093356, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:49:23 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+aggregator 2026-02-10 13:49:31 [WARNING] Aggregation timed out. Saving partial data.
+aggregator 2026-02-10 13:49:31 [ERROR] Failed to finalize collection: 'NoneType' object has no attribute 'cursor'
+edge_mqtt_client 2026-02-10 13:52:55 [INFO] Stopping EdgeMQTTClient...
+edge_mqtt_client 2026-02-10 13:52:55 [WARNING] 🔌 Disconnected from MQTT Broker (rc=Normal disconnection)
+firebase_sync 2026-02-10 13:52:58 [INFO] Firebase Sync: Synced 1 measurements.
+firebase_sync 2026-02-10 13:52:58 [INFO] Firebase Sync: Synced 1 alerts.
+
+🛑 Shutdown signal received. Stopping threads...
+🧹 Cleaning up resources...
+✅ Edge Server shut down cleanly.

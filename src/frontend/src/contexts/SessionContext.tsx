@@ -159,7 +159,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const alertsTopic = "session/alerts";
 
         const handleSessionMessage = (topic: string, rawMessage: unknown) => {
-            console.log("Session Message Received:", topic, rawMessage);
             const message = rawMessage as { type?: string; payload?: any; history?: any[]; alerts?: any[]; data?: any; severity?: any; message?: string; sensor_type?: string; value?: any; timestamp?: string; session_time?: number };
 
             if (topic === sessionTopic) {
@@ -365,7 +364,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 payload.userEmail = user.email;
             }
 
-            console.log("Sending start session command to device (Offline-First)...");
             sendCommand("start_session", payload);
 
             addSessionAlert("success", "Session started", { source: "User" });
@@ -407,7 +405,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
             setActiveSession(newSession);
 
-            console.log("Sending start session command to device (Offline-First)...");
 
             // Prepare payload
             const payload: any = newSession;
@@ -454,7 +451,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setActiveSession({ ...activeSession, status: 'paused' });
 
         try {
-            console.log("Sending pause session command to device (Offline-First)...");
             sendCommand("pause_session", {
                 command: "pause_session",
                 params: { id: activeSession.id }
@@ -474,7 +470,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setActiveSession({ ...activeSession, status: 'running' });
 
         try {
-            console.log("Sending resume session command to device (Offline-First)...");
             sendCommand("resume_session", {
                 command: "resume_session",
                 params: { id: activeSession.id }

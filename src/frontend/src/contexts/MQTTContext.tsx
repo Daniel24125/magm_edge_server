@@ -9,7 +9,6 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import mqtt, { MqttClient } from "mqtt";
-import { useAlert } from "./AlertContext";
 
 
 const getBrokerUrl = () => {
@@ -44,7 +43,6 @@ interface MQTTContextType {
 const MQTTContext = createContext<MQTTContextType | null>(null);
 
 export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
-    const { addAlert } = useAlert();
     const [client, setClient] = useState<MqttClient | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [latestMessage, setLatestMessage] = useState<{ topic: string; payload: any; timestamp: Date } | null>(null);
@@ -105,7 +103,6 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
         mqttClient.on("message", (topic, payload) => {
             try {
                 const payloadStr = payload.toString();
-                // console.log(`📩 Received on ${topic}:`, payloadStr);
                 const parsed = JSON.parse(payloadStr);
 
                 // Dispatch to handlers
@@ -154,7 +151,6 @@ export const MQTTProvider = ({ children }: { children: React.ReactNode }) => {
         if (clientRef.current?.connected) {
             clientRef.current.subscribe(topic, { qos: 1 }, (err) => {
                 if (err) console.error(`Subscribe error for ${topic}:`, err);
-                // else console.log(`Subscribed to ${topic}`);
             });
         }
     }, []);

@@ -66,6 +66,8 @@ class PHController:
                 self.target_ph = float(settings.get("phSetPoint"))
             if "enabled" in settings:
                 self.control_enabled = settings.get("enabled", True)
+                if not self.control_enabled:
+                    self.turn_off_pumps()
             if "maxPumpTime" in settings:
                 self.max_pump_time = float(settings.get("maxPumpTime"))
 
@@ -187,8 +189,23 @@ class PHController:
                         "pin": pin
                     })
 
+                # CRITICAL SAFETY CHECK: Abortion if stopped/paused/disabled
+                if self._stop_control_event.is_set() or self._pause_control_event.is_set() or not self.control_enabled:
+                    logger.warning(f"Pump activation aborted: stop/pause/disabled state detected.")
+                    return
+
                 lgpio.gpio_write(self.h, pin, 0) # ON (Active LOW)
-                time.sleep(duration)
+                
+                # Check repeatedly during sleep if we should abort
+                slept = 0
+                step = 0.05
+                while slept < duration:
+                    if self._stop_control_event.is_set() or self._pause_control_event.is_set() or not self.control_enabled:
+                         logger.warning("Emergency pump stop triggered during activation.")
+                         break
+                    time.sleep(step)
+                    slept += step
+                
                 lgpio.gpio_write(self.h, pin, 1) # OFF
             except Exception as e:
                 logger.error(f"Pump error: {e}")

@@ -1,0 +1,111 @@
+db_manager 2026-02-10 13:54:17 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:54:17 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+firebase_sync 2026-02-10 13:54:17 [INFO] Firebase Sync: Successfully initialized Firestore client.
+firebase_sync 2026-02-10 13:54:17 [INFO] Firebase Sync Service started.
+db_manager 2026-02-10 13:54:17 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:54:17 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+ml_service 2026-02-10 13:54:17 [INFO] Loaded OD model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/od_model.pkl
+ml_service 2026-02-10 13:54:17 [INFO] Loaded CO2 model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/co2_model.pkl
+ml_service 2026-02-10 13:54:17 [DEBUG] MLService initialized
+edge_mqtt_client 2026-02-10 13:54:17 [INFO] Connecting to localhost...
+manager 2026-02-10 13:54:17 [INFO] Manager main loop starting
+edge_mqtt_client 2026-02-10 13:54:17 [INFO] ✅ Connected to Local MQTT Broker at localhost:1883
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'ui/commands/#'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/register'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/cal/#'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/unregister'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/status'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/data'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/config'...
+edge_mqtt_client 2026-02-10 13:54:17 [DEBUG] Subscribing to 'devices/+/events'...
+edge_mqtt_client 2026-02-10 13:54:17 [INFO] Published 'devices/registration_request' to sync sensors.
+edge_mqtt_client 2026-02-10 13:54:17 [INFO] Published 'rpi_connected' notification to 'system/notifications'
+edge_mqtt_client 2026-02-10 13:54:19 [INFO] Received UI Command on ui/commands/start
+session_controller 2026-02-10 13:54:19 [INFO] Session test_session_1770731659 is now ACTIVE
+session_controller 2026-02-10 13:54:19 [INFO] Data acquisition started. Interval: 1s
+session_controller 2026-02-10 13:54:19 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:19 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:19 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+session_controller 2026-02-10 13:54:19 [INFO] Published session status: running
+edge_mqtt_client 2026-02-10 13:54:19 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 13:54:19 [INFO] Published session status: running
+edge_mqtt_client 2026-02-10 13:54:20 [INFO] Received UI Command on ui/commands/get_session_history
+session_controller 2026-02-10 13:54:20 [INFO] Published history for test_session_1770731659 (0 records)
+edge_mqtt_client 2026-02-10 13:54:20 [INFO] Received UI Command on ui/commands/get_session_history
+session_controller 2026-02-10 13:54:20 [INFO] Published history for test_session_1770731659 (0 records)
+session_controller 2026-02-10 13:54:20 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:20 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:20 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:20 [INFO] Published history for test_session_1770731659 (1 records)
+aggregator 2026-02-10 13:54:20 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:20 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+session_controller 2026-02-10 13:54:21 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:21 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:21 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:21 [INFO] Published history for test_session_1770731659 (2 records)
+aggregator 2026-02-10 13:54:21 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:21 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+connectionpool 2026-02-10 13:54:22 [DEBUG] Starting new HTTPS connection (1): oauth2.googleapis.com:443
+session_controller 2026-02-10 13:54:22 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:22 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:22 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:22 [INFO] Published history for test_session_1770731659 (3 records)
+aggregator 2026-02-10 13:54:22 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:22 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+connectionpool 2026-02-10 13:54:22 [DEBUG] https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+firebase_sync 2026-02-10 13:54:23 [INFO] Firebase Sync: Synced 2 measurements.
+firebase_sync 2026-02-10 13:54:23 [INFO] Firebase Sync: Synced 1 alerts.
+session_controller 2026-02-10 13:54:23 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:23 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:23 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:23 [INFO] Published history for test_session_1770731659 (4 records)
+aggregator 2026-02-10 13:54:23 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:23 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+session_controller 2026-02-10 13:54:24 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:24 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:24 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:24 [INFO] Published history for test_session_1770731659 (5 records)
+aggregator 2026-02-10 13:54:24 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:24 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+session_controller 2026-02-10 13:54:25 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:25 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:25 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:25 [INFO] Published history for test_session_1770731659 (6 records)
+aggregator 2026-02-10 13:54:25 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:25 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+session_controller 2026-02-10 13:54:26 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:26 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:26 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:26 [INFO] Published history for test_session_1770731659 (7 records)
+aggregator 2026-02-10 13:54:26 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:26 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+session_controller 2026-02-10 13:54:27 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:27 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:27 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:27 [INFO] Published history for test_session_1770731659 (8 records)
+aggregator 2026-02-10 13:54:27 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:27 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+firebase_sync 2026-02-10 13:54:28 [INFO] Firebase Sync: Synced 6 measurements.
+session_controller 2026-02-10 13:54:28 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:54:28 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:54:28 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:54:28 [INFO] Published history for test_session_1770731659 (9 records)
+aggregator 2026-02-10 13:54:28 [DEBUG] Aggregator started: expected={'rpi'}
+session_controller 2026-02-10 13:54:28 [INFO] Requests measurements for session test_session_1770731659 (Saving to DB)
+edge_mqtt_client 2026-02-10 13:54:29 [INFO] Received UI Command on ui/commands/stop
+session_controller 2026-02-10 13:54:29 [INFO] Published session status: idle
+session_controller 2026-02-10 13:54:29 [INFO] Acquisition thread stopped successfully.
+firebase_sync 2026-02-10 13:54:33 [INFO] Firebase Sync: Synced 1 measurements.
+firebase_sync 2026-02-10 13:54:33 [INFO] Firebase Sync: Synced 1 alerts.
+aggregator 2026-02-10 13:54:43 [WARNING] Aggregation timed out. Saving partial data.
+aggregator 2026-02-10 13:54:43 [WARNING] DB unavailable during timeout, skipping partial save.
+edge_mqtt_client 2026-02-10 13:55:05 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 13:55:05 [INFO] Published session status: idle
+edge_mqtt_client 2026-02-10 13:55:06 [INFO] Stopping EdgeMQTTClient...
+edge_mqtt_client 2026-02-10 13:55:06 [WARNING] 🔌 Disconnected from MQTT Broker (rc=Normal disconnection)
+firebase_sync 2026-02-10 13:55:08 [INFO] Firebase Sync: Synced 1 measurements.
+firebase_sync 2026-02-10 13:55:08 [INFO] Firebase Sync: Synced 1 alerts.
+
+🛑 Shutdown signal received. Stopping threads...
+🧹 Cleaning up resources...
+✅ Edge Server shut down cleanly.

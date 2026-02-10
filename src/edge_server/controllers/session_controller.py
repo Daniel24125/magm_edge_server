@@ -291,7 +291,7 @@ class SessionController:
                 # Dynamic Expected Sources
                 # Fast Loop: Expect only RPi (assuming external devices are slow/sync-only)
                 # Sync Loop: Expect RPi + All Online Devices
-                expected_sources = set(["rpi", "nir"])
+                expected_sources = set(["rpi"])
                 logger.debug(f"Acquisition Loop: exp_sources={expected_sources}")
                 
                 if is_sync_loop and self.device_controller:
@@ -313,12 +313,12 @@ class SessionController:
                     # New Sync Trigger (for Slow Devices/Spec)
                     if not self.paused:
                         self.request_sync_measurements()
-                
-                # Always request measurements for live view (for Fast Devices/RPi)
-                # The Spectrometer (listening to sync topic) will ignore this.
-                # The Aggegator (expecting only RPi) will not wait for Spectrometer.
-                if not self.paused:
-                    self.request_measurements()
+                else: 
+                    # Always request measurements for live view (for Fast Devices/RPi)
+                    # The Spectrometer (listening to sync topic) will ignore this.
+                    # The Aggegator (expecting only RPi) will not wait for Spectrometer.
+                    if not self.paused:
+                        self.request_measurements()
 
                 time.sleep(1)
                 self.time_elapsed += 1

@@ -123,10 +123,19 @@ class DataAggregator:
             self._stop_timer()
 
     def _on_timeout(self):
+        """
+        Called when the timer expires. Finishes collection with partial data.
+        """
         with self.collection_lock:
             if self.current_collection is not None:
                 logger.warning("Aggregation timed out. Saving partial data.")
-                self._finalize_collection(status="TIMEOUT")
+                # Check if DB is still available (to avoid crash during shutdown)
+                if self.db and hasattr(self.db, '_conn') and self.db._conn:
+                    self._finalize_collection(status="timeout")
+                else:
+                    logger.warning("DB unavailable during timeout, skipping partial save.")
+                    self.current_collection = None
+                    self.pending_timestamp = None
             self.timer = None
 
     def _finalize_collection(self, status="OK"):

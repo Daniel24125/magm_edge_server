@@ -1,4 +1,5 @@
-import time, os, glob
+import time, os, glob, threading
+from typing import Optional
 from .base import AbstractSensor, SensorReading, state_manager, lgpio, logger
 
 SIMULATION_MODE = state_manager.simulation_mode
@@ -10,15 +11,21 @@ class TemperatureSensor(AbstractSensor):
     def __init__(self, name: str, unit: str, config: dict, sensor_id: str):
         super().__init__(name, unit, config, sensor_id)
         self.key = "temp"
+        self._latest_reading = None
+        self._lock = threading.Lock()
+        self._stop_event = threading.Event()
 
         if SIMULATION_MODE:
             self.simulator_init(SimulatedTemperatureSensor, "Temperature")
         else:
             self.gpio_init()
+            # Start background sampling thread
+            self._sampling_thread = threading.Thread(target=self._sampling_loop, daemon=True)
+            self._sampling_thread.start()
+            logger.info(f"Temperature sensor background sampling started.")
 
-    def gpio_init(self):
+    def gpio_init(self) -> bool:
         # Initialize 1-Wire device
-        # If onewire_id is specified in config, use it. Otherwise auto-detect 28-*
         self.device_file = None
         base_dir = '/sys/bus/w1/devices/'
         
@@ -38,58 +45,68 @@ class TemperatureSensor(AbstractSensor):
             if folder:
                 self.device_file = os.path.join(folder, 'w1_slave')
                 logger.info(f"DS18B20 Sensor found at {self.device_file}")
-                
+                return True
+            return False
         except Exception as e:
             logger.error(f"Error finding DS18B20 sensor: {e}")
+            return False
 
-    def read_temp_raw(self):
+    def _sampling_loop(self):
+        while not self._stop_event.is_set():
+            try:
+                temp_c = self._read_from_hardware()
+                if temp_c is not None:
+                    # Apply Unit Conversion
+                    final_val = temp_c
+                    if self.unit.lower() in ["fahrenheit", "f"]:
+                        final_val = (temp_c * 9/5) + 32
+                    
+                    with self._lock:
+                        self._latest_reading = SensorReading(
+                            timestamp=time.time(),
+                            value=final_val,
+                            unit=self.unit,
+                            sensor_type="Temperature",
+                            is_stable=True
+                        )
+            except Exception as e:
+                logger.error(f"Error in temperature sampling loop: {e}")
+            
+            time.sleep(2) # Sample every 2 seconds
+
+    def _read_from_hardware(self) -> Optional[float]:
         if not self.device_file or not os.path.exists(self.device_file):
             return None
         
         try:
             with open(self.device_file, 'r') as f:
                 lines = f.readlines()
-            return lines
-        except Exception as e:
-            logger.error(f"Error reading raw temp: {e}")
-            return None
-
-    def read(self) -> SensorReading:
-        if SIMULATION_MODE and self.simulated_sensor:
-            reading = self.simulated_sensor.read()
-            if not reading:
-                return None
-            temp_c = reading.value
-        else:
-            lines = self.read_temp_raw()
-            if not lines:
-                return None
-                
+            
             # Parse the W1-GPIO output
-            if lines[0].strip()[-3:] != 'YES':
+            if not lines or len(lines) < 2 or lines[0].strip()[-3:] != 'YES':
                  return None
             
             equals_pos = lines[1].find('t=')
             if equals_pos != -1:
                 temp_string = lines[1][equals_pos+2:]
                 temp_c = float(temp_string) / 1000.0
-            else:
-                return None
-
-        # Check for 85.0 power-on reset error (DS18B20 specific)
-        if not SIMULATION_MODE and temp_c == 85.0:
-            logger.warning("DS18B20 returned 85.0°C. This is a power-on reset value. Check wiring or pull-up resistor.")
+                
+                # Check for 85.0 power-on reset error
+                if temp_c == 85.0:
+                    logger.warning("DS18B20 returned 85.0°C (Reset value).")
+                    return None
+                return temp_c
+            return None
+        except Exception as e:
+            logger.error(f"Error reading raw temp: {e}")
             return None
 
-        # Apply Unit Conversion
-        final_val = temp_c
-        if self.unit.lower() in ["fahrenheit", "f"]:
-            final_val = (temp_c * 9/5) + 32
+    def read(self) -> Optional[SensorReading]:
+        if SIMULATION_MODE and self.simulated_sensor:
+            return self.simulated_sensor.read()
         
-        return SensorReading(
-            timestamp=time.time(),
-            value=final_val,
-            unit=self.unit,
-            sensor_type="Temperature",
-            is_stable=True
-        )
+        with self._lock:
+            return self._latest_reading
+
+    def stop(self):
+        self._stop_event.set()

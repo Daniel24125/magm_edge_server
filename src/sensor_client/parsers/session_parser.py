@@ -26,7 +26,7 @@ class SessionCommandParser:
             self.pause_session(payload)
         elif topic == "controller/commands/resume":
             self.resume_session(payload)
-        elif topic.startswith(f"controller/session/") and topic.endswith("/measurement"):
+        elif "/measurement" in topic:
             self._handle_measurement_request(payload)
 
     def _handle_measurement_request(self, payload):

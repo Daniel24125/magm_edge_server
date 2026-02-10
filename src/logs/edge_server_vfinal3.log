@@ -1,0 +1,677 @@
+db_manager 2026-02-10 13:57:28 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:57:28 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+firebase_sync 2026-02-10 13:57:28 [INFO] Firebase Sync: Successfully initialized Firestore client.
+firebase_sync 2026-02-10 13:57:28 [INFO] Firebase Sync Service started.
+db_manager 2026-02-10 13:57:28 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:57:28 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+ml_service 2026-02-10 13:57:29 [INFO] Loaded OD model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/od_model.pkl
+ml_service 2026-02-10 13:57:29 [INFO] Loaded CO2 model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/co2_model.pkl
+ml_service 2026-02-10 13:57:29 [DEBUG] MLService initialized
+edge_mqtt_client 2026-02-10 13:57:29 [INFO] Connecting to localhost...
+manager 2026-02-10 13:57:29 [INFO] Manager main loop starting
+edge_mqtt_client 2026-02-10 13:57:29 [INFO] ✅ Connected to Local MQTT Broker at localhost:1883
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'ui/commands/#'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/register'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/cal/#'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/unregister'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/status'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/data'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/config'...
+edge_mqtt_client 2026-02-10 13:57:29 [DEBUG] Subscribing to 'devices/+/events'...
+edge_mqtt_client 2026-02-10 13:57:29 [INFO] Published 'devices/registration_request' to sync sensors.
+edge_mqtt_client 2026-02-10 13:57:29 [INFO] Published 'rpi_connected' notification to 'system/notifications'
+device_controller 2026-02-10 13:57:29 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de registered
+edge_mqtt_client 2026-02-10 13:57:29 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 13:57:29 [INFO] Published session status: idle
+edge_mqtt_client 2026-02-10 13:57:32 [INFO] Received UI Command on ui/commands/start
+session_controller 2026-02-10 13:57:32 [INFO] Session test_session_1770731852 is now ACTIVE
+session_controller 2026-02-10 13:57:32 [INFO] Data acquisition started. Interval: 1s
+session_controller 2026-02-10 13:57:32 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:32 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:32 [INFO] Published session status: running
+session_controller 2026-02-10 13:57:32 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+edge_mqtt_client 2026-02-10 13:57:32 [INFO] Received UI Command on ui/commands/get_session_history
+session_controller 2026-02-10 13:57:32 [INFO] Published history for test_session_1770731852 (0 records)
+session_controller 2026-02-10 13:57:33 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:33 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:33 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:33 [INFO] Published history for test_session_1770731852 (1 records)
+aggregator 2026-02-10 13:57:33 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:33 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:33 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731851.8077507, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.62, 'timestamp': 1770731853.1946738, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:33 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:33 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:33 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.62}
+device_controller 2026-02-10 13:57:33 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:57:33 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:57:33 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731853.5291438, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:57:33 [INFO] Received pump activation event: acidic for 0.3s
+connectionpool 2026-02-10 13:57:33 [DEBUG] Starting new HTTPS connection (1): oauth2.googleapis.com:443
+connectionpool 2026-02-10 13:57:33 [DEBUG] https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+firebase_sync 2026-02-10 13:57:34 [INFO] Firebase Sync: Synced 1 alerts.
+session_controller 2026-02-10 13:57:34 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:34 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:34 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:34 [INFO] Published history for test_session_1770731852 (2 records)
+aggregator 2026-02-10 13:57:34 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:34 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:34 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731851.8077507, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.615, 'timestamp': 1770731853.9639661, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:34 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:34 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:34 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.615}
+device_controller 2026-02-10 13:57:34 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:57:35 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:35 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:35 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:35 [INFO] Published history for test_session_1770731852 (3 records)
+aggregator 2026-02-10 13:57:35 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:35 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:35 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731851.8077507, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.627, 'timestamp': 1770731855.4719274, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:35 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:35 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:35 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.627}
+device_controller 2026-02-10 13:57:35 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:57:36 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:36 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:36 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:36 [INFO] Published history for test_session_1770731852 (4 records)
+aggregator 2026-02-10 13:57:36 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:36 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:36 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731851.8077507, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.629, 'timestamp': 1770731856.2189143, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:36 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:36 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:36 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.629}
+device_controller 2026-02-10 13:57:36 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:57:37 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:37 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:37 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:37 [INFO] Published history for test_session_1770731852 (5 records)
+aggregator 2026-02-10 13:57:37 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:37 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:37 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731851.8077507, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.625, 'timestamp': 1770731857.033578, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:37 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:37 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:37 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.625}
+device_controller 2026-02-10 13:57:37 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:57:38 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:38 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:38 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:38 [INFO] Published history for test_session_1770731852 (6 records)
+aggregator 2026-02-10 13:57:38 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:38 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:38 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.75, 'timestamp': 1770731851.8077507, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.624, 'timestamp': 1770731857.7947612, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:38 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:38 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:38 [DEBUG] Added reading from rpi: {'temp': 35.75, 'ph': 11.624}
+device_controller 2026-02-10 13:57:38 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:57:38 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:57:38 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731858.5322196, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:57:38 [INFO] Received pump activation event: acidic for 0.3s
+firebase_sync 2026-02-10 13:57:39 [INFO] Firebase Sync: Synced 6 measurements.
+firebase_sync 2026-02-10 13:57:39 [INFO] Firebase Sync: Synced 3 alerts.
+session_controller 2026-02-10 13:57:39 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:39 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:39 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:39 [INFO] Published history for test_session_1770731852 (7 records)
+aggregator 2026-02-10 13:57:39 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:39 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:39 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.937, 'timestamp': 1770731858.9809828, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.62, 'timestamp': 1770731859.283504, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:39 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:39 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:39 [DEBUG] Added reading from rpi: {'temp': 35.937, 'ph': 11.62}
+device_controller 2026-02-10 13:57:39 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:57:40 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:40 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:40 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:40 [INFO] Published history for test_session_1770731852 (8 records)
+aggregator 2026-02-10 13:57:40 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:40 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:40 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.937, 'timestamp': 1770731858.9809828, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.619, 'timestamp': 1770731860.0282745, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:40 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:40 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:40 [DEBUG] Added reading from rpi: {'temp': 35.937, 'ph': 11.619}
+device_controller 2026-02-10 13:57:40 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:57:41 [DEBUG] Acquisition Loop: exp_sources={'rpi'}
+aggregator 2026-02-10 13:57:41 [WARNING] Starting new collection while previous one is still active. Force saving.
+aggregator 2026-02-10 13:57:41 [INFO] Saved measurement. Status: OK
+session_controller 2026-02-10 13:57:41 [INFO] Published history for test_session_1770731852 (9 records)
+aggregator 2026-02-10 13:57:41 [DEBUG] Aggregator started: expected={'rpi', 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de'}
+session_controller 2026-02-10 13:57:41 [INFO] Requests measurements for session test_session_1770731852 (Saving to DB)
+session_controller 2026-02-10 13:57:41 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.937, 'timestamp': 1770731858.9809828, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.61, 'timestamp': 1770731860.7909489, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:57:41 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:57:41 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:57:41 [DEBUG] Added reading from rpi: {'temp': 35.937, 'ph': 11.61}
+device_controller 2026-02-10 13:57:41 [INFO] Data received from device 'Temperature and pH Sensor'
+edge_mqtt_client 2026-02-10 13:57:42 [INFO] Received UI Command on ui/commands/stop
+session_controller 2026-02-10 13:57:42 [INFO] Published session status: idle
+session_controller 2026-02-10 13:57:42 [INFO] Acquisition thread stopped successfully.
+firebase_sync 2026-02-10 13:57:44 [INFO] Firebase Sync: Synced 3 measurements.
+firebase_sync 2026-02-10 13:57:44 [INFO] Firebase Sync: Synced 1 alerts.
+aggregator 2026-02-10 13:57:56 [WARNING] Aggregation timed out. Saving partial data.
+aggregator 2026-02-10 13:57:56 [WARNING] DB unavailable during timeout, skipping partial save.
+device_controller 2026-02-10 13:58:48 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:50 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:51 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:52 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:53 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:54 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:55 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:56 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:57 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:58 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:58:59 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:00 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:01 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:02 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:03 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:04 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:05 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:06 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:07 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:08 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:09 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:10 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:11 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:12 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:13 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:14 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+edge_mqtt_client 2026-02-10 13:59:15 [INFO] Received UI Command on ui/commands/start_session
+manager 2026-02-10 13:59:15 [ERROR] Error in main loop
+Traceback (most recent call last):
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/manager.py", line 57, in run
+    self.command_handler.handle_ui_command( payload)
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/controllers/command_handler.py", line 36, in handle_ui_command
+    self.session_controller.start_session(cmd.params)
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/controllers/session_controller.py", line 87, in start_session
+    self.db.add_record("sessions", db_record)
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/database/db_manager.py", line 439, in add_record
+    self._retrying_execute(cur, sql, tuple(data.values()))
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/database/db_manager.py", line 235, in _retrying_execute
+    return cur.execute(query, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: UNIQUE constraint failed: sessions.id
+session_controller 2026-02-10 13:59:15 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.585, 'timestamp': 1770731954.7754853, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:15 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:15 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:15 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:15 [INFO] Data received from device 'Temperature and pH Sensor'
+edge_mqtt_client 2026-02-10 13:59:15 [INFO] Received UI Command on ui/commands/get_session_history
+session_controller 2026-02-10 13:59:15 [INFO] Published history for 4def4673-f58a-4daa-b73d-1960505bdd76 (0 records)
+device_controller 2026-02-10 13:59:15 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 13:59:16 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 13:59:16 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:16 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731956.4363186, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:16 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:59:16 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.58, 'timestamp': 1770731956.269562, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:16 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:16 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:16 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:16 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:17 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:17 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.596, 'timestamp': 1770731957.472698, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:17 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:17 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:17 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:17 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:18 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:18 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.575, 'timestamp': 1770731958.5310562, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:18 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:18 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:18 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:18 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:19 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:19 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.578, 'timestamp': 1770731959.7311356, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:19 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:19 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:19 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:19 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:20 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:20 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.578, 'timestamp': 1770731960.7735, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:20 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:20 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:20 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:20 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:59:21 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:21 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731961.4371097, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:21 [INFO] Received pump activation event: acidic for 0.3s
+device_controller 2026-02-10 13:59:21 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:21 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.582, 'timestamp': 1770731961.2335622, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:21 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:21 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:21 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:21 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:22 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:22 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.585, 'timestamp': 1770731962.27845, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:22 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:22 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:22 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:22 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:23 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:23 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.59, 'timestamp': 1770731963.4781017, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:23 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:23 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:23 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:23 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:24 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:24 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.592, 'timestamp': 1770731964.5168593, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:24 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:24 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:24 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:24 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:25 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:25 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.604, 'timestamp': 1770731965.730616, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:25 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:25 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:25 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:25 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:26 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 13:59:26 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:26 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731966.437924, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:26 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:59:26 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.597999999999999, 'timestamp': 1770731966.7665052, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:26 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:26 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:26 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:26 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:27 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:27 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.620000000000001, 'timestamp': 1770731967.2302735, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:27 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:27 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:27 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:27 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:28 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:28 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.626, 'timestamp': 1770731968.2557194, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:28 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:28 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:28 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:28 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:29 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:29 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.647, 'timestamp': 1770731969.4636037, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:29 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:29 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:29 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:29 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:30 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:30 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.648, 'timestamp': 1770731970.4929419, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:30 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:30 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:30 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:30 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:31 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:31 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.666, 'timestamp': 1770731971.6978633, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:31 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:31 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:31 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:31 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:32 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:32 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.663, 'timestamp': 1770731972.7363732, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:32 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:32 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:32 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:32 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:33 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:33 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.671, 'timestamp': 1770731973.1902845, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:33 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:33 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:33 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:33 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:34 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:34 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.666, 'timestamp': 1770731974.2254403, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:34 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:34 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:34 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:34 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:35 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:35 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.674, 'timestamp': 1770731975.4220707, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:35 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:35 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:35 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:35 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:36 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:36 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.664, 'timestamp': 1770731976.4554474, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:36 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:36 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:36 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:36 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:37 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:37 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.665, 'timestamp': 1770731977.6668122, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:37 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:37 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:37 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:37 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:38 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:38 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.646, 'timestamp': 1770731978.6885223, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:38 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:38 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:38 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:38 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:59:39 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:39 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731979.4392745, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:39 [INFO] Received pump activation event: acidic for 0.3s
+firebase_sync 2026-02-10 13:59:39 [INFO] Firebase Sync: Synced 2 alerts.
+device_controller 2026-02-10 13:59:39 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:39 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.637, 'timestamp': 1770731979.1845195, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:39 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:39 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:39 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:39 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:40 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:40 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.622, 'timestamp': 1770731980.1931095, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:40 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:40 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:40 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:40 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:41 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:41 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.603, 'timestamp': 1770731981.4255517, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:41 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:41 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:41 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:41 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:42 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:42 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.599, 'timestamp': 1770731982.4250839, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:42 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:42 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:42 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:42 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:43 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:43 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.588000000000001, 'timestamp': 1770731983.666695, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:43 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:43 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:43 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:43 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:44 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 13:59:44 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:44 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731984.4400084, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:44 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:59:44 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.575, 'timestamp': 1770731984.6674085, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:44 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:44 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:44 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:44 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:45 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:45 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.567, 'timestamp': 1770731985.1702669, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:45 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:45 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:45 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:45 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:46 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:46 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.56, 'timestamp': 1770731986.1600296, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:46 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:46 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:46 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:46 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:47 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:47 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.567, 'timestamp': 1770731987.4188266, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:47 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:47 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:47 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:47 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:48 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:48 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.572, 'timestamp': 1770731988.4181273, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:48 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:48 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:48 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:48 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:49 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:49 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.571, 'timestamp': 1770731989.6749413, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:49 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:49 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:49 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:49 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:50 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:50 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.584, 'timestamp': 1770731990.654098, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:50 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:50 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:50 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:50 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:51 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:51 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.563, 'timestamp': 1770731991.1719675, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:51 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:51 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:51 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:51 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:52 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:52 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.581, 'timestamp': 1770731992.1623328, 'unit': '', 'is_stable': False, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:52 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:52 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:52 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:52 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:59:53 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:53 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731993.441238, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:53 [INFO] Received pump activation event: acidic for 0.3s
+device_controller 2026-02-10 13:59:53 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:53 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.582, 'timestamp': 1770731993.406008, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:53 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:53 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:53 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:53 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:54 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:54 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.596, 'timestamp': 1770731994.409848, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:54 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:54 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:54 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:54 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 13:59:54 [INFO] Firebase Sync: Synced 2 alerts.
+device_controller 2026-02-10 13:59:55 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:55 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.594, 'timestamp': 1770731995.675676, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:55 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:55 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:55 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:55 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:56 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:56 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.608, 'timestamp': 1770731996.6599622, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:56 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:56 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:56 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:56 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:57 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:57 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.602, 'timestamp': 1770731997.1748202, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:57 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:57 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:57 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:57 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:58 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 13:59:58 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:59:58 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770731998.4423776, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:59:58 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:59:58 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.604, 'timestamp': 1770731998.162344, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:58 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:58 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:58 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:58 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 13:59:59 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 13:59:59 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.611, 'timestamp': 1770731999.4177916, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:59:59 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:59:59 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:59:59 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:59:59 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:00 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:00 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.613, 'timestamp': 1770732000.3953004, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:00 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:00 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:00 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:00 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:01 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:01 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.619, 'timestamp': 1770732001.659127, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:01 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:01 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:01 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:01 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:02 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:02 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.623000000000001, 'timestamp': 1770732002.6361682, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:02 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:02 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:02 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:02 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 14:00:03 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 14:00:03 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770732003.4431713, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 14:00:03 [INFO] Received pump activation event: acidic for 0.3s
+device_controller 2026-02-10 14:00:03 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:03 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.622, 'timestamp': 1770732003.154236, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:03 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:03 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:03 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:03 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:04 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:04 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.617, 'timestamp': 1770732004.1410325, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:04 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:04 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:04 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:04 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 14:00:04 [INFO] Firebase Sync: Synced 2 alerts.
+device_controller 2026-02-10 14:00:05 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:05 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.607, 'timestamp': 1770732005.427776, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:05 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:05 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:05 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:05 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:06 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:06 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.624, 'timestamp': 1770732006.386931, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:06 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:06 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:06 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:06 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:07 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:07 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.616, 'timestamp': 1770732007.6803977, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:07 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:07 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:07 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:07 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:08 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 14:00:08 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 14:00:08 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770732008.443927, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 14:00:08 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 14:00:08 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.617, 'timestamp': 1770732008.6298673, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:08 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:08 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:08 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:08 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:09 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:09 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.603, 'timestamp': 1770732009.1981096, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:09 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:09 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:09 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:09 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 14:00:10 [INFO] Firebase Sync: Synced 2 alerts.
+device_controller 2026-02-10 14:00:10 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:10 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.598, 'timestamp': 1770732010.1395223, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:10 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:10 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:10 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:10 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:11 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:11 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.612, 'timestamp': 1770732011.429568, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:11 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:11 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:11 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:11 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:12 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:12 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.600999999999999, 'timestamp': 1770732012.376491, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:12 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:12 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:12 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:12 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 14:00:13 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 14:00:13 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770732013.444833, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 14:00:13 [INFO] Received pump activation event: acidic for 0.3s
+device_controller 2026-02-10 14:00:13 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:13 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.611, 'timestamp': 1770732013.686395, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:13 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:13 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:13 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:13 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:14 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:14 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.599, 'timestamp': 1770732014.6289802, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:14 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:14 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:14 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:14 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 14:00:15 [INFO] Firebase Sync: Synced 2 alerts.
+device_controller 2026-02-10 14:00:15 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:15 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.591, 'timestamp': 1770732015.1958492, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:15 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:15 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:15 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:15 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:16 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:16 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.594, 'timestamp': 1770732016.1275492, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:16 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:16 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:16 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:16 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:17 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:17 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.593, 'timestamp': 1770732017.4400325, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:17 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:17 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:17 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:17 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:18 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 14:00:18 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 14:00:18 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770732018.4512582, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 14:00:18 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 14:00:18 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.592, 'timestamp': 1770732018.38736, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:18 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:18 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:18 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:18 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:19 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:19 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.596, 'timestamp': 1770732019.7407854, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:19 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:19 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:19 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:19 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 14:00:20 [INFO] Firebase Sync: Synced 1 measurements.
+firebase_sync 2026-02-10 14:00:20 [INFO] Firebase Sync: Synced 4 alerts.
+device_controller 2026-02-10 14:00:20 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:20 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.6, 'timestamp': 1770732020.6390965, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:20 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:20 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:20 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:20 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:21 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:21 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.596, 'timestamp': 1770732021.238664, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:21 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:21 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:21 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:21 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:22 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:22 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.599, 'timestamp': 1770732022.1421778, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:22 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:22 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:22 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:22 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 14:00:23 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 14:00:23 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770732023.4487033, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 14:00:23 [INFO] Received pump activation event: acidic for 0.3s
+device_controller 2026-02-10 14:00:23 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:23 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.937, 'timestamp': 1770731927.2955756, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.61, 'timestamp': 1770732023.5098093, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:23 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:23 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:23 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:23 [INFO] Data received from device 'Temperature and pH Sensor'
+device_controller 2026-02-10 14:00:24 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+session_controller 2026-02-10 14:00:24 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.602, 'timestamp': 1770732024.41845, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 14:00:24 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 14:00:24 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 14:00:24 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 14:00:24 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 14:00:25 [INFO] Firebase Sync: Synced 2 alerts.
+edge_mqtt_client 2026-02-10 14:00:25 [INFO] Received UI Command on ui/commands/stop_session
+session_controller 2026-02-10 14:00:25 [INFO] Published session status: idle
+device_controller 2026-02-10 14:00:25 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:27 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:28 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:29 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+firebase_sync 2026-02-10 14:00:30 [INFO] Firebase Sync: Synced 2 alerts.
+device_controller 2026-02-10 14:00:30 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:31 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:32 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:33 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+device_controller 2026-02-10 14:00:34 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de unregistered
+device_controller 2026-02-10 14:00:34 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de registered
+edge_mqtt_client 2026-02-10 14:01:10 [INFO] Stopping EdgeMQTTClient...
+edge_mqtt_client 2026-02-10 14:01:10 [WARNING] 🔌 Disconnected from MQTT Broker (rc=Normal disconnection)
+
+🛑 Shutdown signal received. Stopping threads...
+🧹 Cleaning up resources...
+✅ Edge Server shut down cleanly.

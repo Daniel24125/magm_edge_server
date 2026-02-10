@@ -1,0 +1,130 @@
+nohup: a ignorar a entrada
+db_manager 2026-02-10 13:19:15 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:19:15 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+firebase_sync 2026-02-10 13:19:15 [INFO] Firebase Sync: Successfully initialized Firestore client.
+firebase_sync 2026-02-10 13:19:15 [INFO] Firebase Sync Service started.
+db_manager 2026-02-10 13:19:15 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 13:19:15 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+ml_service 2026-02-10 13:19:17 [INFO] Loaded OD model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/od_model.pkl
+ml_service 2026-02-10 13:19:17 [INFO] Loaded CO2 model from /home/rpi/Desktop/magm_edge_server/src/edge_server/ml_models/co2_model.pkl
+ml_service 2026-02-10 13:19:17 [DEBUG] MLService initialized
+edge_mqtt_client 2026-02-10 13:19:17 [INFO] Connecting to localhost...
+manager 2026-02-10 13:19:17 [INFO] Manager main loop starting
+edge_mqtt_client 2026-02-10 13:19:17 [INFO] ✅ Connected to Local MQTT Broker at localhost:1883
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'ui/commands/#'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/register'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/cal/#'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/unregister'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/status'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/data'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/config'...
+edge_mqtt_client 2026-02-10 13:19:17 [DEBUG] Subscribing to 'devices/+/events'...
+edge_mqtt_client 2026-02-10 13:19:17 [INFO] Published 'devices/registration_request' to sync sensors.
+edge_mqtt_client 2026-02-10 13:19:17 [INFO] Published 'rpi_connected' notification to 'system/notifications'
+device_controller 2026-02-10 13:19:17 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de registered
+edge_mqtt_client 2026-02-10 13:19:17 [INFO] Received UI Command on ui/commands/get_session_status
+session_controller 2026-02-10 13:19:17 [INFO] Published session status: idle
+manager 2026-02-10 13:19:50 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:19:50 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729590.036638, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:19:50 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+manager 2026-02-10 13:19:55 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:19:55 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729595.0374582, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:19:55 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+device_controller 2026-02-10 13:20:50 [INFO] Device d09454f7-6a4a-44af-9e0d-eb0bea17e9de is already registered
+manager 2026-02-10 13:21:05 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:21:05 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729665.9558628, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:21:05 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+manager 2026-02-10 13:21:10 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:21:10 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729670.9566257, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:21:10 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+edge_mqtt_client 2026-02-10 13:23:02 [INFO] Received UI Command on ui/commands/start
+manager 2026-02-10 13:23:02 [ERROR] Error in main loop
+Traceback (most recent call last):
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/manager.py", line 57, in run
+    self.command_handler.handle_ui_command( payload)
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/controllers/command_handler.py", line 36, in handle_ui_command
+    self.session_controller.start_session(cmd.params)
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/controllers/session_controller.py", line 87, in start_session
+    self.db.add_record("sessions", db_record)
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/database/db_manager.py", line 439, in add_record
+    self._retrying_execute(cur, sql, tuple(data.values()))
+  File "/home/rpi/Desktop/magm_edge_server/src/edge_server/database/db_manager.py", line 235, in _retrying_execute
+    return cur.execute(query, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: UNIQUE constraint failed: sessions.id
+edge_mqtt_client 2026-02-10 13:23:02 [INFO] Received UI Command on ui/commands/get_session_history
+session_controller 2026-02-10 13:23:02 [INFO] Published history for test_session_backend_fix (0 records)
+manager 2026-02-10 13:23:03 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:23:03 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729783.0528088, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:23:03 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:23:03 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 35.812, 'timestamp': 1770729783.6396537, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.542, 'timestamp': 1770729782.9833052, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:03 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:03 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:03 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:03 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:23:05 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.546, 'timestamp': 1770729785.2645168, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:05 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:05 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:05 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:05 [INFO] Data received from device 'Temperature and pH Sensor'
+connectionpool 2026-02-10 13:23:06 [DEBUG] Starting new HTTPS connection (1): oauth2.googleapis.com:443
+connectionpool 2026-02-10 13:23:06 [DEBUG] https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+firebase_sync 2026-02-10 13:23:06 [INFO] Firebase Sync: Synced 2 measurements.
+session_controller 2026-02-10 13:23:06 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.527, 'timestamp': 1770729786.7895763, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:06 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:06 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:06 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:06 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:23:10 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:23:10 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729788.0571382, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:23:10 [INFO] Received pump activation event: acidic for 0.3s
+session_controller 2026-02-10 13:23:10 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.625, 'timestamp': 1770729788.5443478, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.514, 'timestamp': 1770729788.3149278, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:10 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:10 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:10 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:10 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:23:10 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.537, 'timestamp': 1770729789.844276, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:10 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:10 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:10 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:10 [INFO] Data received from device 'Temperature and pH Sensor'
+firebase_sync 2026-02-10 13:23:11 [INFO] Firebase Sync: Synced 1 measurements.
+edge_mqtt_client 2026-02-10 13:23:12 [INFO] Received UI Command on ui/commands/stop
+session_controller 2026-02-10 13:23:12 [INFO] Published session status: idle
+session_controller 2026-02-10 13:23:15 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': None, 'ph': {'value': 11.532, 'timestamp': 1770729791.3818293, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:15 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:15 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:15 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:15 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:23:15 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:23:15 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729793.0585148, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:23:15 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+session_controller 2026-02-10 13:23:15 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.0, 'timestamp': 1770729793.5438488, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.516, 'timestamp': 1770729792.9006803, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:15 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:15 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:15 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:15 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:23:15 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.5, 'timestamp': 1770729795.1037064, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.534, 'timestamp': 1770729794.4041538, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:15 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:15 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:15 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:15 [INFO] Data received from device 'Temperature and pH Sensor'
+session_controller 2026-02-10 13:23:18 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.437, 'timestamp': 1770729796.6717696, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.542, 'timestamp': 1770729796.6511583, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:18 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:18 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:18 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:18 [INFO] Data received from device 'Temperature and pH Sensor'
+manager 2026-02-10 13:23:18 [INFO] DEBUG MANAGER: Received event msg keys: ['topic', 'payload']
+manager 2026-02-10 13:23:18 [INFO] DEBUG MANAGER: msg payload: {'topic': 'devices/d09454f7-6a4a-44af-9e0d-eb0bea17e9de/events', 'payload': {'device_id': 'd09454f7-6a4a-44af-9e0d-eb0bea17e9de', 'type': 'pump_activated', 'timestamp': 1770729798.0671747, 'payload': {'pump_type': 'acidic', 'duration': 0.3, 'pin': 10}}}
+session_controller 2026-02-10 13:23:18 [DEBUG] Ignored event from d09454f7-6a4a-44af-9e0d-eb0bea17e9de (No active session)
+session_controller 2026-02-10 13:23:18 [INFO] Received data from d09454f7-6a4a-44af-9e0d-eb0bea17e9de: {'temp': {'value': 36.437, 'timestamp': 1770729798.26611, 'unit': 'Celsius', 'is_stable': True, 'sensor_type': 'Temperature'}, 'ph': {'value': 11.556000000000001, 'timestamp': 1770729798.156294, 'unit': '', 'is_stable': True, 'sensor_type': 'pH'}}
+session_controller 2026-02-10 13:23:18 [DEBUG] ML Check [d09454f7-6a4a-44af-9e0d-eb0bea17e9de]: Service=True, Spectra=False, WL=False
+session_controller 2026-02-10 13:23:18 [DEBUG] Skipping ML prediction.
+aggregator 2026-02-10 13:23:18 [WARNING] Ignored data from rpi: No active collection.
+device_controller 2026-02-10 13:23:18 [INFO] Data received from device 'Temperature and pH Sensor'
+
+🛑 Shutdown signal received. Stopping threads...
+🧹 Cleaning up resources...
+edge_mqtt_client 2026-02-10 13:23:46 [INFO] Stopping EdgeMQTTClient...
+edge_mqtt_client 2026-02-10 13:23:46 [WARNING] 🔌 Disconnected from MQTT Broker (rc=Normal disconnection)
+✅ Edge Server shut down cleanly.

@@ -1,0 +1,24 @@
+state_manager 2026-02-10 14:01:29 [INFO] Simulation Mode: False
+db_manager 2026-02-10 14:01:29 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 14:01:29 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+temperature 2026-02-10 14:01:29 [INFO] DS18B20 Sensor found at /sys/bus/w1/devices/28-01192e010a91/w1_slave
+temperature 2026-02-10 14:01:29 [INFO] Temperature sensor background sampling started.
+controller 2026-02-10 14:01:29 [INFO] pH Controller GPIO Initialized
+ph 2026-02-10 14:01:29 [INFO] pH Sensor Sampling Loop started
+db_manager 2026-02-10 14:01:29 [INFO] Database initialized and tables ensured
+db_manager 2026-02-10 14:01:29 [INFO] SQLite ready at src/edge_server/database/models/sessions.db
+mqtt_client 2026-02-10 14:01:29 [INFO] Connected to MQTT broker at localhost:1883
+device_parser 2026-02-10 14:01:29 [INFO] Device registration sent
+temperature 2026-02-10 14:01:30 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:01:48 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:02:10 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:02:21 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:02:31 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:02:53 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:02:57 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:03:00 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:03:04 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:03:22 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:03:25 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:03:36 [WARNING] DS18B20 returned 85.0°C (Reset value).
+temperature 2026-02-10 14:03:47 [WARNING] DS18B20 returned 85.0°C (Reset value).
