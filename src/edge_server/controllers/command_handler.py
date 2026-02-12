@@ -132,7 +132,7 @@ class CommandHandler:
         elif topic.endswith("/live_readings"):
             self.device_controller._handle_user_prompt(payload, "cal/live_readings")
         elif topic.endswith("/events"):
-            self.session_controller._handle_device_event(device_id, payload)
+            self.device_controller._handle_device_event(device_id, payload)
         elif topic.endswith("/commands/measure"):
             self.spectrometer_controller.handle_measure(device_id, payload)
         elif topic.endswith("/commands/configure"):

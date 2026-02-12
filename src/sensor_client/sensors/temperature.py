@@ -69,10 +69,14 @@ class TemperatureSensor(AbstractSensor):
                             sensor_type="Temperature",
                             is_stable=True
                         )
+                    # Once we have a valid reading, we can follow the normal sampling interval
+                    time.sleep(2)
+                else:
+                    # If we didn't get a valid reading (e.g. 85.0 reset value), retry faster
+                    time.sleep(1)
             except Exception as e:
                 logger.error(f"Error in temperature sampling loop: {e}")
-            
-            time.sleep(2) # Sample every 2 seconds
+                time.sleep(2)
 
     def _read_from_hardware(self) -> Optional[float]:
         if not self.device_file or not os.path.exists(self.device_file):

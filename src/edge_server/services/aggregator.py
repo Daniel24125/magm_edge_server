@@ -79,10 +79,10 @@ class DataAggregator:
 
     def _validate_reading(self, source: str) -> bool:
         if self.current_collection is None:
-            logger.warning(f"Ignored data from {source}: No active collection.")
+            logger.warning(f"Ignored data from {source}: No active collection window.")
             return False
         if source not in self.expected_sources:
-            logger.warning(f"Ignored data from {source}: Unexpected source.")
+            logger.warning(f"Ignored data from {source}: Unexpected source. Expected: {self.expected_sources}")
             return False
         return True
 

@@ -166,9 +166,9 @@ class PHController:
             self.test_pump(pump_type, duration=pump_time)
             self.last_pump_activation = time.time()
 
-    def test_pump(self, pump_type, duration=1.0):
-        # Enforce safety limit
-        if duration > self.safety_max_duration:
+    def test_pump(self, pump_type, duration=1.0, bypass_limit=False):
+        # Enforce safety limit unless bypassed
+        if not bypass_limit and duration > self.safety_max_duration:
              logger.warning(f"Requested pump duration {duration:.2f}s exceeds safety limit {self.safety_max_duration:.2f}s. Clamping.")
              duration = self.safety_max_duration
 

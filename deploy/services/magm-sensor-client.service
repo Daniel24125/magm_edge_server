@@ -1,0 +1,14 @@
+[Unit]
+Description=MAGM Sensor Client
+After=magm-edge-server.service
+
+[Service]
+Type=simple
+User=rpi
+WorkingDirectory=/home/rpi/Desktop/magm_edge_server
+ExecStart=/home/rpi/Desktop/magm_edge_server/env/bin/python /home/rpi/Desktop/magm_edge_server/src/sensor_client/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -63,7 +63,14 @@ class DeviceCommandParser:
                     break
         
         if sensor and hasattr(sensor, "test_pump"):
-            sensor.test_pump(pump_type, duration)
+            # If manually triggered via UI/Parser, we allow bypassing safety limits
+            # Check if method supports it first (to avoid breaking old sensors if any)
+            import inspect
+            sig = inspect.signature(sensor.test_pump)
+            if "bypass_limit" in sig.parameters:
+                sensor.test_pump(pump_type, duration, bypass_limit=True)
+            else:
+                sensor.test_pump(pump_type, duration)
         else:
             logger.warning(f"No sensor found that supports pump control (ID: {sensor_id})")
 

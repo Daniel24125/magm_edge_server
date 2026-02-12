@@ -1,5 +1,6 @@
 import sys, os, json, time
 from datetime import datetime, timezone
+from typing import Dict, Any
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
@@ -111,6 +112,29 @@ class DeviceController:
         logger.info(f"Forwarding user prompt/live data from {device_id}: {subtopic}")
         # Forward to AWS:
         self.client.publish(f"devices/{device_id}/{subtopic}", json.dumps(payload))
+
+    def _handle_device_event(self, device_id: str, payload: Dict[str, Any]):
+        """
+        Handles explicit events from devices, such as pump activations.
+        These are device-level events, effectively independent of sessions.
+        """
+        event_type = payload.get("type")
+        data = payload.get("payload", {}) # Inner payload from client
+
+        if event_type == "pump_activated":
+            pump_type = data.get("pump_type", "unknown")
+            duration = data.get("duration", 0)
+            
+            logger.info(f"Received pump activation event: {pump_type} for {duration}s")
+            
+            # Since this is a device event, we use system alert. 
+            # If a session is active, the alert manager could theoretically correlate it,
+            # but for now we treat it as a system notification as per user request.
+            self._notify_user(
+                event="pump_activated",
+                message=f"The {pump_type} pump was activated for {duration:.2f} seconds",
+                severity="info"
+            )
 
     def _get_online_status(self):
         return {d: True for d in self.online_devices.keys()}

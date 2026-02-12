@@ -157,8 +157,8 @@ class PHSensor(AbstractSensor):
         self.controller.stop_control_thread()
 
     # Delegate Manual Control (for testing/DeviceParser)
-    def test_pump(self, pump_type, duration=1.0):
-        self.controller.test_pump(pump_type, duration)
+    def test_pump(self, pump_type, duration=1.0, bypass_limit=False):
+        self.controller.test_pump(pump_type, duration, bypass_limit)
 
     # Helper for Calibration
     def get_last_raw_average(self):

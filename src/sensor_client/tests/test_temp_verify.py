@@ -31,7 +31,7 @@ def test_temp():
     for i in range(10):
         reading = sensor.read()
         print(f"Reading {i+1}: {reading}")
-        time.sleep(0.5)
+        time.sleep(5)
 
 if __name__ == "__main__":
     test_temp()

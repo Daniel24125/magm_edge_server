@@ -1,0 +1,13 @@
+[Unit]
+Description=Ngrok Tunnel for Port 9001
+After=network.target
+
+[Service]
+Type=simple
+User=rpi
+ExecStart=/usr/local/bin/ngrok http 9001
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

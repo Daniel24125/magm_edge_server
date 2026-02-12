@@ -76,13 +76,24 @@ class SessionController:
             self.id = payload.get("id") or f"session_{uuid4()}"
             self.session_active = True
             self.paused = False
+            self.time_elapsed = 0
 
         # Create Session Objects
         sess_payload = self._create_session_payload(payload)
         db_record = self._prepare_db_record(sess_payload)
         self.active_session = db_record
 
-        # Persist and Notify
+        # 1. Open Aggregator Window BEFORE triggering client
+        # This ensures the server is ready for the 'Immediate Publish' from the client
+        self.aggregator.start_collection(
+            self.id, 
+            datetime.now(timezone.utc).isoformat(), 
+            set(["rpi"]), # Initial expected source
+            save_to_db=True,
+            session_time=0
+        )
+
+        # 2. Persist and Notify
         self.client.publish(self.TOPIC_CMD_START, sess_payload.model_dump_json(), qos=1)
         self.db.add_record("sessions", db_record)
         logger.info(f"Session {self.id} is now ACTIVE")
@@ -281,11 +292,18 @@ class SessionController:
             while self.session_active:
 
                 if self.paused:
-                    time.sleep(1)
                     continue
 
                 # Determine trigger type
                 is_sync_loop = (self.time_elapsed % self.read_interval == 0)
+                
+                # Skip T=0 in the loop because it's handled by start_session()
+                # to ensure window is open BEFORE the cmd_start is sent.
+                if self.time_elapsed == 0:
+                    time.sleep(1)
+                    self.time_elapsed += 1
+                    continue
+
                 save_to_db = is_sync_loop # Save to DB only on sync loops
 
                 # Dynamic Expected Sources
@@ -362,33 +380,6 @@ class SessionController:
 
     # -------------------- Data Handling --------------------
 
-    def _handle_device_event(self, device_id: str, payload: Dict[str, Any]):
-        """
-        Handles explicit events from devices, such as pump activations.
-        """
-        if not self.session_active or not self.id:
-            logger.debug(f"Ignored event from {device_id} (No active session)")
-            return
-
-        event_type = payload.get("type")
-        data = payload.get("payload", {}) # Inner payload from client
-
-        if event_type == "pump_activated":
-            pump_type = data.get("pump_type", "unknown")
-            duration = data.get("duration", 0)
-            
-            logger.info(f"Received pump activation event: {pump_type} for {duration}s")
-            
-            self.alert_manager.send_session_alert(
-                session_id=self.id,
-                device_id=device_id,
-                sensor_type="ph_control",
-                value=duration,
-                message=f"The {pump_type} pump was activated during {duration:.2f} seconds",
-                severity="info",
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                cooldown_seconds=0
-            )
 
     def _handle_session_data(self, device_id: str, payload: Dict[str, Any]):
 

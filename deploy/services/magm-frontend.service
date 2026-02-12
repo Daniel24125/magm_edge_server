@@ -1,0 +1,15 @@
+[Unit]
+Description=MAGM Frontend (Next.js)
+After=network.target magm-edge-server.service
+
+[Service]
+Type=simple
+User=rpi
+WorkingDirectory=/home/rpi/Desktop/magm_edge_server/src/frontend
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

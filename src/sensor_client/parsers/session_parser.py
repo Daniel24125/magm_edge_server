@@ -39,6 +39,9 @@ class SessionCommandParser:
         self.mqtt_client.subscribe(f"controller/session/{session_id}/#")
         # Notify Sensor Manager to start background tasks (e.g. pH control)
         self.sensor_manager.on_session_start(session_id)
+        
+        # Immediately publish initial readings
+        self._handle_measurement_request(payload)
 
     def stop_session(self, payload: dict):
         logger.info("Stopping session...")
