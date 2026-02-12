@@ -6,10 +6,11 @@ After=network.target magm-edge-server.service
 Type=simple
 User=rpi
 WorkingDirectory=/home/rpi/Desktop/magm_edge_server/src/frontend
-ExecStart=/usr/bin/npm start
+ExecStart=/home/rpi/.nvm/versions/node/v24.13.0/bin/npm start
 Restart=always
 RestartSec=5
 Environment=NODE_ENV=production
+Environment=PATH=/home/rpi/.nvm/versions/node/v24.13.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target
