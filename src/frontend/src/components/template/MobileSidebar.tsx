@@ -182,7 +182,7 @@ const StatusRow = ({ type }: { type: 'broker' | 'device' }) => {
 }
 
 const UserProfile = () => {
-    const { user } = useUserContext()
+    const { user, logout } = useUserContext()
 
     if (!user) return null
 
@@ -198,11 +198,9 @@ const UserProfile = () => {
                     <span className="text-muted-foreground text-xs">{user.email}</span>
                 </div>
             </div>
-            <Link href="/auth/logout">
-                <Button variant="ghost" size="icon">
-                    <LogOut className="size-5 text-muted-foreground" />
-                </Button>
-            </Link>
+            <Button variant="ghost" size="icon" onClick={logout}>
+                <LogOut className="size-5 text-muted-foreground" />
+            </Button>
         </div>
     )
 }

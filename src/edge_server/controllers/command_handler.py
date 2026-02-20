@@ -21,6 +21,7 @@ class CommandHandler:
         self.spectrometer_controller = SpectrometerController(client)
 
     def handle_ui_command(self, payload: dict):
+        logger.info(f"Received UI Command Payload: {payload}")
         if type(payload) == str:
             payload = json.loads(payload)
         try:

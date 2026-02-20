@@ -505,7 +505,7 @@ class DatabaseHelper:
         query = "SELECT id, start_time, duration, notes, user_email, session_details FROM sessions WHERE (project_id IS NULL OR project_id = '')"
         params = []
         if user_email:
-            query += " AND user_email = ?"
+            query += " AND (user_email = ? OR user_email IS NULL)"
             params.append(user_email)
         
         rows = self.fetch_records_raw(query, tuple(params))

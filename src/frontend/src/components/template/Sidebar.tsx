@@ -214,7 +214,7 @@ const DeviceConnectionStatus = () => {
 
 
 const AccountElement = () => {
-    const { user, isLoading, error } = useUserContext();
+    const { user, isLoading, error, logout } = useUserContext();
     const { isSidebarOpen } = useApplication();
 
     if (!user) return null;
@@ -246,11 +246,9 @@ const AccountElement = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
                 >
-                    <a href="/auth/logout">
-                        <Button variant="ghost" className='text-text-faded shrink-0'>
-                            <LogOut />
-                        </Button>
-                    </a>
+                    <Button variant="ghost" className='text-text-faded shrink-0' onClick={logout}>
+                        <LogOut />
+                    </Button>
                 </motion.div>
             )}
         </AnimatePresence>
