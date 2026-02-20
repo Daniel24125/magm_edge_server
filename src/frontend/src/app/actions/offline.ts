@@ -3,6 +3,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { auth0 } from "@/lib/auth0";
 
 // Helper to get DB path
 const getDbPath = () => {
@@ -76,10 +77,15 @@ export async function getOfflineSessions(userEmail?: string) {
 export async function assignProjectToSession(sessionId: string, projectId: string) {
     const dbPath = getDbPath();
     try {
+        const authSession = await auth0.getSession();
+        if (!authSession?.user?.sub) {
+            return { success: false, error: "Unauthorized" };
+        }
+
         const db = new Database(dbPath);
 
-        const stmt = db.prepare("UPDATE sessions SET project_id = ? WHERE id = ?");
-        const result = stmt.run(projectId, sessionId);
+        const stmt = db.prepare("UPDATE sessions SET project_id = ?, user_id = ?, synced = 0, is_offline = 0 WHERE id = ?");
+        const result = stmt.run(projectId, authSession.user.sub, sessionId);
 
         db.close();
 

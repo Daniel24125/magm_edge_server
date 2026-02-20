@@ -229,13 +229,14 @@ class SessionController:
     def assign_session_project(self, payload: Dict[str, Any]) -> None:
         session_id = payload.get("sessionId")
         project_id = payload.get("projectId")
+        user_id = payload.get("userId")
         
-        if not session_id or not project_id:
-            logger.error("Missing sessionId or projectId in assign_session_project")
+        if not session_id or not project_id or not user_id:
+            logger.error("Missing sessionId, projectId, or userId in assign_session_project")
             return
             
         logger.info(f"Assigning session {session_id} to project {project_id}")
-        self.db.update_session_project(session_id, project_id, {})
+        self.db.update_session_project(session_id, project_id, user_id)
 
     # -------------------- Internal Helpers --------------------
 

@@ -523,14 +523,15 @@ class DatabaseHelper:
             })
         return results
 
-    def update_session_project(self, session_id: str, project_id: str, project_details: Dict[str, Any]) -> None:
+    def update_session_project(self, session_id: str, project_id: str, user_id: str, project_details: Dict[str, Any] = None) -> None:
         """
-        Updates an offline session with a project ID and details, marking it as ready for sync.
+        Updates an offline session with a project ID and user ID, marking it as ready for sync.
         """
         # We also set synced=0 to ensure it gets picked up by the sync service
         # We clear is_offline flag (set to 0)
         data = {
             "project_id": project_id,
+            "user_id": user_id,
             "is_offline": 0,
             "synced": 0
         }

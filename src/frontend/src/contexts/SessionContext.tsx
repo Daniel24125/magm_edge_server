@@ -129,7 +129,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const assignProjectToSession = async (sessionId: string, projectId: string) => {
         publish("ui/commands/assign_session_project", JSON.stringify({
             command: "assign_session_project",
-            params: { sessionId, projectId }
+            params: { sessionId, projectId, userId: user?.sub }
         }));
         // Optimistically remove from list
         setOfflineSessions(prev => prev.filter(s => s.id !== sessionId));
