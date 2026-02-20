@@ -361,7 +361,8 @@ class SessionController:
         
         if settings and "dataAcquisitionInterval" in settings:
             try:
-                self.read_interval = int(settings["dataAcquisitionInterval"])
+                # The frontend passes the interval in minutes, but the loop expects seconds
+                self.read_interval = int(settings["dataAcquisitionInterval"]) * 60
             except (ValueError, TypeError):
                 logger.warning("Invalid dataAcquisitionInterval, using default")
         
