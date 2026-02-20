@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Bell, Download } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { configEnv, configGrowth, formatDate, getFormartedTimeWithLetters } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import AlertTable from "../sessions/AlertTable"
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 import { useSession } from "@/contexts/SessionContext"
 import { useParams } from "next/navigation"
@@ -81,7 +83,7 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <SessionAlerts sessionID={session.id} />
+                                        <SessionAlerts session={session} />
                                         <DownloadButton sessionId={session.id} />
                                     </div>
                                 </CardHeader>
@@ -99,19 +101,20 @@ const SessionList = ({ sessions }: { sessions: ISession[] }) => {
     )
 }
 
-const SessionAlerts = ({ sessionID }: { sessionID: string }) => {
+const SessionAlerts = ({ session }: { session: ISession }) => {
     const [alerts, setAlerts] = useState<TAlert[]>([])
 
     // Optional: could add loading state here if needed, but for badge it's often fine to show 0 until loaded
     // User requested loading state on every component though.
     // Let's add it for correctness.
     const [isLoading, setIsLoading] = useState(true)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     useEffect(() => {
         const fetchAlerts = async () => {
             setIsLoading(true)
             try {
-                const result = await getSessionAlerts(sessionID)
+                const result = await getSessionAlerts(session.id)
                 if (result.success && result.data) {
                     setAlerts(result.data)
                 }
@@ -120,14 +123,29 @@ const SessionAlerts = ({ sessionID }: { sessionID: string }) => {
             }
         }
         fetchAlerts()
-    }, [sessionID])
+    }, [session.id])
 
-    return <div className="relative">
-        <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-gray-900" />
-        <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-            {alerts.length}
-        </span>
-    </div>
+    return (
+        <>
+            <div className="relative" onClick={() => setIsDialogOpen(true)}>
+                <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-gray-900" />
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full pointer-events-none">
+                    {alerts.length}
+                </span>
+            </div>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-4 bg-background">
+                    <DialogHeader className="px-2">
+                        <DialogTitle>Session Alerts</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-hidden">
+                        <AlertTable sessionAlerts={alerts} sessionCreatedAt={session.createdAt} />
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    )
 }
 
 const DownloadButton = ({ sessionId }: { sessionId: string }) => {
