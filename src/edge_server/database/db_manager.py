@@ -497,6 +497,8 @@ class DatabaseHelper:
                 "alert_configuration": r[7], "user_id": r[8], "notes": r[9],
                 "duration": r[10], "target": r[11]
             })
+        return results
+
     def get_offline_sessions(self, user_email: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Retrieves sessions that are marked as offline (no project_id).
