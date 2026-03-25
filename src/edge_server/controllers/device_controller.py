@@ -13,6 +13,7 @@ class DeviceController:
         self.client = client
         self.alert_manager = alert_manager
         self.online_devices = {}
+        self.latest_spectrum = None
 
     # -------------------- Device Handling --------------------
     def _handle_device_registration(self, device_id, payload): 
@@ -42,7 +43,15 @@ class DeviceController:
 
     def _handle_device_data(self, device_id, payload): 
         device_name = self.online_devices.get(device_id, {}).get("device_name", "")
-        logger.info(f"Data received from device '{device_name}'") 
+        logger.debug(f"Data received from device '{device_name}'")
+        
+        data = payload.get("data", {})
+        if "spectra" in data:
+            wavelengths = data.get("wavelengths") or data.get("wavelength", [])
+            self.latest_spectrum = {
+                "spectra_matrix": data["spectra"],
+                "wavelengths": wavelengths
+            }
         
     def _notify_user(self, event, message, severity="info"):
         # We no longer inject 'devices_online' here, as the UI should subscribe to 'ui/devices/update'

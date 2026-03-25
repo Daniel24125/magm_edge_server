@@ -32,7 +32,7 @@ class ManagerController(threading.Thread):
         self.firebase_sync = FirebaseSyncService(self.db_helper)
         self.firebase_sync.start()
 
-        self.command_handler = CommandHandler(client, self.alert_manager)
+        self.command_handler = CommandHandler(client, self.alert_manager, self.db_helper)
         self._stop_event = threading.Event()
 
         self.in_queue = getattr(self.client, "data_queue", None)
@@ -55,8 +55,10 @@ class ManagerController(threading.Thread):
                     self.command_handler.handle_device_message(topic, payload)
                 elif topic.startswith("ui/") or topic.startswith("/ui/"):
                     self.command_handler.handle_ui_command( payload)
+                elif topic.startswith("magm/calibration/"):
+                    self.command_handler.handle_calibration_message(topic, payload)
                 else: 
-                    logger.warning("Command not recognized...")
+                    logger.warning(f"Command not recognized: {topic}")
             except Empty:
                 continue
             except Exception:
