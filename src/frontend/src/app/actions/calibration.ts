@@ -2,7 +2,7 @@
 
 import mqtt from 'mqtt';
 import { v4 as uuidv4 } from 'uuid';
-import { getSession } from '@auth0/nextjs-auth0';
+import { auth0 } from '@/lib/auth0';
 
 // Use the MQTT broker address configured in your environment or default to local edge server
 const getBrokerUrl = () => process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883';
@@ -13,7 +13,7 @@ export async function trainCalibrationModel(
   spectraMatrix: number[][],
   wavelengths: number[]
 ) {
-  const session = await getSession();
+  const session = await auth0.getSession();
   const userId = session?.user?.sub || 'anonymous';
 
   return new Promise((resolve, reject) => {

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { getProject } from '@/app/actions/projects'
 import DataDisplayCard from '@/components/DataDisplayCard'
