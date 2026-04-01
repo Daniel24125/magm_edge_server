@@ -23,7 +23,7 @@ import { ProjectSelectionDialog } from "@/components/sessions/ProjectSelectionDi
 import { useProjects } from "./ProjectsContext";
 import { IProject } from "@/types/projects";
 import { useDeviceManager } from "./DeviceManagerContext";
-import { useUser } from "@auth0/nextjs-auth0";
+import { useUserContext } from "./UserContext";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface SessionContextType {
@@ -63,7 +63,7 @@ export const SessionContext = createContext<SessionContextType>({
 });
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user } = useUser()
+    const { user } = useUserContext()
     const { subscribe, unsubscribe, publish, isConnected, latestMessage } = useMQTT();
     const { addAlert } = useAlert();
     const { projects } = useProjects();
@@ -119,36 +119,32 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     const checkOfflineSessions = () => {
         if (isOnline && user?.email) {
-            sendCommand("get_offline_sessions", { userEmail: user.email });
+            publish("ui/commands/get_offline_sessions", JSON.stringify({
+                command: "get_offline_sessions",
+                params: { userEmail: user.email }
+            }));
         }
     };
 
     const assignProjectToSession = async (sessionId: string, projectId: string) => {
-        sendCommand("assign_session_project", { sessionId, projectId });
+        publish("ui/commands/assign_session_project", JSON.stringify({
+            command: "assign_session_project",
+            params: { sessionId, projectId, userId: user?.sub }
+        }));
         // Optimistically remove from list
         setOfflineSessions(prev => prev.filter(s => s.id !== sessionId));
     };
 
-    // 5. Check offline sessions when coming online
+    // 5. Check offline sessions when connection or user is ready
     useEffect(() => {
-        if (isOnline) {
+        if (isConnected && isOnline && user?.email) {
             checkOfflineSessions();
         }
-    }, [isOnline, user]);
+    }, [isConnected, isOnline, user]);
 
 
     // 4. MQTT Message Handling
     useEffect(() => {
-        if (!latestMessage) return;
-
-        const { topic, payload } = latestMessage;
-
-        if (topic === "ui/responses/get_offline_sessions") {
-            if (payload && payload.payload) {
-                setOfflineSessions(payload.payload);
-            }
-        }
-
         // Verify Connection via Device Status (Received via DeviceManager)
         // Subscription Effect - Dedicated Session Topic
         if (!isConnected) return;
@@ -157,6 +153,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const historyTopic = "session/history";
         const liveTopic = "session/live";
         const alertsTopic = "session/alerts";
+        const offlineSessionTopic = "ui/responses/get_offline_sessions";
 
         const handleSessionMessage = (topic: string, rawMessage: unknown) => {
             const message = rawMessage as { type?: string; payload?: any; history?: any[]; alerts?: any[]; data?: any; severity?: any; message?: string; sensor_type?: string; value?: any; timestamp?: string; session_time?: number };
@@ -254,6 +251,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                         ...message
                     }
                 );
+            } else if (topic === offlineSessionTopic) {
+                if (message.type === 'offline_sessions' && message.payload) {
+                    setOfflineSessions(message.payload);
+                }
             }
         };
 
@@ -261,6 +262,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         subscribe(historyTopic, handleSessionMessage);
         subscribe(liveTopic, handleSessionMessage);
         subscribe(alertsTopic, handleSessionMessage);
+        subscribe(offlineSessionTopic, handleSessionMessage);
 
         // Request status
         publish("ui/commands/get_session_status", { command: "get_session_status" });
@@ -270,6 +272,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             unsubscribe(historyTopic, handleSessionMessage);
             unsubscribe(liveTopic, handleSessionMessage);
             unsubscribe(alertsTopic, handleSessionMessage);
+            unsubscribe("ui/responses/get_offline_sessions", handleSessionMessage);
         }
     }, [isConnected, isRPIConnected, subscribe, unsubscribe, publish, addSessionAlert]);
 
@@ -408,8 +411,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
             // Prepare payload
             const payload: any = newSession;
-            // Inject user email for offline tracking if available (and if offline)
-            if (!isOnline && user?.email) {
+            // Inject user email for offline tracking if available
+            if (user?.email) {
                 payload.userEmail = user.email;
             }
 

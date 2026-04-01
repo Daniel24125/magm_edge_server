@@ -15,6 +15,9 @@ import AlertTable from '@/components/sessions/AlertTable'
 import { useAlert } from '@/contexts/AlertContext'
 import { useRouter } from 'next/navigation'
 import Loading from '@/components/ui/loading'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { MoreVertical } from 'lucide-react'
 
 const Session = () => {
 
@@ -100,7 +103,17 @@ const SessionDataDisplay = () => {
                 </div>
                 <SessionChartMonitor />
             </div>
-            <AlertTable />
+            <Card className="w-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                    <CardTitle className="text-lg font-medium">Recent Events</CardTitle>
+                    <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <AlertTable />
+                </CardContent>
+            </Card>
         </div>
     )
 }

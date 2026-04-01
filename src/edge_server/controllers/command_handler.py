@@ -14,13 +14,15 @@ from edge_server.models.schemas import CommandPayload
 class CommandHandler:
     """Responsible for parsing commands and dispatching them to the controller."""
 
-    def __init__(self, client, alert_manager=None):
+    def __init__(self, client, alert_manager=None, db_helper=None):
         self.client = client
+        self.db_helper = db_helper
         self.device_controller = DeviceController(client, alert_manager)
         self.session_controller = SessionController(client, device_controller=self.device_controller)
         self.spectrometer_controller = SpectrometerController(client)
 
     def handle_ui_command(self, payload: dict):
+        logger.info(f"Received UI Command Payload: {payload}")
         if type(payload) == str:
             payload = json.loads(payload)
         try:
@@ -137,3 +139,71 @@ class CommandHandler:
             self.spectrometer_controller.handle_measure(device_id, payload)
         elif topic.endswith("/commands/configure"):
             self.spectrometer_controller.handle_configure(device_id, payload)
+
+    def handle_calibration_message(self, topic: str, payload: dict):
+        if topic == "magm/calibration/train/request":
+            if type(payload) == str:
+                try:
+                    payload = json.loads(payload)
+                except Exception:
+                    pass
+            from edge_server.utils.chemometrics import train_pls_model
+            req_id = payload.get("request_id")
+            
+            try:
+                # Wavelengths should come from payload if dynamic. Otherwise fallback to something?
+                # The user requirement didn't specify explicitly where wavelengths array comes from,
+                # but it's a parameter in train_pls_model. Assuming payload["wavelengths"] exists.
+                result = train_pls_model(
+                    payload["spectra_matrix"],
+                    payload["reference_ods"],
+                    payload["wavelengths"]
+                )
+                
+                model_id = self.db_helper.insert_calibration_model(
+                    auth0_user_id=payload["auth0_user_id"],
+                    compound_name=payload["compound_name"],
+                    coefficients=json.dumps(result["coefficients"]),
+                    x_mean=json.dumps(result["x_mean"]),
+                    y_mean=result["y_mean"],
+                    r2_score=result["r2_score"]
+                )
+                
+                self.client.publish("magm/calibration/train/response", json.dumps({
+                    "request_id": req_id,
+                    "status": "success",
+                    "r2_score": result["r2_score"],
+                    "model_id": model_id
+                }))
+                logger.info(f"Calibration model trained successfully. R2: {result['r2_score']}")
+            except Exception as e:
+                logger.exception("Calibration training error")
+                self.client.publish("magm/calibration/train/response", json.dumps({
+                    "request_id": req_id,
+                    "status": "error",
+                    "message": str(e)
+                }))
+
+        elif topic == "magm/calibration/capture/request":
+            if type(payload) == str:
+                try:
+                    payload = json.loads(payload)
+                except Exception:
+                    pass
+            req_id = payload.get("request_id")
+            latest = self.device_controller.latest_spectrum
+            
+            if latest:
+                self.client.publish("magm/calibration/capture/response", json.dumps({
+                    "request_id": req_id,
+                    "status": "success",
+                    "spectrum": latest["spectra_matrix"],
+                    "wavelengths": latest["wavelengths"]
+                }))
+                logger.info(f"Captured single spectrum for calibration wizard.")
+            else:
+                self.client.publish("magm/calibration/capture/response", json.dumps({
+                    "request_id": req_id,
+                    "status": "error",
+                    "message": "No spectrum data available yet. Ensure the spectrometer is measuring."
+                }))

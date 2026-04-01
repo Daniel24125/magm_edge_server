@@ -1,46 +1,93 @@
 "use client";
 
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ListFilter } from "lucide-react";
 import { TAlert } from "@/types";
 import { useSession } from "@/contexts/SessionContext";
-import { MoreVertical } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { formatDate, formatDuration } from "@/lib/utils";
 
-const AlertTable = () => {
+interface AlertTableProps {
+    sessionAlerts?: TAlert[];
+    sessionCreatedAt?: string;
+}
+
+const AlertTable = ({ sessionAlerts, sessionCreatedAt }: AlertTableProps = {}) => {
     const { activeSession } = useSession();
+    const [severityFilter, setSeverityFilter] = useState<TAlert["type"][]>([]);
 
-    if (!activeSession) return null;
+    // Use props if provided, otherwise fallback to the active session
+    const alertsToDisplay = sessionAlerts || (activeSession?.alerts || []);
+    const startTimeToDisplay = sessionCreatedAt || activeSession?.createdAt;
 
-    const alerts: TAlert[] = activeSession.alerts || [];
+    if (!alertsToDisplay.length && !activeSession) return null;
 
-    const sortedAlerts = [...alerts].sort((a, b) => {
+    const filteredAlerts = alertsToDisplay.filter(alert =>
+        severityFilter.length === 0 || severityFilter.includes(alert.type)
+    );
+
+    const sortedAlerts = [...filteredAlerts].sort((a, b) => {
         const timeA = new Date(!isNaN(Number(a.timestamp)) ? Number(a.timestamp) : a.timestamp).getTime();
         const timeB = new Date(!isNaN(Number(b.timestamp)) ? Number(b.timestamp) : b.timestamp).getTime();
         return timeB - timeA;
     });
 
+    const severities: TAlert["type"][] = ["info", "success", "warning", "error"];
+
+    const toggleSeverity = (severity: TAlert["type"]) => {
+        setSeverityFilter(prev =>
+            prev.includes(severity) ? prev.filter(s => s !== severity) : [...prev, severity]
+        );
+    };
+
     return (
-        <Card className="w-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-lg font-medium">Recent Events</CardTitle>
-                <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                </Button>
-            </CardHeader>
-            <CardContent>
-                <ScrollArea className="h-[400px] rounded-md border">
+        <div className="flex flex-col gap-2 w-full h-full">
+            <div className="flex items-center justify-end">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 gap-1">
+                            <ListFilter className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                Filter
+                            </span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {severities.map((severity) => (
+                            <DropdownMenuCheckboxItem
+                                key={severity}
+                                checked={severityFilter.includes(severity)}
+                                onCheckedChange={() => toggleSeverity(severity)}
+                                className="capitalize"
+                            >
+                                {severity}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                        {severityFilter.length > 0 && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => setSeverityFilter([])}>
+                                    Clear filters
+                                </DropdownMenuItem>
+                            </>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+            <ScrollArea className={`h-full max-h-[65vh] rounded-md border w-full`}>
+                <div className="min-w-[800px]">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-card z-10">
+                        <TableHeader className="sticky top-0 bg-card z-10 w-full">
                             <TableRow>
-                                <TableHead>Time</TableHead>
-                                <TableHead>Session Time</TableHead>
+                                <TableHead className="w-[180px]">Time</TableHead>
+                                <TableHead className="w-[150px]">Session Time</TableHead>
                                 <TableHead>Event</TableHead>
-                                <TableHead>Severity</TableHead>
-                                <TableHead>Device</TableHead>
+                                <TableHead className="w-[120px]">Severity</TableHead>
+                                <TableHead className="w-[150px]">Device</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -52,14 +99,15 @@ const AlertTable = () => {
                                 </TableRow>
                             ) : (
                                 sortedAlerts.map((alert) => (
-                                    <AlertRow key={alert.id} alert={alert} sessionStart={activeSession.createdAt} />
+                                    <AlertRow key={alert.id} alert={alert} sessionStart={startTimeToDisplay || new Date().toISOString()} />
                                 ))
                             )}
                         </TableBody>
                     </Table>
-                </ScrollArea>
-            </CardContent>
-        </Card>
+                </div>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+        </div>
     );
 };
 

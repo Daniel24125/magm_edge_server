@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "@/contexts/SessionContext";
 import { useProjects } from "@/contexts/ProjectsContext";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from "../ui/responsive-dialog";
@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { formatDate, formatDuration } from "@/lib/utils";
-import { CloudUpload, WifiOff } from "lucide-react";
+import { CloudUpload } from "lucide-react";
 
 interface OfflineSessionSyncDialogProps {
     open: boolean;

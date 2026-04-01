@@ -214,7 +214,7 @@ const DeviceConnectionStatus = () => {
 
 
 const AccountElement = () => {
-    const { user, isLoading, error } = useUserContext();
+    const { user, isLoading, error, logout } = useUserContext();
     const { isSidebarOpen } = useApplication();
 
     if (!user) return null;

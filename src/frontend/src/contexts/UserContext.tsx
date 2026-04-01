@@ -23,6 +23,7 @@ interface UserContextType {
     user: any;
     isLoading: boolean;
     error: any;
+    logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -87,11 +88,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // Actually simplicity: if we are waiting for offline interaction? 
     // Let's just pass `finalUser`.
 
+    const logout = () => {
+        if (offlineUser) {
+            localStorage.removeItem("offline_user");
+            setOfflineUser(null);
+            setShowOfflineLogin(true);
+        } else {
+            window.location.href = '/auth/logout';
+        }
+    };
+
     if (isAuth0Loading) return <Loading isLoading={true} />
 
     // Return children but render dialog if needed
     return (
-        <UserContext.Provider value={{ user: finalUser, isLoading: isAuth0Loading, error: auth0Error }}>
+        <UserContext.Provider value={{ user: finalUser, isLoading: isAuth0Loading, error: auth0Error, logout }}>
             {children}
             <OfflineLoginDialog open={showOfflineLogin} onLogin={handleOfflineLogin} />
         </UserContext.Provider>

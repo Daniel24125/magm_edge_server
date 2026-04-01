@@ -5,6 +5,7 @@ import SessionWidget from "@/components/dashboard/SessionWidget";
 import ProjectDetailsWidget from "@/components/dashboard/ProjectDetailsWidget";
 import ConnectedDevicesWidget from "@/components/dashboard/ConnectedDevicesWidget";
 import { SessionChartWidget } from "@/components/dashboard/SessionChartWidget";
+import UnsyncedSessionsWidget from "@/components/dashboard/UnsyncedSessionsWidget";
 
 import { useRouter } from 'next/navigation';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -36,6 +37,7 @@ export default function Page() {
   return (
     <main className="pt-10 space-y-6 flex flex-col pb-4">
       <DashboardHeader />
+      <UnsyncedSessionsWidget />
       <SessionChartWidget />
     </main>
   );

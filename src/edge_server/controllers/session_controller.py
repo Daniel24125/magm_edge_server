@@ -229,13 +229,14 @@ class SessionController:
     def assign_session_project(self, payload: Dict[str, Any]) -> None:
         session_id = payload.get("sessionId")
         project_id = payload.get("projectId")
+        user_id = payload.get("userId")
         
-        if not session_id or not project_id:
-            logger.error("Missing sessionId or projectId in assign_session_project")
+        if not session_id or not project_id or not user_id:
+            logger.error("Missing sessionId, projectId, or userId in assign_session_project")
             return
             
         logger.info(f"Assigning session {session_id} to project {project_id}")
-        self.db.update_session_project(session_id, project_id, {})
+        self.db.update_session_project(session_id, project_id, user_id)
 
     # -------------------- Internal Helpers --------------------
 
@@ -360,7 +361,8 @@ class SessionController:
         
         if settings and "dataAcquisitionInterval" in settings:
             try:
-                self.read_interval = int(settings["dataAcquisitionInterval"])
+                # The frontend passes the interval in minutes, but the loop expects seconds
+                self.read_interval = int(settings["dataAcquisitionInterval"]) * 60
             except (ValueError, TypeError):
                 logger.warning("Invalid dataAcquisitionInterval, using default")
         
@@ -401,14 +403,36 @@ class SessionController:
 
         logger.debug(f"ML Check [{device_id}]: Service={self.ml_service is not None}, Spectra={has_spectra}, WL={has_wavelengths}")
 
+        # --- Self-Calibration Pipeline ---
+        user_id = self.active_session.get("user_id")
+        if user_id and has_spectra and has_wavelengths:
+            # Note: For SQLite access here in a high-frequency loop we could theoretically cache this
+            # but db access is local and fast enough for now
+            cal_model = self.db.get_active_calibration_model(user_id)
+            if cal_model:
+                try:
+                    from edge_server.utils.chemometrics import predict_od
+                    predicted_od = predict_od(
+                        data["spectra"],
+                        data["wavelengths"],
+                        cal_model["coefficients"],
+                        cal_model["x_mean"],
+                        cal_model["y_mean"]
+                    )
+                    data["od"] = {"value": predicted_od, "unit": "OD", "sensor_type": "od", "calibrated": True}
+                    logger.debug(f"Applied custom calibration model {cal_model['id']} for user {user_id}. OD = {predicted_od}")
+                except Exception as e:
+                    logger.error(f"Failed to apply custom calibration model: {e}")
+
+        # --- Base ML Service Fallback ---
         if self.ml_service and has_spectra and has_wavelengths:
             try:
                 logger.debug("Calling MLService.predict...")
                 predictions = self.ml_service.predict(data)
                 logger.debug(f"Received predictions: {predictions}")
                 
-                # Inject predictions into data so they are aggregated and saved
-                if predictions.get("od") is not None:
+                # Only inject base OD prediction if custom calibration hasn't already done it
+                if predictions.get("od") is not None and "od" not in data:
                     data["od"] = {"value": predictions["od"], "unit": "OD", "sensor_type": "od"}
                 
                 if predictions.get("dissolved_co2") is not None:
@@ -417,7 +441,7 @@ class SessionController:
             except Exception as e:
                 logger.error(f"Failed to run ML prediction: {e}")
         else:
-             logger.debug("Skipping ML prediction.")
+             logger.debug("Skipping base ML prediction.")
 
         # 1. Anomaly Detection
         self._process_anomalies(device_id, data, payload.get("id"), timestamp)

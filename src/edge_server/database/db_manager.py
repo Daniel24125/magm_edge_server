@@ -157,6 +157,21 @@ class DatabaseHelper:
 
                 CREATE INDEX IF NOT EXISTS idx_alerts_session
                     ON alerts(session_id);
+
+                CREATE TABLE IF NOT EXISTS calibration_models (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    auth0_user_id TEXT NOT NULL,
+                    compound_name TEXT NOT NULL,
+                    coefficients TEXT NOT NULL,
+                    x_mean TEXT NOT NULL,
+                    y_mean REAL NOT NULL,
+                    r2_score REAL NOT NULL,
+                    is_active INTEGER DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_cal_models_user
+                    ON calibration_models(auth0_user_id);
                 """
             )
             
@@ -293,6 +308,68 @@ class DatabaseHelper:
             if not row:
                 self.insert_calibration( "e6cc7497-d0aa-4cd9-9e56-578b6f9db521","d09454f7-6a4a-44af-9e0d-eb0bea17e9de", "pH", 0.000315967, 2.35586, 25, "Daniel Madalena", "note", datetime.now(timezone.utc).isoformat())
             return row 
+
+    def insert_calibration_model(
+        self,
+        auth0_user_id: str,
+        compound_name: str,
+        coefficients: str,
+        x_mean: str,
+        y_mean: float,
+        r2_score: float,
+        created_at_iso: Optional[str] = None,
+    ) -> int:
+        """
+        Inserts a new calibration model and sets it as the active one for the user.
+        """
+        created_at_iso = created_at_iso or utcnow_iso()
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            # Deactivate previous models for this user
+            self._retrying_execute(
+                cur,
+                "UPDATE calibration_models SET is_active = 0 WHERE auth0_user_id = ?",
+                (auth0_user_id,)
+            )
+            
+            # Insert the new active model
+            self._retrying_execute(
+                cur,
+                """INSERT INTO calibration_models
+                   (auth0_user_id, compound_name, coefficients, x_mean, y_mean, r2_score, is_active, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, 1, ?)""",
+                (auth0_user_id, compound_name, coefficients, x_mean, y_mean, r2_score, created_at_iso),
+            )
+            rid = cur.lastrowid
+            self._conn.commit()
+            return rid
+
+    def get_active_calibration_model(self, auth0_user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Returns the active calibration model for a given user.
+        """
+        with self._locked_cursor() as cur:
+            row = self._retrying_execute(
+                cur,
+                """SELECT id, compound_name, coefficients, x_mean, y_mean, r2_score, created_at
+                   FROM calibration_models
+                   WHERE auth0_user_id = ? AND is_active = 1
+                   LIMIT 1""",
+                (auth0_user_id,),
+            ).fetchone()
+            if not row:
+                return None
+                
+            import json
+            return {
+                "id": row[0],
+                "compound_name": row[1],
+                "coefficients": json.loads(row[2]),
+                "x_mean": json.loads(row[3]),
+                "y_mean": row[4],
+                "r2_score": row[5],
+                "created_at": row[6]
+            }
 
     def insert_measurement(
         self,
@@ -497,6 +574,8 @@ class DatabaseHelper:
                 "alert_configuration": r[7], "user_id": r[8], "notes": r[9],
                 "duration": r[10], "target": r[11]
             })
+        return results
+
     def get_offline_sessions(self, user_email: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Retrieves sessions that are marked as offline (no project_id).
@@ -505,7 +584,7 @@ class DatabaseHelper:
         query = "SELECT id, start_time, duration, notes, user_email, session_details FROM sessions WHERE (project_id IS NULL OR project_id = '')"
         params = []
         if user_email:
-            query += " AND user_email = ?"
+            query += " AND (user_email = ? OR user_email IS NULL)"
             params.append(user_email)
         
         rows = self.fetch_records_raw(query, tuple(params))
@@ -521,14 +600,15 @@ class DatabaseHelper:
             })
         return results
 
-    def update_session_project(self, session_id: str, project_id: str, project_details: Dict[str, Any]) -> None:
+    def update_session_project(self, session_id: str, project_id: str, user_id: str, project_details: Dict[str, Any] = None) -> None:
         """
-        Updates an offline session with a project ID and details, marking it as ready for sync.
+        Updates an offline session with a project ID and user ID, marking it as ready for sync.
         """
         # We also set synced=0 to ensure it gets picked up by the sync service
         # We clear is_offline flag (set to 0)
         data = {
             "project_id": project_id,
+            "user_id": user_id,
             "is_offline": 0,
             "synced": 0
         }

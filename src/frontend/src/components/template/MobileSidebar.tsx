@@ -182,7 +182,7 @@ const StatusRow = ({ type }: { type: 'broker' | 'device' }) => {
 }
 
 const UserProfile = () => {
-    const { user } = useUserContext()
+    const { user, logout } = useUserContext()
 
     if (!user) return null
 
