@@ -246,7 +246,7 @@ const AccountElement = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
                 >
-                    <a href="/auth/logout">
+                    <a href="/auth/logout" onClick={() => localStorage.removeItem("offline_user")}>
                         <Button variant="ghost" className='text-text-faded shrink-0'>
                             <LogOut />
                         </Button>

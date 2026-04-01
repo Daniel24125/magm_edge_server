@@ -198,11 +198,11 @@ const UserProfile = () => {
                     <span className="text-muted-foreground text-xs">{user.email}</span>
                 </div>
             </div>
-            <Link href="/auth/logout">
+            <a href="/auth/logout" onClick={() => localStorage.removeItem("offline_user")}>
                 <Button variant="ghost" size="icon">
                     <LogOut className="size-5 text-muted-foreground" />
                 </Button>
-            </Link>
+            </a>
         </div>
     )
 }
