@@ -147,35 +147,50 @@ class CommandHandler:
                     payload = json.loads(payload)
                 except Exception:
                     pass
-            from edge_server.utils.chemometrics import train_pls_model
+            from services.chemometrics import run_automl_pipeline
             req_id = payload.get("request_id")
             
             try:
-                # Wavelengths should come from payload if dynamic. Otherwise fallback to something?
-                # The user requirement didn't specify explicitly where wavelengths array comes from,
-                # but it's a parameter in train_pls_model. Assuming payload["wavelengths"] exists.
-                result = train_pls_model(
-                    payload["spectra_matrix"],
-                    payload["reference_ods"],
-                    payload["wavelengths"]
-                )
+                raw_spectra = payload["raw_spectra"]
+                reference_ods = payload["reference_ods"]
+                wavelengths = payload["wavelengths"]
+                user_config = payload.get("user_config", {})
                 
-                model_id = self.db_helper.insert_calibration_model(
-                    auth0_user_id=payload["auth0_user_id"],
-                    compound_name=payload["compound_name"],
-                    coefficients=json.dumps(result["coefficients"]),
-                    x_mean=json.dumps(result["x_mean"]),
-                    y_mean=result["y_mean"],
-                    r2_score=result["r2_score"]
-                )
+                result = run_automl_pipeline(raw_spectra, reference_ods, wavelengths, user_config)
                 
-                self.client.publish("magm/calibration/train/response", json.dumps({
-                    "request_id": req_id,
-                    "status": "success",
-                    "r2_score": result["r2_score"],
-                    "model_id": model_id
-                }))
-                logger.info(f"Calibration model trained successfully. R2: {result['r2_score']}")
+                if result["status"] == "success":
+                    winning_model = result["winning_model"]
+                    auth0_user_id = payload.get("auth0_user_id", "system")
+                    compound_name = payload.get("compound_name", "unknown")
+                    
+                    if winning_model["algorithm"] == "RandomForest":
+                        import joblib
+                        import io
+                        
+                        rf_model = winning_model["rf_model_instance"]
+                        buffer = io.BytesIO()
+                        joblib.dump(rf_model, buffer)
+                        model_blob = buffer.getvalue()
+                        
+                        model_id = self.db_helper.insert_ml_model(
+                            auth0_user_id=auth0_user_id,
+                            compound_name=compound_name,
+                            algorithm=winning_model["algorithm"],
+                            metrics=json.dumps({"r2": winning_model["r2"], "rmse": winning_model["rmse"]}),
+                            model_blob=model_blob
+                        )
+                        
+                        # Remove the actual object before sending back JSON
+                        del winning_model["rf_model_instance"] 
+                    
+                    self.client.publish("magm/calibration/train/response", json.dumps({
+                        "request_id": req_id,
+                        "status": "success",
+                        "winning_model": winning_model,
+                        "scaler_params": result["scaler_params"],
+                        "valid_wavelengths": result["valid_wavelengths"]
+                    }))
+                    logger.info(f"Calibration model trained successfully. Winner: {winning_model['algorithm']}, R2: {winning_model['r2']}")
             except Exception as e:
                 logger.exception("Calibration training error")
                 self.client.publish("magm/calibration/train/response", json.dumps({
@@ -194,10 +209,12 @@ class CommandHandler:
             latest = self.device_controller.latest_spectrum
             
             if latest:
+                spectra = latest["spectra_matrix"]
+                raw_spec = spectra[0] if isinstance(spectra, list) and len(spectra)>0 and isinstance(spectra[0], list) else spectra
                 self.client.publish("magm/calibration/capture/response", json.dumps({
                     "request_id": req_id,
                     "status": "success",
-                    "spectrum": latest["spectra_matrix"],
+                    "raw_spectrum": raw_spec,
                     "wavelengths": latest["wavelengths"]
                 }))
                 logger.info(f"Captured single spectrum for calibration wizard.")

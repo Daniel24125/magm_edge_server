@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter, ResponsiveDialogDescription } from "@/components/ui/responsive-dialog";
+import { useMQTT } from "@/contexts/MQTTContext";
 
 
 interface SpectrometerWidgetProps {
@@ -81,7 +82,7 @@ export function SpectrometerWidget({ deviceId, initialConfig }: SpectrometerWidg
 }
 
 export function SpectrometerConfigDialog({ open, onOpenChange, deviceId, initialConfig }: { open: boolean, onOpenChange: (o: boolean) => void, deviceId: string, initialConfig: any }) {
-    const { sendCommand } = useDeviceManager();
+    const { publish, subscribe, unsubscribe } = useMQTT();
     const DEFAULT_EXPOSURE = 20000;
     const DEFAULT_CYCLE = 210000;
 
@@ -105,24 +106,53 @@ export function SpectrometerConfigDialog({ open, onOpenChange, deviceId, initial
     }, [initialConfig, open]);
 
     const handleUpdateConfig = async () => {
-        if (!isValid) {
-            return;
-        }
+        if (!isValid) return;
         setIsUpdating(true);
-        try {
-            console.log("Updating Spectrometer Config:", config);
-            sendCommand("configure", {
-                device_id: deviceId,
-                ...config
-            });
-            toast.success("Configuration sent to spectrometer");
-            onOpenChange(false);
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to send configuration");
-        } finally {
-            setIsUpdating(false);
-        }
+        
+        const requestId = crypto.randomUUID();
+        
+        return new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                unsubscribe("magm/hardware/settings/confirm", handleConfirm);
+                toast.error("Timeout waiting for spectrometer configuration");
+                setIsUpdating(false);
+                reject(new Error("Timeout"));
+            }, 10000);
+
+            const handleConfirm = (topic: string, payload: any) => {
+                if (payload.request_id === requestId) {
+                    clearTimeout(timeout);
+                    unsubscribe("magm/hardware/settings/confirm", handleConfirm);
+                    
+                    if (payload.status === "success") {
+                        toast.success("Configuration applied successfully");
+                        onOpenChange(false);
+                        resolve();
+                    } else {
+                        toast.error(`Configuration failed: ${payload.message || 'Unknown error'}`);
+                        reject(new Error("Failed"));
+                    }
+                    setIsUpdating(false);
+                }
+            };
+
+            subscribe("magm/hardware/settings/confirm", handleConfirm);
+            
+            try {
+                publish("magm/hardware/settings/request", {
+                    request_id: requestId,
+                    device_id: deviceId,
+                    exposure_time: config.exposure_time,
+                    cycle_time: config.cycle_time
+                });
+            } catch (error) {
+                clearTimeout(timeout);
+                unsubscribe("magm/hardware/settings/confirm", handleConfirm);
+                setIsUpdating(false);
+                toast.error("Failed to send configuration request");
+                reject(error);
+            }
+        });
     };
 
     const handleChange = (key: keyof typeof config, value: string) => {

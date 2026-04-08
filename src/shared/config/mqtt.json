@@ -13,7 +13,10 @@
       "devices/+/status",
       "devices/+/data",
       "devices/+/config",
-      "devices/+/events"
+      "devices/+/events",
+      "magm/hardware/settings/confirm",
+      "magm/calibration/train/request",
+      "magm/calibration/capture/request"
     ]
   }
 }

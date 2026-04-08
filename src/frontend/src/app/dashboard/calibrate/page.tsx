@@ -1,192 +1,310 @@
 "use client";
 
-import React, { useState } from "react";
-import { trainCalibrationModel, captureSpectrum } from "../../actions/calibration";
+import React, { useState, useEffect } from "react";
+import { useUserContext } from "@/contexts/UserContext";
+import { useMQTT } from "@/contexts/MQTTContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Loader2, Plus, Trash2, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 
 interface CalibrationRow {
-  id: string;
-  referenceOd: number | "";
-  spectrum: number[] | null;
-  wavelengths: number[] | null;
-  isCapturing: boolean;
+    id: string;
+    referenceOd: number | '';
+    spectrum: number[] | null;
+    isCapturing: boolean;
 }
 
-export default function CalibrationWizard() {
-  const [compoundName, setCompoundName] = useState("");
-  const [rows, setRows] = useState<CalibrationRow[]>([
-    { id: "1", referenceOd: "", spectrum: null, wavelengths: null, isCapturing: false },
-  ]);
-  const [isTraining, setIsTraining] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; r2Score?: number; message?: string } | null>(null);
+export default function CalibrationWizardPage() {
+    const { user } = useUserContext();
+    const { publish, subscribe, unsubscribe } = useMQTT();
 
-  const addRow = () => {
-    setRows([
-      ...rows,
-      { id: Date.now().toString(), referenceOd: "", spectrum: null, wavelengths: null, isCapturing: false },
+    // Section A State
+    const [compoundName, setCompoundName] = useState("");
+    const [targetType, setTargetType] = useState("chemical_compound");
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [sgWindow, setSgWindow] = useState(11);
+    const [sgPoly, setSgPoly] = useState(2);
+    const [sgDeriv, setSgDeriv] = useState(0);
+
+    // Section B State
+    const [calibrationRows, setCalibrationRows] = useState<CalibrationRow[]>([
+        { id: crypto.randomUUID(), referenceOd: '', spectrum: null, isCapturing: false }
     ]);
-  };
+    const [capturedWavelengths, setCapturedWavelengths] = useState<number[] | null>(null);
 
-  const removeRow = (id: string) => {
-    setRows(rows.filter((r) => r.id !== id));
-  };
+    // Section C State
+    const [isTraining, setIsTraining] = useState(false);
+    const [trainingResult, setTrainingResult] = useState<any>(null);
 
-  const updateReferenceOd = (id: string, value: string) => {
-    setRows(
-      rows.map((r) =>
-        r.id === id ? { ...r, referenceOd: value === "" ? "" : Number(value) } : r
-      )
-    );
-  };
+    const addRow = () => {
+        setCalibrationRows(prev => [...prev, { id: crypto.randomUUID(), referenceOd: '', spectrum: null, isCapturing: false }]);
+    };
 
-  const handleCapture = async (id: string) => {
-    setRows(rows.map((r) => (r.id === id ? { ...r, isCapturing: true } : r)));
-    try {
-      const res: any = await captureSpectrum();
-      if (res.success) {
-        setRows(
-          rows.map((r) =>
-            r.id === id
-              ? { ...r, spectrum: res.spectrum, wavelengths: res.wavelengths, isCapturing: false }
-              : r
-          )
-        );
-      }
-    } catch (error: any) {
-      alert("Capture Failed: " + error.message);
-      setRows(rows.map((r) => (r.id === id ? { ...r, isCapturing: false } : r)));
-    }
-  };
+    const removeRow = (id: string) => {
+        setCalibrationRows(prev => prev.filter(r => r.id !== id));
+    };
 
-  const isReadyToTrain =
-    compoundName.trim() !== "" &&
-    rows.length >= 2 &&
-    rows.every((r) => typeof r.referenceOd === "number" && r.spectrum !== null);
+    const updateRowOd = (id: string, value: string) => {
+        const num = parseFloat(value);
+        setCalibrationRows(prev => prev.map(r => 
+            r.id === id ? { ...r, referenceOd: isNaN(num) ? '' : num } : r
+        ));
+    };
 
-  const handleTrain = async () => {
-    setIsTraining(true);
-    setResult(null);
-    try {
-      const referenceOds = rows.map((r) => r.referenceOd as number);
-      const spectraMatrix = rows.map((r) => r.spectrum!);
-      // Assuming all rows use the same wavelengths from the spectrometer
-      const wavelengths = rows[0].wavelengths || Array.from({ length: spectraMatrix[0].length }, (_, i) => 900 + i);
-
-      const res: any = await trainCalibrationModel(
-        compoundName,
-        referenceOds,
-        spectraMatrix,
-        wavelengths
-      );
-
-      if (res.success) {
-        setResult({ success: true, r2Score: res.r2Score });
-      }
-    } catch (error: any) {
-      setResult({ success: false, message: error.message });
-    } finally {
-      setIsTraining(false);
-    }
-  };
-
-  return (
-    <div className="p-8 max-w-4xl mx-auto dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-indigo-500">Self-Calibration Wizard</h1>
-      
-      <div className="mb-6 bg-white dark:bg-zinc-900 shadow-md rounded-xl p-6 border border-zinc-200 dark:border-zinc-800">
-        <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-          Compound Name
-        </label>
-        <input
-          type="text"
-          value={compoundName}
-          onChange={(e) => setCompoundName(e.target.value)}
-          placeholder="e.g. Chlorophyll a"
-          className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      <div className="bg-white dark:bg-zinc-900 shadow-md rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 text-sm uppercase">
-              <th className="py-3 px-4">Reference OD (750nm)</th>
-              <th className="py-3 px-4">Spectrum Data</th>
-              <th className="py-3 px-4 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => (
-              <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                <td className="py-3 px-4 w-1/3">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    value={row.referenceOd}
-                    onChange={(e) => updateReferenceOd(row.id, e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </td>
-                <td className="py-3 px-4 w-1/3">
-                  {row.spectrum ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                      Captured ({row.spectrum.length} px)
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                      Pending
-                    </span>
-                  )}
-                </td>
-                <td className="py-3 px-4 flex gap-2 justify-center">
-                  <button
-                    onClick={() => handleCapture(row.id)}
-                    disabled={row.isCapturing}
-                    className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 transition-colors"
-                  >
-                    {row.isCapturing ? "Capturing..." : "Capture Spectrum"}
-                  </button>
-                  <button
-                    onClick={() => removeRow(row.id)}
-                    className="px-3 py-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    // Capture Spectrum Logic
+    const captureSpectrum = (id: string) => {
+        const requestId = crypto.randomUUID();
         
-        <div className="mt-4 border-t border-zinc-200 dark:border-zinc-800 pt-4 flex justify-between items-center">
-             <button
-            onClick={addRow}
-            className="px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-colors border border-emerald-200 dark:border-emerald-800"
-          >
-            + Add Data Point
-          </button>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
-            {rows.length} points total (Min 2 recommended)
-          </span>
+        setCalibrationRows(prev => prev.map(r => r.id === id ? { ...r, isCapturing: true } : r));
+
+        const timeout = setTimeout(() => {
+            unsubscribe("magm/calibration/capture/response", handleCaptureResponse);
+            setCalibrationRows(prev => prev.map(r => r.id === id ? { ...r, isCapturing: false } : r));
+            toast.error("Capture timeout.");
+        }, 10000);
+
+        const handleCaptureResponse = (topic: string, payload: any) => {
+            if (payload.request_id === requestId) {
+                clearTimeout(timeout);
+                unsubscribe("magm/calibration/capture/response", handleCaptureResponse);
+                
+                if (payload.status === "success" && payload.raw_spectrum) {
+                    setCalibrationRows(prev => prev.map(r => 
+                        r.id === id ? { ...r, spectrum: payload.raw_spectrum, isCapturing: false } : r
+                    ));
+                    if (!capturedWavelengths && payload.wavelengths) {
+                        setCapturedWavelengths(payload.wavelengths);
+                    }
+                    toast.success("Spectrum captured.");
+                } else {
+                    setCalibrationRows(prev => prev.map(r => r.id === id ? { ...r, isCapturing: false } : r));
+                    toast.error(`Capture failed: ${payload.message || "No data"}`);
+                }
+            }
+        };
+
+        subscribe("magm/calibration/capture/response", handleCaptureResponse);
+        try {
+            publish("magm/calibration/capture/request", { request_id: requestId });
+        } catch (e) {
+            clearTimeout(timeout);
+            unsubscribe("magm/calibration/capture/response", handleCaptureResponse);
+            setCalibrationRows(prev => prev.map(r => r.id === id ? { ...r, isCapturing: false } : r));
+            toast.error("Failed to send capture request.");
+        }
+    };
+
+    // Training Logic
+    const isValidToTrain = compoundName.trim() !== "" && 
+                           calibrationRows.length > 0 && 
+                           calibrationRows.every(r => typeof r.referenceOd === 'number' && r.spectrum !== null) &&
+                           capturedWavelengths !== null;
+
+    const trainModel = () => {
+        if (!isValidToTrain) return;
+        setIsTraining(true);
+        setTrainingResult(null);
+        
+        const requestId = crypto.randomUUID();
+
+        const timeout = setTimeout(() => {
+            unsubscribe("magm/calibration/train/response", handleTrainResponse);
+            setIsTraining(false);
+            toast.error("Training timeout.");
+        }, 30000);
+
+        const handleTrainResponse = (topic: string, payload: any) => {
+            if (payload.request_id === requestId) {
+                clearTimeout(timeout);
+                unsubscribe("magm/calibration/train/response", handleTrainResponse);
+                
+                if (payload.status === "success") {
+                    setTrainingResult(payload.winning_model);
+                    toast.success("Model trained successfully!");
+                } else {
+                    toast.error(`Training failed: ${payload.message}`);
+                }
+                setIsTraining(false);
+            }
+        };
+
+        subscribe("magm/calibration/train/response", handleTrainResponse);
+
+        const payload = {
+            request_id: requestId,
+            auth0_user_id: user?.sub || "unknown_user",
+            compound_name: compoundName,
+            user_config: {
+                target_type: targetType,
+                sg_window: sgWindow,
+                sg_poly: sgPoly,
+                sg_deriv: sgDeriv
+            },
+            reference_ods: calibrationRows.map(r => r.referenceOd),
+            raw_spectra_matrix: calibrationRows.map(r => r.spectrum),
+            wavelengths: capturedWavelengths
+        };
+
+        try {
+            publish("magm/calibration/train/request", payload);
+            toast.info("Training initiated. This may take a few moments...");
+        } catch (e) {
+            clearTimeout(timeout);
+            unsubscribe("magm/calibration/train/response", handleTrainResponse);
+            setIsTraining(false);
+            toast.error("Failed to submit training request.");
+        }
+    };
+
+    return (
+        <div className="container mx-auto p-6 max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h1 className="text-3xl font-bold mb-8">Calibration Wizard</h1>
+            
+            {/* SECTION A: Setup */}
+            <div className="bg-card border rounded-lg p-6 mb-6 shadow-sm">
+                <h2 className="text-xl font-semibold mb-4">1. Configuration</h2>
+                <div className="grid gap-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="compound">Compound Name</Label>
+                        <Input 
+                            id="compound" 
+                            placeholder="e.g. Glucose, Biomass..." 
+                            value={compoundName} 
+                            onChange={e => setCompoundName(e.target.value)} 
+                        />
+                    </div>
+                    
+                    <div className="grid gap-2">
+                        <Label htmlFor="targetType">Target Type</Label>
+                        <select 
+                            id="targetType" 
+                            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={targetType}
+                            onChange={(e) => setTargetType(e.target.value)}
+                        >
+                            <option value="chemical_compound">Chemical Compound (SNV)</option>
+                            <option value="biomass">Biomass / Turbidity (Mean Center)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <Button variant="ghost" className="p-0 h-auto font-medium flex items-center text-muted-foreground" onClick={() => setShowAdvanced(!showAdvanced)}>
+                            Advanced Preprocessing {showAdvanced ? <ChevronUp className="ml-1 size-4" /> : <ChevronDown className="ml-1 size-4" />}
+                        </Button>
+                        
+                        {showAdvanced && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 border rounded-md bg-muted/20">
+                                <div className="grid gap-2">
+                                    <Label>Savitzky-Golay Window</Label>
+                                    <Input type="number" min={5} step={2} value={sgWindow} onChange={e => setSgWindow(parseInt(e.target.value))} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Polynomial Order</Label>
+                                    <Input type="number" min={1} value={sgPoly} onChange={e => setSgPoly(parseInt(e.target.value))} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Derivative</Label>
+                                    <Input type="number" min={0} value={sgDeriv} onChange={e => setSgDeriv(parseInt(e.target.value))} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* SECTION B: Acquisition */}
+            <div className="bg-card border rounded-lg p-6 mb-6 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">2. Data Acquisition</h2>
+                    <Button onClick={addRow} size="sm" variant="outline"><Plus className="mr-2 size-4"/> Add Sample</Button>
+                </div>
+                
+                <div className="space-y-3">
+                    {calibrationRows.map((row, index) => (
+                        <div key={row.id} className="flex items-center gap-4 p-3 bg-muted/10 border rounded-md">
+                            <div className="font-medium text-muted-foreground w-8">#{index + 1}</div>
+                            <div className="flex-1 grid gap-1">
+                                <Label className="text-xs">Reference Value (OD/Conc)</Label>
+                                <Input 
+                                    type="number" 
+                                    placeholder="Enter reference..." 
+                                    value={row.referenceOd} 
+                                    onChange={(e) => updateRowOd(row.id, e.target.value)} 
+                                />
+                            </div>
+                            <div className="flex-1 flex flex-col items-center justify-center gap-1">
+                                <Button 
+                                    variant={row.spectrum ? "secondary" : "default"} 
+                                    className="w-full"
+                                    onClick={() => captureSpectrum(row.id)}
+                                    disabled={row.isCapturing}
+                                >
+                                    {row.isCapturing ? <Loader2 className="animate-spin size-4" /> : "Capture Spectrum"}
+                                </Button>
+                            </div>
+                            <div className="w-10 flex justify-center">
+                                {row.spectrum && <CheckCircle2 className="text-green-500 size-6" />}
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => removeRow(row.id)} disabled={calibrationRows.length === 1}>
+                                <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* SECTION C: Training */}
+            <div className="bg-card border rounded-lg p-6 shadow-sm flex flex-col items-center">
+                <Button 
+                    size="lg" 
+                    className="w-full md:w-1/2 py-8 text-lg font-bold" 
+                    disabled={!isValidToTrain || isTraining}
+                    onClick={trainModel}
+                >
+                    {isTraining ? <><Loader2 className="mr-2 size-6 animate-spin" /> Training AutoML...</> : "Train AutoML Model"}
+                </Button>
+                {!isValidToTrain && (
+                    <p className="text-sm text-muted-foreground mt-3 text-center">
+                        Please provide a compound name, select a target type, and ensure all samples have a reference value and captured spectrum.
+                    </p>
+                )}
+            </div>
+
+            {/* Results Modal */}
+            <ResponsiveDialog open={trainingResult !== null} onOpenChange={() => setTrainingResult(null)}>
+                <ResponsiveDialogContent>
+                    <ResponsiveDialogHeader>
+                        <ResponsiveDialogTitle>Training Complete</ResponsiveDialogTitle>
+                    </ResponsiveDialogHeader>
+                    {trainingResult && (
+                        <div className="py-6 space-y-4">
+                            <div className="text-center p-4 bg-muted/20 rounded-lg">
+                                <h3 className="text-sm text-muted-foreground mb-1">Winning Algorithm</h3>
+                                <p className="text-2xl font-bold text-primary">{trainingResult.algorithm}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-sm text-muted-foreground">R² Score</p>
+                                    <p className="text-xl font-mono">{trainingResult.r2.toFixed(4)}</p>
+                                </div>
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-sm text-muted-foreground">RMSE</p>
+                                    <p className="text-xl font-mono">{trainingResult.rmse.toFixed(4)}</p>
+                                </div>
+                            </div>
+                            <p className="text-sm text-center text-muted-foreground mt-4">
+                                This model has been automatically saved and activated for <b>{compoundName}</b>.
+                            </p>
+                        </div>
+                    )}
+                    <ResponsiveDialogFooter>
+                        <Button onClick={() => setTrainingResult(null)} className="w-full">Close & Continue</Button>
+                    </ResponsiveDialogFooter>
+                </ResponsiveDialogContent>
+            </ResponsiveDialog>
         </div>
-      </div>
-
-      <div className="mt-8 flex flex-col items-center gap-4">
-        {result && (
-          <div className={`p-4 rounded-xl w-full text-center ${result.success ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'}`}>
-            {result.success ? `✅ Model Trained Successfully! R² Score: ${result.r2Score?.toFixed(4)}` : `❌ Error: ${result.message}`}
-          </div>
-        )}
-
-        <button
-          onClick={handleTrain}
-          disabled={!isReadyToTrain || isTraining}
-          className="w-full max-w-sm px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-bold rounded-xl shadow-lg hover:from-indigo-600 hover:to-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
-        >
-          {isTraining ? "Training Model..." : "Train Calibration Model"}
-        </button>
-      </div>
-    </div>
-  );
+    );
 }

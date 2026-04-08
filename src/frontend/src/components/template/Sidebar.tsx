@@ -130,6 +130,11 @@ const NavigationList = () => {
             label="Devices"
             href="/devices"
         />
+        <NavigationItem
+            icon={<Settings className='size-6' />}
+            label="Calibration Wizard"
+            href="/dashboard/calibrate"
+        />
     </div>
 }
 

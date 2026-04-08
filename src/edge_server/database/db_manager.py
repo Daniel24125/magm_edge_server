@@ -172,6 +172,20 @@ class DatabaseHelper:
 
                 CREATE INDEX IF NOT EXISTS idx_cal_models_user
                     ON calibration_models(auth0_user_id);
+                    
+                CREATE TABLE IF NOT EXISTS ml_models (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    auth0_user_id TEXT NOT NULL,
+                    compound_name TEXT NOT NULL,
+                    algorithm TEXT NOT NULL,
+                    metrics TEXT NOT NULL,
+                    model_blob BLOB NOT NULL,
+                    is_active INTEGER DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
+                
+                CREATE INDEX IF NOT EXISTS idx_ml_models_user
+                    ON ml_models(auth0_user_id);
                 """
             )
             
@@ -370,6 +384,40 @@ class DatabaseHelper:
                 "r2_score": row[5],
                 "created_at": row[6]
             }
+
+    def insert_ml_model(
+        self,
+        auth0_user_id: str,
+        compound_name: str,
+        algorithm: str,
+        metrics: str,
+        model_blob: bytes,
+        created_at_iso: Optional[str] = None
+    ) -> int:
+        """
+        Inserts a new ML model (BLOB) and sets it as the active one for the user/compound.
+        """
+        created_at_iso = created_at_iso or utcnow_iso()
+        with self._locked_cursor() as cur:
+            self._begin_immediate(cur)
+            # Deactivate previous models for this user & compound
+            self._retrying_execute(
+                cur,
+                "UPDATE ml_models SET is_active = 0 WHERE auth0_user_id = ? AND compound_name = ?",
+                (auth0_user_id, compound_name)
+            )
+            
+            # Insert the new active ML model
+            self._retrying_execute(
+                cur,
+                """INSERT INTO ml_models
+                   (auth0_user_id, compound_name, algorithm, metrics, model_blob, is_active, created_at)
+                   VALUES (?, ?, ?, ?, ?, 1, ?)""",
+                (auth0_user_id, compound_name, algorithm, metrics, model_blob, created_at_iso),
+            )
+            rid = cur.lastrowid
+            self._conn.commit()
+            return rid
 
     def insert_measurement(
         self,
