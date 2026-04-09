@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useTransition, useCallback } from "react";
+import React, { useState, useTransition, useCallback, useEffect } from "react";
 import { IMLModel, deployModel, deleteModel } from "@/app/actions/models";
+import { useMQTT } from "@/contexts/MQTTContext";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogFooter,
 } from "@/components/ui/dialog";
 import {
     AlertDialog,
@@ -100,8 +100,6 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
     const r2 = model.metrics?.r2 ?? 0;
     const rmse = model.metrics?.rmse ?? 0;
 
-    // Placeholder scatter data that visualises a hypothetical Actual vs Predicted line
-    // Real data would come from stored predictions in Firestore (future enhancement).
     const placeholderScatterData = Array.from({ length: 12 }, (_, i) => {
         const actual = 0.1 + i * 0.15;
         const noise = (Math.random() - 0.5) * rmse * 4;
@@ -123,7 +121,6 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                 </DialogHeader>
 
                 <div className="space-y-6 py-2">
-                    {/* Performance metrics */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 border rounded-lg text-center bg-muted/20">
                             <p className="text-xs text-muted-foreground mb-1 uppercase font-semibold tracking-wider">R² Score</p>
@@ -139,7 +136,6 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
 
                     <Separator />
 
-                    {/* Model details */}
                     <div>
                         <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">Model Details</h4>
                         <div className="grid grid-cols-2 gap-3 text-sm">
@@ -151,12 +147,6 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                                 <span className="text-muted-foreground">Compound</span>
                                 <span className="font-medium">{model.compound_name}</span>
                             </div>
-                            {model.num_samples !== undefined && (
-                                <div className="flex justify-between p-2 bg-muted/20 rounded">
-                                    <span className="text-muted-foreground">Samples trained</span>
-                                    <span className="font-medium">{model.num_samples}</span>
-                                </div>
-                            )}
                             <div className="flex justify-between p-2 bg-muted/20 rounded">
                                 <span className="text-muted-foreground">Status</span>
                                 <Badge variant={model.is_active ? "default" : "secondary"}>
@@ -166,27 +156,8 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                         </div>
                     </div>
 
-                    {/* Preprocessing */}
-                    {model.preprocessing && Object.keys(model.preprocessing).length > 0 && (
-                        <>
-                            <Separator />
-                            <div>
-                                <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">Preprocessing</h4>
-                                <div className="grid grid-cols-3 gap-3 text-sm">
-                                    {Object.entries(model.preprocessing).map(([k, v]) => (
-                                        <div key={k} className="flex flex-col p-2 bg-muted/20 rounded">
-                                            <span className="text-muted-foreground text-xs capitalize">{k.replace(/_/g, " ")}</span>
-                                            <span className="font-mono font-medium">{String(v)}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    )}
-
                     <Separator />
 
-                    {/* Actual vs Predicted scatter plot stub */}
                     <div>
                         <div className="flex items-center gap-2 mb-3">
                             <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
@@ -194,9 +165,6 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                             </h4>
                             <Badge variant="outline" className="text-[10px]">Preview</Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-3">
-                            Simulated scatter shown below. Real predictions will appear once the model serves live data.
-                        </p>
                         <div className="h-[240px] w-full border rounded-lg p-2 bg-muted/10">
                             <ResponsiveContainer width="100%" height="100%">
                                 <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
@@ -217,7 +185,7 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                                     />
                                     <RechartsTooltip
                                         cursor={{ strokeDasharray: "3 3" }}
-                                        formatter={(v) => [Number(v).toFixed(3)]}
+                                        formatter={(v: any) => [Number(v).toFixed(3)]}
                                         labelFormatter={() => ""}
                                     />
                                     <ReferenceLine
@@ -257,27 +225,22 @@ const ModelRow = ({ model, onViewDetails, onDelete, onDeploy }: RowProps) => {
 
     return (
         <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto_auto] items-center gap-x-4 gap-y-2 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors text-sm">
-            {/* Date */}
             <div className="flex items-center gap-2 text-muted-foreground min-w-0">
                 <CalendarDays className="h-4 w-4 shrink-0" />
                 <span className="truncate">{formatDate(model.created_at)}</span>
             </div>
-            {/* Compound */}
             <div className="flex items-center gap-2 min-w-0">
                 <FlaskConical className="h-4 w-4 shrink-0 text-violet-500" />
                 <span className="font-medium truncate">{model.compound_name}</span>
             </div>
-            {/* Algorithm */}
             <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4 shrink-0 text-blue-500" />
                 <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{model.algorithm}</span>
             </div>
-            {/* Metrics */}
             <div className="flex flex-col gap-0.5">
                 <span className={`font-mono font-bold ${r2Color(r2)}`}>R² {r2.toFixed(3)}</span>
                 <span className="text-xs text-muted-foreground font-mono">RMSE {rmse.toFixed(3)}</span>
             </div>
-            {/* Status */}
             <div>
                 {model.is_active ? (
                     <Badge className="gap-1.5 bg-green-600/15 text-green-700 dark:text-green-400 hover:bg-green-600/20 border-green-500/30">
@@ -289,7 +252,6 @@ const ModelRow = ({ model, onViewDetails, onDelete, onDeploy }: RowProps) => {
                     </Badge>
                 )}
             </div>
-            {/* Actions */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -324,11 +286,39 @@ const ModelRow = ({ model, onViewDetails, onDelete, onDeploy }: RowProps) => {
 
 export default function ModelsTableClient({ initialModels }: { initialModels: IMLModel[] }) {
     const router = useRouter();
+    const { subscribe, unsubscribe, publish, isConnected } = useMQTT();
     const [isPending, startTransition] = useTransition();
     const [models, setModels] = useState<IMLModel[]>(initialModels);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [detailsModel, setDetailsModel] = useState<IMLModel | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<IMLModel | null>(null);
+
+    // ── MQTT Fetch Logic ────────────────────────────────────────────────────
+    useEffect(() => {
+        const topic = "ui/responses/get_ml_models";
+
+        const handleMessage = (t: string, payload: any) => {
+            if (t === topic && payload.type === "ml_models_list") {
+                setModels(payload.models || []);
+                setIsLoading(false);
+            }
+        };
+
+        subscribe(topic, handleMessage);
+
+        // Fetch models once connected
+        if (isConnected) {
+            publish("ui/commands/get_ml_models", {
+                command: "get_ml_models",
+                params: {}
+            });
+        }
+
+        return () => {
+            unsubscribe(topic, handleMessage);
+        };
+    }, [subscribe, unsubscribe, publish, isConnected]);
 
     // ── Deploy ──────────────────────────────────────────────────────────────
     const handleDeploy = useCallback((model: IMLModel) => {
@@ -336,20 +326,14 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
             const res = await deployModel(model.id);
             if (res.success) {
                 toast.success(`"${model.compound_name} — ${model.algorithm}" is now active.`);
-                // Optimistic update
-                setModels(prev =>
-                    prev.map(m =>
-                        m.compound_name === model.compound_name
-                            ? { ...m, is_active: m.id === model.id }
-                            : m
-                    )
-                );
+                // Refresh data via MQTT
+                publish("ui/commands/get_ml_models", { command: "get_ml_models", params: {} });
                 router.refresh();
             } else {
                 toast.error(res.error || "Failed to deploy model.");
             }
         });
-    }, [router]);
+    }, [router, publish]);
 
     // ── Delete ──────────────────────────────────────────────────────────────
     const handleDeleteConfirm = useCallback(() => {
@@ -395,7 +379,6 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
 
             {/* Table */}
             <div className="border rounded-xl bg-card overflow-hidden">
-                {/* Table header */}
                 <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto_auto] gap-x-4 px-4 py-3 bg-muted/40 border-b text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <span>Date Trained</span>
                     <span>Compound</span>
@@ -405,13 +388,13 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
                     <span className="sr-only">Actions</span>
                 </div>
 
-                {isPending && (
+                {(isPending || (isLoading && models.length === 0)) && (
                     <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground border-b">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Updating...
+                        <Loader2 className="h-4 w-4 animate-spin" /> {isLoading ? "Fetching models..." : "Updating..."}
                     </div>
                 )}
 
-                {models.length === 0 ? (
+                {models.length === 0 && !isLoading ? (
                     <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
                         <BarChart3 className="h-12 w-12 opacity-30" />
                         <p className="font-medium">No models trained yet</p>

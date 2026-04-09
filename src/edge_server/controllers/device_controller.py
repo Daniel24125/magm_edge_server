@@ -13,7 +13,6 @@ class DeviceController:
         self.client = client
         self.alert_manager = alert_manager
         self.online_devices = {}
-        self.latest_spectrum = None
 
     # -------------------- Device Handling --------------------
     def _handle_device_registration(self, device_id, payload): 
@@ -44,25 +43,6 @@ class DeviceController:
     def _handle_device_data(self, device_id, payload): 
         device_name = self.online_devices.get(device_id, {}).get("device_name", "")
         logger.debug(f"Data received from device '{device_name}'")
-        # Robust data extraction: Navigate potential nested structures ("payload" or "data")
-        data = payload
-        if isinstance(data, dict) and "payload" in data and isinstance(data["payload"], dict):
-            data = data["payload"]
-        if isinstance(data, dict) and "data" in data and isinstance(data["data"], dict):
-            data = data["data"]
-
-        spectra = data.get("spectra")
-        if spectra is None: spectra = data.get("raw_spectra")
-        if spectra is None: spectra = data.get("raw_spectrum")
-        if spectra is None: spectra = data.get("spectra_matrix")
-
-        if spectra is not None:
-            wavelengths = data.get("wavelengths") or data.get("wavelength") or data.get("Wavelengths") or []
-            self.latest_spectrum = {
-                "spectra_matrix": spectra,
-                "wavelengths": wavelengths
-            }
-            logger.debug(f"Updated latest_spectrum for device {device_id}")
         
     def _notify_user(self, event, message, severity="info"):
         # We no longer inject 'devices_online' here, as the UI should subscribe to 'ui/devices/update'

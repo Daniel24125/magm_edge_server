@@ -47,7 +47,7 @@ class SessionController:
         # Initialize ML Service
         try:
             from edge_server.services.ml_service import MLService
-            self.ml_service = MLService()
+            self.ml_service = MLService(self.db)
         except ImportError as e:
             logger.error(f"Failed to import MLService: {e}")
             self.ml_service = None
@@ -434,8 +434,8 @@ class SessionController:
         # --- Base ML Service Fallback ---
         if self.ml_service and has_spectra and has_wavelengths:
             try:
-                logger.debug("Calling MLService.predict...")
-                predictions = self.ml_service.predict(data)
+                logger.debug(f"Calling MLService.predict for user {user_id}...")
+                predictions = self.ml_service.predict(data, user_id=user_id)
                 logger.debug(f"Received predictions: {predictions}")
                 
                 # Only inject base OD prediction if custom calibration hasn't already done it

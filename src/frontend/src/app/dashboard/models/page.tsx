@@ -1,5 +1,4 @@
 import React from "react";
-import { getModels } from "@/app/actions/models";
 import ModelsTableClient from "@/components/models/ModelsTableClient";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,8 +10,8 @@ export const metadata = {
 };
 
 export default async function ModelsPage() {
-    const result = await getModels();
-    const models = result.success && result.data ? result.data : [];
+    // We now fetch models via MQTT in the client component for full offline support
+    const models: any[] = [];
 
     return (
         <div className="flex flex-col gap-6 py-6 md:p-6 h-full w-full overflow-y-auto">
@@ -36,12 +35,7 @@ export default async function ModelsPage() {
                 </Button>
             </div>
 
-            {/* Error state */}
-            {!result.success && (
-                <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    Failed to load models: {result.error}
-                </div>
-            )}
+
 
             {/* Table with all interactions */}
             <ModelsTableClient initialModels={models} />

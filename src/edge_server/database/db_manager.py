@@ -419,6 +419,53 @@ class DatabaseHelper:
             self._conn.commit()
             return rid
 
+    def get_active_ml_model(self, auth0_user_id: str, compound_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves the currently active ML model for a specific compound and user.
+        Returns a dict with 'id' and 'blob' (bytes).
+        """
+        with self._locked_cursor() as cur:
+            row = self._retrying_execute(
+                cur,
+                """SELECT id, model_blob FROM ml_models 
+                   WHERE auth0_user_id = ? AND compound_name = ? AND is_active = 1 
+                   LIMIT 1""",
+                (auth0_user_id, compound_name)
+            ).fetchone()
+            
+            if not row:
+                return None
+                
+            return {
+                "id": row[0],
+                "blob": row[1]
+            }
+
+    def get_all_ml_models(self) -> list:
+        """Fetches all ML model metadata to serve to the UI."""
+        rows = self.fetch_records_raw(
+            "SELECT id, auth0_user_id, compound_name, algorithm, metrics, is_active, created_at "
+            "FROM ml_models ORDER BY created_at DESC"
+        )
+        results = []
+        import json
+        for r in rows:
+            try:
+                metrics_dict = json.loads(r[4]) if r[4] else {}
+            except Exception:
+                metrics_dict = {}
+                
+            results.append({
+                "id": r[0],
+                "auth0_user_id": r[1],
+                "compound_name": r[2],
+                "algorithm": r[3],
+                "metrics": metrics_dict,
+                "is_active": bool(r[5]),
+                "created_at": r[6]
+            })
+        return results
+
     def insert_measurement(
         self,
         session_id: str,

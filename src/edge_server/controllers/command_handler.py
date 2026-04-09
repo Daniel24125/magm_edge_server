@@ -250,29 +250,3 @@ class CommandHandler:
                     "status": "error",
                     "message": str(e)
                 }))
-
-        elif topic == "magm/calibration/capture/request":
-            if type(payload) == str:
-                try:
-                    payload = json.loads(payload)
-                except Exception:
-                    pass
-            req_id = payload.get("request_id")
-            latest = self.device_controller.latest_spectrum
-            
-            if latest:
-                spectra = latest["spectra_matrix"]
-                raw_spec = spectra[0] if isinstance(spectra, list) and len(spectra)>0 and isinstance(spectra[0], list) else spectra
-                self.client.publish("magm/calibration/capture/response", json.dumps({
-                    "request_id": req_id,
-                    "status": "success",
-                    "raw_spectrum": raw_spec,
-                    "wavelengths": latest["wavelengths"]
-                }))
-                logger.info(f"Captured single spectrum for calibration wizard.")
-            else:
-                self.client.publish("magm/calibration/capture/response", json.dumps({
-                    "request_id": req_id,
-                    "status": "error",
-                    "message": "No spectrum data available yet. Ensure the spectrometer is measuring."
-                }))
