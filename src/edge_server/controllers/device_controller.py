@@ -45,13 +45,18 @@ class DeviceController:
         device_name = self.online_devices.get(device_id, {}).get("device_name", "")
         logger.debug(f"Data received from device '{device_name}'")
         
-        data = payload.get("data", {})
+        # Robust data extraction: Check 'data' key first, then fall back to root
+        data = payload.get("data")
+        if not data or not isinstance(data, dict):
+            data = payload
+
         if "spectra" in data:
-            wavelengths = data.get("wavelengths") or data.get("wavelength", [])
+            wavelengths = data.get("wavelengths") or data.get("wavelength") or data.get("Wavelengths") or []
             self.latest_spectrum = {
                 "spectra_matrix": data["spectra"],
                 "wavelengths": wavelengths
             }
+            logger.debug(f"Updated latest_spectrum for device {device_id}")
         
     def _notify_user(self, event, message, severity="info"):
         # We no longer inject 'devices_online' here, as the UI should subscribe to 'ui/devices/update'

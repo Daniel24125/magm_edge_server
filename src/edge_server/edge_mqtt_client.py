@@ -91,28 +91,17 @@ class EdgeMQTTClient(threading.Thread):
         try:
             topic = msg.topic
             payload_str = msg.payload.decode()
+            payload = json.loads(payload_str)
             
-            # 1. Handle UI Commands (previously via AWS)
+            # Standardize message structure for manager.py
+            # Structure: {"topic": topic, "payload": payload}
+            self.data_queue.put({
+                "topic": topic, 
+                "payload": payload
+            })
+            
             if topic.startswith("ui/commands/"):
                 logger.info(f"Received UI Command on {topic}")
-                # Put in queue with specific marking or handle directly?
-                # The existing architecture puts everything in data_queue
-                # But AWSIoTClient used to put it in data_queue too.
-                # structure: {"topic": topic, "payload": json.loads(parsed_payload)}
-                self.data_queue.put({
-                    "topic": topic, 
-                    "payload": json.loads(payload_str)
-                })
-                return
-
-            # 2. Handle Sensor Data (previously MqttSubscriber)
-            # data_to_send = { **payload, "topic": msg.topic }
-            payload = json.loads(payload_str)
-            data_to_send = {
-                **payload,
-                "topic": topic
-            }
-            self.data_queue.put(data_to_send)
             
         except json.JSONDecodeError:
             logger.error(f"Error decoding JSON payload on {msg.topic}")

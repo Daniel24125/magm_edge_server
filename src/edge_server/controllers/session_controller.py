@@ -384,10 +384,17 @@ class SessionController:
 
 
     def _handle_session_data(self, device_id: str, payload: Dict[str, Any]):
-
         source = payload.get("source")
-        data = payload.get("data", {})
         timestamp = payload.get("timestamp")
+        
+        # Robust data extraction: check 'data' key first or fall back to root
+        data = payload.get("data")
+        if not data or not isinstance(data, dict):
+            # If flat, use the root but filter out standard metadata keys
+            # to avoid cluttering the telemetry JSON in the database.
+            metadata_keys = {"id", "source", "timestamp", "device_id", "topic", "type"}
+            data = {k: v for k, v in payload.items() if k not in metadata_keys}
+
         logger.info(f"Received data from {device_id}: {data}")
 
         # 0. ML Prediction (Spectrometer only)

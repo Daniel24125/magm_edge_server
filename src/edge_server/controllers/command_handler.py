@@ -148,53 +148,94 @@ class CommandHandler:
                 except Exception:
                     pass
             from services.chemometrics import run_automl_pipeline
-            req_id = payload.get("request_id")
-            
+
+            # Extract request_id first so every error path can reference it
+            request_id = payload.get("request_id", "unknown")
+
             try:
-                raw_spectra = payload["raw_spectra"]
-                reference_ods = payload["reference_ods"]
-                wavelengths = payload["wavelengths"]
+                # Support both key names: frontend sends 'raw_spectra_matrix', fall back to 'raw_spectra'
+                raw_spectra = payload.get("raw_spectra_matrix") or payload.get("raw_spectra")
+                reference_ods = payload.get("reference_ods")
+                wavelengths = payload.get("wavelengths")
                 user_config = payload.get("user_config", {})
-                
+                dark_spectrum = payload.get("dark_spectrum")
+                ref_spectrum = payload.get("ref_spectrum")
+
+                if not raw_spectra:
+                    error_msg = "Calibration payload missing spectra matrix (raw_spectra_matrix)."
+                    logger.error(error_msg)
+                    self.client.publish("magm/calibration/train/response", json.dumps({
+                        "request_id": request_id,
+                        "status": "error",
+                        "message": error_msg
+                    }))
+                    return
+
+                if not reference_ods:
+                    error_msg = "Calibration payload missing required field: reference_ods."
+                    logger.error(error_msg)
+                    self.client.publish("magm/calibration/train/response", json.dumps({
+                        "request_id": request_id,
+                        "status": "error",
+                        "message": error_msg
+                    }))
+                    return
+
+                # If wavelengths are missing, fall back to index-based array so training can still proceed
+                if not wavelengths and raw_spectra:
+                    logger.warning("Calibration payload missing wavelengths — using index-based fallback.")
+                    wavelengths = list(range(len(raw_spectra[0]) if isinstance(raw_spectra[0], list) else len(raw_spectra)))
+
                 result = run_automl_pipeline(raw_spectra, reference_ods, wavelengths, user_config)
-                
+
                 if result["status"] == "success":
                     winning_model = result["winning_model"]
                     auth0_user_id = payload.get("auth0_user_id", "system")
                     compound_name = payload.get("compound_name", "unknown")
-                    
+
                     if winning_model["algorithm"] == "RandomForest":
                         import joblib
                         import io
-                        
+
                         rf_model = winning_model["rf_model_instance"]
                         buffer = io.BytesIO()
                         joblib.dump(rf_model, buffer)
                         model_blob = buffer.getvalue()
-                        
-                        model_id = self.db_helper.insert_ml_model(
+
+                        self.db_helper.insert_ml_model(
                             auth0_user_id=auth0_user_id,
                             compound_name=compound_name,
                             algorithm=winning_model["algorithm"],
                             metrics=json.dumps({"r2": winning_model["r2"], "rmse": winning_model["rmse"]}),
                             model_blob=model_blob
                         )
-                        
-                        # Remove the actual object before sending back JSON
-                        del winning_model["rf_model_instance"] 
-                    
+
+                        # Remove the non-serialisable object before publishing JSON
+                        del winning_model["rf_model_instance"]
+
                     self.client.publish("magm/calibration/train/response", json.dumps({
-                        "request_id": req_id,
+                        "request_id": request_id,
                         "status": "success",
                         "winning_model": winning_model,
                         "scaler_params": result["scaler_params"],
                         "valid_wavelengths": result["valid_wavelengths"]
                     }))
                     logger.info(f"Calibration model trained successfully. Winner: {winning_model['algorithm']}, R2: {winning_model['r2']}")
+
+                else:
+                    # Pipeline returned a non-success status — notify the frontend so the UI unblocks
+                    pipeline_msg = result.get("message", "AutoML pipeline returned a non-success status.")
+                    logger.error(f"AutoML pipeline failed: {pipeline_msg}")
+                    self.client.publish("magm/calibration/train/response", json.dumps({
+                        "request_id": request_id,
+                        "status": "error",
+                        "message": pipeline_msg
+                    }))
+
             except Exception as e:
                 logger.exception("Calibration training error")
                 self.client.publish("magm/calibration/train/response", json.dumps({
-                    "request_id": req_id,
+                    "request_id": request_id,
                     "status": "error",
                     "message": str(e)
                 }))

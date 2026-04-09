@@ -66,9 +66,15 @@ def filter_peaks_for_mlr(vips, wavelengths, min_distance_nm=15, top_n=5):
 
 def run_automl_pipeline(raw_spectra, reference_ods, wavelengths, user_config):
     """Evaluates PLSR, MLR, and RF, returning the winning model."""
+    if len(raw_spectra) < 2:
+        return {
+            "status": "error",
+            "message": "AutoML training requires at least 2 samples. Please capture more data."
+        }
+
     X, valid_waves, scaler_params = apply_preprocessing(
         np.array(raw_spectra), 
-        wavelengths, 
+        np.array(wavelengths), 
         user_config.get('target_type', 'chemical_compound'), 
         user_config.get('sg_window', 11), 
         user_config.get('sg_poly', 2), 
