@@ -7,6 +7,7 @@ import {
     LayoutDashboard,
     SquareKanban,
     RadioReceiver,
+    BrainCircuit,
     Cloud,
     Server,
     Bell,
@@ -120,7 +121,8 @@ const MobileDrawerContent = () => {
                 <MenuLink href="/projects" icon={<SquareKanban className="size-5" />} label="Projects" />
                 <MenuLink href="/devices" icon={<RadioReceiver className="size-5" />} label="Devices" />
                 <MenuLink href="/notifications" icon={<Bell className="size-5" />} label="Notifications" badge={badgeText} />
-                <MenuLink href="/settings" icon={<Settings className="size-5" />} label="Settings" />
+                <MenuLink href="/dashboard/calibrate" icon={<Settings className="size-5" />} label="Calibration Wizard" />
+                <MenuLink href="/dashboard/models" icon={<BrainCircuit className="size-5" />} label="Models" />
             </div>
 
             <div className="mt-auto flex flex-col gap-4">

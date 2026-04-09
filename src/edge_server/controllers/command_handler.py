@@ -104,6 +104,16 @@ class CommandHandler:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 
     def handle_device_message(self, topic: str, payload: dict):
+        if type(payload) == str:
+            try:
+                payload = json.loads(payload)
+            except Exception:
+                pass
+                
+        if not isinstance(payload, dict):
+            logger.warning(f"Payload is not a dict after decoding. Using empty dict. Payload: {payload}")
+            payload = {}
+
         device_id = payload.get("device_id")
         
         # Fallback: Extract device_id from topic (devices/{id}/...)
@@ -133,6 +143,7 @@ class CommandHandler:
             self.device_controller._handle_user_prompt( payload, "cal/prompt_user")
         elif topic.endswith("/live_readings"):
             self.device_controller._handle_user_prompt(payload, "cal/live_readings")
+            self.device_controller._handle_device_data(device_id, payload)
         elif topic.endswith("/events"):
             self.device_controller._handle_device_event(device_id, payload)
         elif topic.endswith("/commands/measure"):

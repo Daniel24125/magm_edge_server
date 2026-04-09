@@ -2,7 +2,7 @@
 import { useApplication } from '@/contexts/ApplicationContext';
 import { useMemo } from 'react'
 import { Button } from '../ui/button';
-import { Bell, Cloud, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, Plus, RadioReceiver, Server, Settings, SquareKanban } from 'lucide-react';
+import { Bell, BrainCircuit, Cloud, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, Plus, RadioReceiver, Server, Settings, SquareKanban } from 'lucide-react';
 import { MAGMLogo } from '../logos';
 import Link from 'next/link';
 import { TConnectionItem, TNavigationItem } from '@/types';
@@ -134,6 +134,11 @@ const NavigationList = () => {
             icon={<Settings className='size-6' />}
             label="Calibration Wizard"
             href="/dashboard/calibrate"
+        />
+        <NavigationItem
+            icon={<BrainCircuit className='size-6' />}
+            label="Models"
+            href="/dashboard/models"
         />
     </div>
 }

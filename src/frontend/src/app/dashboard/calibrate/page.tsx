@@ -27,7 +27,6 @@ export default function CalibrationWizardPage() {
 
     // Section 1 State – Configuration
     const [compoundName, setCompoundName] = useState("");
-    const [targetType, setTargetType] = useState("chemical_compound");
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [sgWindow, setSgWindow] = useState(11);
     const [sgPoly, setSgPoly] = useState(2);
@@ -205,7 +204,6 @@ export default function CalibrationWizardPage() {
             auth0_user_id: user?.sub || "anonymous",
             compound_name: compoundName,
             user_config: {
-                target_type: targetType,
                 sg_window: sgWindow,
                 sg_poly: sgPoly,
                 sg_deriv: sgDeriv,
@@ -277,19 +275,6 @@ export default function CalibrationWizardPage() {
                             value={compoundName}
                             onChange={e => setCompoundName(e.target.value)}
                         />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="targetType">Target Type</Label>
-                        <select
-                            id="targetType"
-                            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={targetType}
-                            onChange={(e) => setTargetType(e.target.value)}
-                        >
-                            <option value="chemical_compound">Chemical Compound (SNV)</option>
-                            <option value="biomass">Biomass / Turbidity (Mean Center)</option>
-                        </select>
                     </div>
 
                     <div>

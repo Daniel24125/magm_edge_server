@@ -8,8 +8,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 
-def apply_preprocessing(spectra, wavelengths, target_type, sg_window, sg_poly, sg_deriv):
-    """Applies cropping, Savitzky-Golay, and conditional SNV."""
+def apply_preprocessing(spectra, wavelengths, sg_window, sg_poly, sg_deriv):
+    """Applies cropping, Savitzky-Golay, and Mean Centering."""
     # 1. Crop water band (1400-1550 nm)
     valid_mask = (wavelengths < 1400) | (wavelengths > 1550)
     cropped_spectra = spectra[:, valid_mask]
@@ -18,20 +18,12 @@ def apply_preprocessing(spectra, wavelengths, target_type, sg_window, sg_poly, s
     # 2. Savitzky-Golay Smoothing
     smoothed = savgol_filter(cropped_spectra, window_length=sg_window, polyorder=sg_poly, deriv=sg_deriv, axis=1)
     
-    # 3. Target Type Logic (The SNV Trap)
+    # 3. Biomass/Turbidity - strictly preserve scattering magnitude, apply column-wise Mean Centering only
     scaler_params = {}
-    if target_type == "chemical_compound":
-        # Apply SNV (Standard Normal Variate) - row-wise standardization
-        mean_spectra = np.mean(smoothed, axis=1, keepdims=True)
-        std_spectra = np.std(smoothed, axis=1, keepdims=True)
-        processed_spectra = (smoothed - mean_spectra) / std_spectra
-        scaler_params['method'] = 'snv'
-    else:
-        # Biomass/Turbidity - strictly preserve scattering magnitude, apply column-wise Mean Centering only
-        scaler = StandardScaler(with_std=False)
-        processed_spectra = scaler.fit_transform(smoothed)
-        scaler_params['method'] = 'mean_center'
-        scaler_params['x_mean'] = scaler.mean_.tolist()
+    scaler = StandardScaler(with_std=False)
+    processed_spectra = scaler.fit_transform(smoothed)
+    scaler_params['method'] = 'mean_center'
+    scaler_params['x_mean'] = scaler.mean_.tolist()
         
     return processed_spectra, cropped_waves, scaler_params
 
@@ -75,7 +67,6 @@ def run_automl_pipeline(raw_spectra, reference_ods, wavelengths, user_config):
     X, valid_waves, scaler_params = apply_preprocessing(
         np.array(raw_spectra), 
         np.array(wavelengths), 
-        user_config.get('target_type', 'chemical_compound'), 
         user_config.get('sg_window', 11), 
         user_config.get('sg_poly', 2), 
         user_config.get('sg_deriv', 0)

@@ -31,6 +31,7 @@ export interface ISensor {
 }
 
 export interface IDeviceDetails {
+    type?: string;
     device_name: string;
     sensors?: ISensor[];
     status: string;

@@ -44,16 +44,22 @@ class DeviceController:
     def _handle_device_data(self, device_id, payload): 
         device_name = self.online_devices.get(device_id, {}).get("device_name", "")
         logger.debug(f"Data received from device '{device_name}'")
-        
-        # Robust data extraction: Check 'data' key first, then fall back to root
-        data = payload.get("data")
-        if not data or not isinstance(data, dict):
-            data = payload
+        # Robust data extraction: Navigate potential nested structures ("payload" or "data")
+        data = payload
+        if isinstance(data, dict) and "payload" in data and isinstance(data["payload"], dict):
+            data = data["payload"]
+        if isinstance(data, dict) and "data" in data and isinstance(data["data"], dict):
+            data = data["data"]
 
-        if "spectra" in data:
+        spectra = data.get("spectra")
+        if spectra is None: spectra = data.get("raw_spectra")
+        if spectra is None: spectra = data.get("raw_spectrum")
+        if spectra is None: spectra = data.get("spectra_matrix")
+
+        if spectra is not None:
             wavelengths = data.get("wavelengths") or data.get("wavelength") or data.get("Wavelengths") or []
             self.latest_spectrum = {
-                "spectra_matrix": data["spectra"],
+                "spectra_matrix": spectra,
                 "wavelengths": wavelengths
             }
             logger.debug(f"Updated latest_spectrum for device {device_id}")
@@ -123,9 +129,8 @@ class DeviceController:
 
     def _handle_user_prompt(self, payload, subtopic):
         device_id = payload.get("device_id", "")
-        logger.info(f"Forwarding user prompt/live data from {device_id}: {subtopic}")
-        # Forward to AWS:
-        self.client.publish(f"devices/{device_id}/{subtopic}", json.dumps(payload))
+        # Forward to AWS (future):
+        # self.client.publish(f"devices/{device_id}/{subtopic}", json.dumps(payload))
 
     def _handle_device_event(self, device_id: str, payload: Dict[str, Any]):
         """
