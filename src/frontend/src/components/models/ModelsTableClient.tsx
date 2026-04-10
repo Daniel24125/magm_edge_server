@@ -113,10 +113,10 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl">
                         <Brain className="h-5 w-5 text-primary" />
-                        {model.compound_name} — {model.algorithm}
+                        {model.compoundName || model.compound_name} — {model.algorithm}
                     </DialogTitle>
                     <DialogDescription>
-                        Trained {formatDate(model.created_at)}
+                        Trained {formatDate((model.createdAt || model.created_at) as string)}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -145,12 +145,12 @@ const DetailsDialog = ({ model, open, onOpenChange }: DetailsDialogProps) => {
                             </div>
                             <div className="flex justify-between p-2 bg-muted/20 rounded">
                                 <span className="text-muted-foreground">Compound</span>
-                                <span className="font-medium">{model.compound_name}</span>
+                                <span className="font-medium">{model.compoundName || model.compound_name}</span>
                             </div>
                             <div className="flex justify-between p-2 bg-muted/20 rounded">
                                 <span className="text-muted-foreground">Status</span>
-                                <Badge variant={model.is_active ? "default" : "secondary"}>
-                                    {model.is_active ? "Active" : "Inactive"}
+                                <Badge variant={(model.isActive ?? model.is_active) ? "default" : "secondary"}>
+                                    {(model.isActive ?? model.is_active) ? "Active" : "Inactive"}
                                 </Badge>
                             </div>
                         </div>
@@ -227,11 +227,11 @@ const ModelRow = ({ model, onViewDetails, onDelete, onDeploy }: RowProps) => {
         <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto_auto] items-center gap-x-4 gap-y-2 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors text-sm">
             <div className="flex items-center gap-2 text-muted-foreground min-w-0">
                 <CalendarDays className="h-4 w-4 shrink-0" />
-                <span className="truncate">{formatDate(model.created_at)}</span>
+                <span className="truncate">{formatDate((model.createdAt || model.created_at) as string)}</span>
             </div>
             <div className="flex items-center gap-2 min-w-0">
                 <FlaskConical className="h-4 w-4 shrink-0 text-violet-500" />
-                <span className="font-medium truncate">{model.compound_name}</span>
+                <span className="font-medium truncate">{model.compoundName || model.compound_name}</span>
             </div>
             <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4 shrink-0 text-blue-500" />
@@ -242,7 +242,7 @@ const ModelRow = ({ model, onViewDetails, onDelete, onDeploy }: RowProps) => {
                 <span className="text-xs text-muted-foreground font-mono">RMSE {rmse.toFixed(3)}</span>
             </div>
             <div>
-                {model.is_active ? (
+                {(model.isActive ?? model.is_active) ? (
                     <Badge className="gap-1.5 bg-green-600/15 text-green-700 dark:text-green-400 hover:bg-green-600/20 border-green-500/30">
                         <CheckCircle2 className="h-3 w-3" /> Active
                     </Badge>
@@ -263,7 +263,7 @@ const ModelRow = ({ model, onViewDetails, onDelete, onDeploy }: RowProps) => {
                     <DropdownMenuItem onClick={() => onViewDetails(model)}>
                         <Eye className="mr-2 h-4 w-4" /> View Details
                     </DropdownMenuItem>
-                    {!model.is_active && (
+                    {!(model.isActive ?? model.is_active) && (
                         <DropdownMenuItem onClick={() => onDeploy(model)}>
                             <Rocket className="mr-2 h-4 w-4 text-green-500" />
                             Deploy
@@ -325,7 +325,7 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
         startTransition(async () => {
             const res = await deployModel(model.id);
             if (res.success) {
-                toast.success(`"${model.compound_name} — ${model.algorithm}" is now active.`);
+                toast.success(`"${model.compoundName || model.compound_name} — ${model.algorithm}" is now active.`);
                 // Refresh data via MQTT
                 publish("ui/commands/get_ml_models", { command: "get_ml_models", params: {} });
                 router.refresh();
@@ -352,10 +352,12 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
         });
     }, [deleteTarget, router]);
 
-    const totalActive = models.filter(m => m.is_active).length;
+    const totalActive = models.filter(m => m.isActive ?? m.is_active).length;
     const avgR2 = models.length
         ? (models.reduce((s, m) => s + (m.metrics?.r2 ?? 0), 0) / models.length).toFixed(3)
         : "—";
+
+    const compounds = new Set(models.map(m => m.compoundName || m.compound_name));
 
     return (
         <>
@@ -365,7 +367,7 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
                     { label: "Total Models", value: models.length, icon: <Brain className="h-5 w-5 text-blue-500" /> },
                     { label: "Active Models", value: totalActive, icon: <CheckCircle2 className="h-5 w-5 text-green-500" /> },
                     { label: "Avg. R² Score", value: avgR2, icon: <TrendingUp className="h-5 w-5 text-violet-500" /> },
-                    { label: "Compounds", value: new Set(models.map(m => m.compound_name)).size, icon: <FlaskConical className="h-5 w-5 text-orange-400" /> },
+                    { label: "Compounds", value: compounds.size, icon: <FlaskConical className="h-5 w-5 text-orange-400" /> },
                 ].map(stat => (
                     <div key={stat.label} className="flex items-center gap-4 p-4 bg-card border rounded-xl">
                         <div className="p-2 rounded-lg bg-muted">{stat.icon}</div>
@@ -429,7 +431,7 @@ export default function ModelsTableClient({ initialModels }: { initialModels: IM
                         <AlertDialogTitle>Delete this model?</AlertDialogTitle>
                         <AlertDialogDescription>
                             This will permanently delete{" "}
-                            <strong>{deleteTarget?.compound_name} — {deleteTarget?.algorithm}</strong>.
+                            <strong>{deleteTarget?.compoundName || deleteTarget?.compound_name} — {deleteTarget?.algorithm}</strong>.
                             This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>

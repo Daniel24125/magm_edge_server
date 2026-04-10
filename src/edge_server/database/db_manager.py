@@ -442,28 +442,49 @@ class DatabaseHelper:
             }
 
     def get_all_ml_models(self) -> list:
-        """Fetches all ML model metadata to serve to the UI."""
-        rows = self.fetch_records_raw(
+        """Fetches all models (ML and Linear Calibrations) to serve to the UI."""
+        # 1. Fetch from ml_models
+        ml_rows = self.fetch_records_raw(
             "SELECT id, auth0_user_id, compound_name, algorithm, metrics, is_active, created_at "
-            "FROM ml_models ORDER BY created_at DESC"
+            "FROM ml_models"
         )
+        # 2. Fetch from calibration_models
+        cal_rows = self.fetch_records_raw(
+            "SELECT id, auth0_user_id, compound_name, r2_score, is_active, created_at "
+            "FROM calibration_models"
+        )
+        
         results = []
-        import json
-        for r in rows:
+        for r in ml_rows:
+            import json
             try:
                 metrics_dict = json.loads(r[4]) if r[4] else {}
             except Exception:
                 metrics_dict = {}
                 
             results.append({
-                "id": r[0],
-                "auth0_user_id": r[1],
-                "compound_name": r[2],
+                "id": f"ml_{r[0]}",
+                "userId": r[1],
+                "compoundName": r[2],
                 "algorithm": r[3],
                 "metrics": metrics_dict,
-                "is_active": bool(r[5]),
-                "created_at": r[6]
+                "isActive": bool(r[5]),
+                "createdAt": r[6]
             })
+            
+        for r in cal_rows:
+            results.append({
+                "id": f"cal_{r[0]}",
+                "userId": r[1],
+                "compoundName": r[2],
+                "algorithm": "Linear Calibration", 
+                "metrics": {"r2": r[3]},
+                "isActive": bool(r[4]),
+                "createdAt": r[5]
+            })
+            
+        # Sort by createdAt descending
+        results.sort(key=lambda x: x["createdAt"], reverse=True)
         return results
 
     def insert_measurement(

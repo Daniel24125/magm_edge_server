@@ -38,7 +38,10 @@ export function StartSessionDialog({ open, onOpenChange, initialSettings, initia
     const { canPerformSession, activeSession } = useSession()
     // Mock check for spectrometer presence - ideally passed as prop or from context
     const { onlineDevices } = useDeviceManager();
-    const hasSpectrometer = Object.values(onlineDevices).some(d => d.device_name.toLowerCase().includes("spectrometer") || d.spectrometer_config);
+    const hasSpectrometer = Object.values(onlineDevices).some((d: any) => {
+        const deviceName = d?.device_name || "";
+        return deviceName.toLowerCase().includes("spectrometer") || !!d?.spectrometer_config;
+    });
 
     const { register, control, handleSubmit, watch, reset, trigger, getValues, formState: { errors } } = useForm<StartSessionFormData>({
         defaultValues: {

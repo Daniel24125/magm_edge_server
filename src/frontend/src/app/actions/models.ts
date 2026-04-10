@@ -11,12 +11,14 @@ const COLLECTION_NAME = "ml_models";
 
 export interface IMLModel {
     id: string | number;
-    auth0_user_id: string;
-    compound_name: string;
+    auth0_user_id?: string;
+    userId?: string; // Unified fetching uses camelCase
+    compound_name?: string;
+    compoundName?: string; // Unified fetching uses camelCase
     algorithm: string;
     metrics: {
         r2: number;
-        rmse: number;
+        rmse?: number; // RMSE might be missing in linear models
     };
     preprocessing?: {
         sg_window?: number;
@@ -25,8 +27,10 @@ export interface IMLModel {
         [key: string]: unknown;
     };
     num_samples?: number;
-    is_active: boolean;
-    created_at: string;
+    is_active?: boolean;
+    isActive?: boolean; // Unified fetching uses camelCase
+    created_at?: string;
+    createdAt?: string; // Unified fetching uses camelCase
     [key: string]: unknown;
 }
 
@@ -73,24 +77,45 @@ export async function getModels(): Promise<{ success: boolean; data?: IMLModel[]
             if (fs.existsSync(dbPath)) {
                 try {
                     const localDb = new Database(dbPath, { readonly: true });
-                    const rows = localDb.prepare("SELECT * FROM ml_models ORDER BY created_at DESC").all() as any[];
+                    
+                    // 1. ML Models
+                    const mlRows = localDb.prepare("SELECT * FROM ml_models").all() as any[];
+                    // 2. Calibration Models
+                    const calRows = localDb.prepare("SELECT * FROM calibration_models").all() as any[];
                     localDb.close();
 
-                    const models: IMLModel[] = rows.map(row => {
+                    const models: IMLModel[] = [];
+
+                    mlRows.forEach(row => {
                         let metrics = { r2: 0, rmse: 0 };
                         if (row.metrics) {
                             try { metrics = JSON.parse(row.metrics); } catch { }
                         }
-                        return {
-                            id: row.id,
-                            auth0_user_id: row.auth0_user_id,
-                            compound_name: row.compound_name,
+                        models.push({
+                            id: `ml_${row.id}`,
+                            userId: row.auth0_user_id,
+                            compoundName: row.compound_name,
                             algorithm: row.algorithm,
                             metrics,
-                            is_active: !!row.is_active,
-                            created_at: row.created_at,
-                        } as IMLModel;
+                            isActive: !!row.is_active,
+                            createdAt: row.created_at,
+                        } as any);
                     });
+
+                    calRows.forEach(row => {
+                        models.push({
+                            id: `cal_${row.id}`,
+                            userId: row.auth0_user_id,
+                            compoundName: row.compound_name,
+                            algorithm: "Linear Calibration",
+                            metrics: { r2: row.r2_score },
+                            isActive: !!row.is_active,
+                            createdAt: row.created_at,
+                        } as any);
+                    });
+                    
+                    // Sort by createdAt descending
+                    models.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
                     
                     return { success: true, data: models };
                 } catch (dbError) {
@@ -139,14 +164,33 @@ export async function deployModel(modelId: string | number): Promise<{ success: 
             const dbPath = getDbPath();
             const localDb = new Database(dbPath);
             
+            let table = "ml_models";
+            let numericId = modelId;
+
+            if (typeof modelId === "string") {
+                if (modelId.startsWith("ml_")) {
+                    table = "ml_models";
+                    numericId = modelId.replace("ml_", "");
+                } else if (modelId.startsWith("cal_")) {
+                    table = "calibration_models";
+                    numericId = modelId.replace("cal_", "");
+                }
+            }
+            
             // Find compound name for the model
-            const model = localDb.prepare("SELECT compound_name FROM ml_models WHERE id = ?").get(modelId) as any;
-            if (!model) return { success: false, error: "Model not found" };
+            const model = localDb.prepare(`SELECT compound_name FROM ${table} WHERE id = ?`).get(numericId) as any;
+            if (!model) {
+                localDb.close();
+                return { success: false, error: "Model not found" };
+            }
 
             // Deactivate all for same compound, activate this one
             const updateBatch = localDb.transaction(() => {
+                // Deactivate in both tables if they share compounds? 
+                // Usually a compound has either ML or Cal model active.
                 localDb.prepare("UPDATE ml_models SET is_active = 0 WHERE compound_name = ?").run(model.compound_name);
-                localDb.prepare("UPDATE ml_models SET is_active = 1 WHERE id = ?").run(modelId);
+                localDb.prepare("UPDATE calibration_models SET is_active = 0 WHERE compound_name = ?").run(model.compound_name);
+                localDb.prepare(`UPDATE ${table} SET is_active = 1 WHERE id = ?`).run(numericId);
             });
             updateBatch();
             localDb.close();
@@ -192,7 +236,21 @@ export async function deleteModel(modelId: string | number): Promise<{ success: 
         if (isLocalMode()) {
             const dbPath = getDbPath();
             const localDb = new Database(dbPath);
-            const result = localDb.prepare("DELETE FROM ml_models WHERE id = ?").run(modelId);
+            
+            let table = "ml_models";
+            let numericId = modelId;
+
+            if (typeof modelId === "string") {
+                if (modelId.startsWith("ml_")) {
+                    table = "ml_models";
+                    numericId = modelId.replace("ml_", "");
+                } else if (modelId.startsWith("cal_")) {
+                    table = "calibration_models";
+                    numericId = modelId.replace("cal_", "");
+                }
+            }
+
+            const result = localDb.prepare(`DELETE FROM ${table} WHERE id = ?`).run(numericId);
             localDb.close();
 
             if (result.changes > 0) {

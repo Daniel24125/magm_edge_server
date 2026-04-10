@@ -100,6 +100,14 @@ class CommandHandler:
                     "sessionId": cmd.params.get("sessionId"),
                     "projectId": cmd.params.get("projectId")
                 }))
+            case "get_ml_models":
+                models = self.db_helper.get_all_ml_models()
+                payload = {
+                    "type": "ml_models_list",
+                    "models": models,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                self.client.publish("ui/responses/get_ml_models", json.dumps(payload))
             case _:
                 logger.warning(f"Unhandled UI command: {cmd.command}")
 
@@ -113,6 +121,10 @@ class CommandHandler:
         if not isinstance(payload, dict):
             logger.warning(f"Payload is not a dict after decoding. Using empty dict. Payload: {payload}")
             payload = {}
+
+        # Un-nest the payload if the hardware device double-wrapped it
+        if "payload" in payload and isinstance(payload["payload"], dict):
+            payload = payload["payload"]
 
         device_id = payload.get("device_id")
         
@@ -223,6 +235,18 @@ class CommandHandler:
 
                         # Remove the non-serialisable object before publishing JSON
                         del winning_model["rf_model_instance"]
+                    else:
+                        # Save PLSR or MLR to the calibration_models table
+                        y_mean_val = winning_model.get("y_mean", winning_model.get("intercept", 0.0))
+                        
+                        self.db_helper.insert_calibration_model(
+                            auth0_user_id=auth0_user_id,
+                            compound_name=compound_name,
+                            coefficients=json.dumps(winning_model.get("coefficients", [])),
+                            x_mean=json.dumps(result.get("scaler_params", {}).get("x_mean", [])),
+                            y_mean=y_mean_val,
+                            r2_score=winning_model.get("r2", 0.0)
+                        )
 
                     self.client.publish("magm/calibration/train/response", json.dumps({
                         "request_id": request_id,
