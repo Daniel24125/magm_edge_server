@@ -375,13 +375,23 @@ class DatabaseHelper:
                 return None
                 
             import json
+            
+            def safe_parse(val):
+                if not val: 
+                    return []
+                try:
+                    return json.loads(val) if isinstance(val, str) else val
+                except Exception as e:
+                    logger.error(f"Failed to parse model JSON from DB: {e}")
+                    return []
+
             return {
                 "id": row[0],
                 "compound_name": row[1],
-                "coefficients": json.loads(row[2]),
-                "x_mean": json.loads(row[3]),
-                "y_mean": row[4],
-                "r2_score": row[5],
+                "coefficients": safe_parse(row[2]),
+                "x_mean": safe_parse(row[3]),
+                "y_mean": row[4] if row[4] is not None else 0.0,
+                "r2_score": row[5] if row[5] is not None else 0.0,
                 "created_at": row[6]
             }
 

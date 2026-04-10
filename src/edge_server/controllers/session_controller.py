@@ -84,11 +84,20 @@ class SessionController:
         self.active_session = db_record
 
         # 1. Open Aggregator Window BEFORE triggering client
-        # This ensures the server is ready for the 'Immediate Publish' from the client
+        # Determine expected sources based on connected hardware
+        expected_sources = set(["rpi"])
+        if self.device_controller:
+            for dev_info in self.device_controller.online_devices.values():
+                if isinstance(dev_info, dict):
+                    dev_name = str(dev_info.get("device_name", "")).lower()
+                    if dev_info.get("type") == "spectrometer" or "spectrometer" in dev_name:
+                        expected_sources.add("nir")
+
+        # Initialize the T=0 collection window
         self.aggregator.start_collection(
             self.id, 
             datetime.now(timezone.utc).isoformat(), 
-            set(["rpi"]), # Initial expected source
+            expected_sources,
             save_to_db=True,
             session_time=0
         )
@@ -307,47 +316,36 @@ class SessionController:
                 if self.paused:
                     continue
 
-                # Determine trigger type
                 is_sync_loop = (self.time_elapsed % self.read_interval == 0)
                 
-                # Skip T=0 in the loop because it's handled by start_session()
-                # to ensure window is open BEFORE the cmd_start is sent.
+                # Skip T=0 in the loop because start_session() handles it
                 if self.time_elapsed == 0:
                     time.sleep(1)
                     self.time_elapsed += 1
                     continue
 
-                save_to_db = is_sync_loop # Save to DB only on sync loops
+                if is_sync_loop:
+                    # Sync loop: open a window that saves to DB and waits for all devices
+                    expected_sources = set(["rpi"])
+                    if self.device_controller:
+                        for dev_info in self.device_controller.online_devices.values():
+                            if isinstance(dev_info, dict):
+                                dev_name = str(dev_info.get("device_name", "")).lower()
+                                if dev_info.get("type") == "spectrometer" or "spectrometer" in dev_name:
+                                    expected_sources.add("nir")
 
-                # Dynamic Expected Sources
-                # Fast Loop: Expect only RPi (assuming external devices are slow/sync-only)
-                # Sync Loop: Expect RPi + All Online Devices
-                expected_sources = set(["rpi"])
-                logger.debug(f"Acquisition Loop: exp_sources={expected_sources}")
-                
-                if is_sync_loop and self.device_controller:
-                     expected_sources.update(self.device_controller.online_devices.keys())
-                
-                # Note: If an external device IS fast, it will be ignored in fast loops with this logic.
-                # However, this safely solves the Spectrometer issue without metadata.
-
-                self.aggregator.start_collection(
-                    self.id, 
-                    datetime.now(timezone.utc).isoformat(), 
-                    expected_sources,
-                    save_to_db=save_to_db,
-                    session_time=self.time_elapsed
-                )
-
-                if save_to_db:
-                    logger.info(f"Requests measurements for session {self.id} (Saving to DB)")
-                    # New Sync Trigger (for Slow Devices/Spec)
+                    self.aggregator.start_collection(
+                        self.id, 
+                        datetime.now(timezone.utc).isoformat(), 
+                        expected_sources,
+                        save_to_db=True,
+                        session_time=self.time_elapsed
+                    )
+                    logger.info(f"Requests sync measurements for session {self.id} (Saving to DB)")
                     if not self.paused:
                         self.request_sync_measurements()
-                else: 
-                    # Always request measurements for live view (for Fast Devices/RPi)
-                    # The Spectrometer (listening to sync topic) will ignore this.
-                    # The Aggegator (expecting only RPi) will not wait for Spectrometer.
+                else:
+                    # Fast loop: NO aggregator reset. Just request fast sensors for UI.
                     if not self.paused:
                         self.request_measurements()
 
@@ -426,31 +424,38 @@ class SessionController:
         user_id = self.active_session.get("user_id")
         if not user_id:
             user_id = "anonymous"
-
+            
         if user_id and has_spectra and has_wavelengths:
-            # Note: For SQLite access here in a high-frequency loop we could theoretically cache this
-            # but db access is local and fast enough for now
             cal_model = self.db.get_active_calibration_model(user_id)
             if cal_model:
                 try:
                     from edge_server.utils.chemometrics import predict_od
+                    
+                    # Safely extract coefficients and x_mean
+                    raw_coeffs = cal_model.get("coefficients", [])
+                    coeffs = json.loads(raw_coeffs) if isinstance(raw_coeffs, str) else raw_coeffs
+                    
+                    raw_x_mean = cal_model.get("x_mean", [])
+                    x_mean = json.loads(raw_x_mean) if isinstance(raw_x_mean, str) else raw_x_mean
+                    
+                    y_mean = float(cal_model.get("y_mean", 0.0))
+
                     predicted_od = predict_od(
                         data["spectra"],
                         data["wavelengths"],
-                        cal_model["coefficients"],
-                        cal_model["x_mean"],
-                        cal_model["y_mean"]
+                        coeffs,
+                        x_mean,
+                        y_mean
                     )
                     
-                    if predicted_od is not None:
-                        data["od"] = {"value": predicted_od, "unit": "OD", "sensor_type": "od", "calibrated": True}
-                        logger.debug(f"Applied custom calibration model {cal_model['id']} for user {user_id}. OD = {predicted_od}")
-                    else:
-                        expected_len = len(json.loads(cal_model["coefficients"]))
-                        # Note: we need to import crop_water_band or know its logic to get actual cropped length for the log, 
-                        # but we can safely warn that a mismatch occurred.
-                        logger.warning(f"Calibration shape mismatch for user {user_id}. Model expects {expected_len} coefficients. Please recalibrate.")
-
+                    data["od"] = {
+                        "value": round(predicted_od, 4), 
+                        "timestamp": payload.get("timestamp", __import__('time').time()),
+                        "unit": "OD", 
+                        "sensor_type": "od", 
+                        "calibrated": True
+                    }
+                    logger.info(f"Successfully calculated custom OD: {predicted_od}")
                 except Exception as e:
                     logger.error(f"Failed to apply custom calibration model: {e}")
 
@@ -476,11 +481,31 @@ class SessionController:
         # 1. Anomaly Detection
         self._process_anomalies(device_id, data, payload.get("id"), timestamp)
 
-        # 2. Aggregation
+        # 2. Aggregation (Only captures if a sync window is actively open)
         self.aggregator.add_reading(source, data)
 
-        # 3. Live Preview (REMOVED - Aggregator now handles live updates)
-        # self._publish_live_preview(source, data)
+        # 3. Live Preview (Direct publish for fast UI updates)
+        try:
+            # Flatten the nested hardware data so the UI can render it as flat numbers
+            flat_data = {}
+            for key, val in data.items():
+                if isinstance(val, dict) and "value" in val:
+                    # Keep None if the value is explicitly None
+                    flat_data[key] = val["value"]
+                else:
+                    flat_data[key] = val
+
+            live_payload = {
+                "timestamp": timestamp or datetime.now(timezone.utc).isoformat(),
+                "data": flat_data,
+                "source": source,
+                "session_id": self.id,
+                "session_time": self.time_elapsed,
+                "is_recorded": False
+            }
+            self.client.publish(self.TOPIC_SESSION_LIVE, json.dumps(live_payload))
+        except Exception as e:
+            logger.error(f"Failed to publish live preview: {e}")
 
 
 
