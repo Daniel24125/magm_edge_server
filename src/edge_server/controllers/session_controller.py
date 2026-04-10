@@ -162,6 +162,7 @@ class SessionController:
             self.id = None
             self.time_elapsed = 0
             self.active_session = {}
+            self.latest_live_data = {}  # Clear live state for new sessions
             
             self.publish_status()
 
@@ -486,19 +487,28 @@ class SessionController:
 
         # 3. Live Preview (Direct publish for fast UI updates)
         try:
-            # Flatten the nested hardware data so the UI can render it as flat numbers
+            # 1. Flatten the nested hardware data and exclude heavy arrays
             flat_data = {}
             for key, val in data.items():
+                if key in ["wavelengths", "spectra", "raw_spectra"]:
+                    continue  # Do not spam the UI with massive arrays
+                    
                 if isinstance(val, dict) and "value" in val:
-                    # Keep None if the value is explicitly None
                     flat_data[key] = val["value"]
                 else:
                     flat_data[key] = val
 
+            # 2. Maintain a running memory of the latest values
+            if not hasattr(self, "latest_live_data"):
+                self.latest_live_data = {}
+                
+            self.latest_live_data.update(flat_data)
+
+            # 3. Publish the combined snapshot
             live_payload = {
                 "timestamp": timestamp or datetime.now(timezone.utc).isoformat(),
-                "data": flat_data,
-                "source": source,
+                "data": self.latest_live_data,
+                "source": "merged",
                 "session_id": self.id,
                 "session_time": self.time_elapsed,
                 "is_recorded": False
