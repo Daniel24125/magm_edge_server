@@ -220,8 +220,20 @@ class SessionController:
     def request_sync_measurements(self):
         if not self.id:
             return
+        # Broadcast the generic sync signal
         topic = f"controller/session/{self.id}/measurement_sync"
         self.client.publish(topic, json.dumps({"id": self.id}), qos=1)
+        
+        # Explicitly command read-on-command spectrometers to take a snapshot
+        if self.device_controller:
+            for dev_id, dev_info in self.device_controller.online_devices.items():
+                if isinstance(dev_info, dict):
+                    dev_name = str(dev_info.get("device_name", "")).lower()
+                    if "spectrometer" in dev_name or dev_info.get("type") == "spectrometer":
+                        self.client.publish(f"devices/{dev_id}/commands/measure", json.dumps({
+                            "command": "measure",
+                            "session_id": self.id
+                        }), qos=1)
 
     def get_offline_sessions(self, user_email: Optional[str] = None) -> List[Dict[str, Any]]:
         return self.db.get_offline_sessions(user_email)
@@ -412,6 +424,9 @@ class SessionController:
 
         # --- Self-Calibration Pipeline ---
         user_id = self.active_session.get("user_id")
+        if not user_id:
+            user_id = "anonymous"
+
         if user_id and has_spectra and has_wavelengths:
             # Note: For SQLite access here in a high-frequency loop we could theoretically cache this
             # but db access is local and fast enough for now
@@ -426,8 +441,16 @@ class SessionController:
                         cal_model["x_mean"],
                         cal_model["y_mean"]
                     )
-                    data["od"] = {"value": predicted_od, "unit": "OD", "sensor_type": "od", "calibrated": True}
-                    logger.debug(f"Applied custom calibration model {cal_model['id']} for user {user_id}. OD = {predicted_od}")
+                    
+                    if predicted_od is not None:
+                        data["od"] = {"value": predicted_od, "unit": "OD", "sensor_type": "od", "calibrated": True}
+                        logger.debug(f"Applied custom calibration model {cal_model['id']} for user {user_id}. OD = {predicted_od}")
+                    else:
+                        expected_len = len(json.loads(cal_model["coefficients"]))
+                        # Note: we need to import crop_water_band or know its logic to get actual cropped length for the log, 
+                        # but we can safely warn that a mismatch occurred.
+                        logger.warning(f"Calibration shape mismatch for user {user_id}. Model expects {expected_len} coefficients. Please recalibrate.")
+
                 except Exception as e:
                     logger.error(f"Failed to apply custom calibration model: {e}")
 
@@ -435,7 +458,7 @@ class SessionController:
         if self.ml_service and has_spectra and has_wavelengths:
             try:
                 logger.debug(f"Calling MLService.predict for user {user_id}...")
-                predictions = self.ml_service.predict(data, user_id=user_id)
+                predictions = self.ml_service.predict(data, user_id)
                 logger.debug(f"Received predictions: {predictions}")
                 
                 # Only inject base OD prediction if custom calibration hasn't already done it

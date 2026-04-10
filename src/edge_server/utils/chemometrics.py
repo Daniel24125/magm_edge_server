@@ -31,7 +31,14 @@ def predict_od(raw_spectrum, wavelengths, coefficients, x_mean, y_mean):
     spectrum_array = np.array(raw_spectrum)
     X_live_cropped = crop_water_band(spectrum_array, wavelengths)
     
-    centered_spectrum = X_live_cropped - np.array(x_mean)
-    predicted_od = np.dot(centered_spectrum, np.array(coefficients)) + y_mean
+    coeffs_array = np.array(coefficients)
+    x_mean_array = np.array(x_mean)
+    
+    # Defensive check: Ensure shapes match for matrix operations
+    if X_live_cropped.shape[0] != coeffs_array.shape[0]:
+        return None
+        
+    centered_spectrum = X_live_cropped - x_mean_array
+    predicted_od = np.dot(centered_spectrum, coeffs_array) + y_mean
     
     return max(0.0, float(predicted_od))
